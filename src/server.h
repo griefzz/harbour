@@ -144,10 +144,9 @@ auto Server::request_handler(std::string_view data) -> std::string {
                 return *resp;
             }
         }
-    } else {
-        // Handle parsing errors
-        return HttpResponseError();
     }
+
+    return HttpResponseError();
 }
 
 template<typename... Args>
@@ -163,6 +162,6 @@ auto Server::route(Args &&...args) -> void {
 }
 
 auto Server::serve() -> void {
-    auto wtf = [this](std::string_view v) -> std::string { return this->request_handler(v); };
-    start_server(port, wtf);
+    auto wrapper = [this](std::string_view v) -> std::string { return this->request_handler(v); };
+    start_server(port, wrapper);
 }
