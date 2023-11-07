@@ -8,6 +8,7 @@
 #include <string>
 #include <optional>
 #include <type_traits>
+#include <unordered_map>
 
 #include "cache.h"
 #include "config.h"
@@ -40,6 +41,11 @@ struct HttpRequest {
 
 using Handler = std::function<std::optional<std::string>(const HttpRequest &)>;
 
+struct Route {
+    fs::path path;
+    Handler handler;
+};
+
 class Server {
 public:
     Server() : port(80) {}
@@ -47,6 +53,9 @@ public:
 
     template<typename... Args>
     auto middleware(Args &&...args) -> void;
+
+    template<typename... Args>
+    auto route(Args &&...args) -> void;
 
     // Serve the http server
     auto serve() -> void;
@@ -60,6 +69,9 @@ private:
 
     // middlewares for the server
     std::vector<Handler> middlewares;
+
+    // routes for the server
+    std::unordered_map<fs::path, Handler> routes;
 };
 
 auto HttpRequest::parse(std::string_view req)
@@ -117,6 +129,16 @@ auto HttpResponseOk(std::string_view file) -> std::string {
 
 auto Server::request_handler(std::string_view data) -> std::string {
     if (auto req = HttpRequest::parse(data); req.has_value()) {
+        // Handle routes
+        for (auto route: routes) {
+            if (auto s = routes.find(req->path); s != routes.end()) {
+                if (auto resp = s->second(*req)) {
+                    return *resp;
+                }
+            }
+        }
+
+        // Handle middleware
         for (auto handler: middlewares) {
             if (auto resp = handler(*req)) {
                 return *resp;
@@ -132,6 +154,12 @@ template<typename... Args>
 auto Server::middleware(Args &&...args) -> void {
     static_assert((std::is_constructible_v<Handler, Args &&> && ...));
     (middlewares.push_back(std::forward<Args>(args)), ...);
+}
+
+template<typename... Args>
+auto Server::route(Args &&...args) -> void {
+    static_assert((std::is_constructible_v<Route, Args &&> && ...));
+    ((routes[args.path] = args.handler), ...);
 }
 
 auto Server::serve() -> void {

@@ -24,10 +24,23 @@ auto file_server(const HttpRequest &req) -> std::optional<std::string> {
     }
 }
 
+// Handle test path
+auto test_handler(const HttpRequest &req) -> std::optional<std::string> {
+    return "oh hey there";
+}
+
+// Handle echo path
+auto echo_handler(const HttpRequest &req) -> std::optional<std::string> {
+    return req.path.data();
+}
+
 auto main() -> int {
     Server server(8080);
-    server.middleware(default_index, file_server);
-    //server.route("/test", test_handler);
+    server.middleware(default_index,
+                      file_server);
+    server.route(
+            Route{"/test", test_handler},
+            Route{"/echo", echo_handler});
     server.serve();
 
     return 0;
