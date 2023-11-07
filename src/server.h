@@ -76,6 +76,8 @@ auto Server::serve() -> void {
                     return resp.decode();
                 }
             }
+        } else if (req.error() == RequestError::Unsupported) {
+            resp = Response(ResponseType::NotImplemented);
         }
 
         return resp.decode();

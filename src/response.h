@@ -9,6 +9,7 @@ enum class ResponseType {
     Ok                  = 200,
     NotFound            = 404,
     InternalServerError = 500,
+    NotImplemented      = 501
 };
 
 auto rt2sv(ResponseType type) -> std::string_view {
@@ -19,6 +20,8 @@ auto rt2sv(ResponseType type) -> std::string_view {
             return "404 Not Found";
         case ResponseType::InternalServerError:
             return "500 Internal Server Error";
+        case ResponseType::NotImplemented:
+            return "501 Not Implemented";
         default:
             return "418 I'm a teapot";// when all else fails
     }
@@ -50,6 +53,11 @@ struct Response {
             set_header("Content-Type", "text/plain");
             set_content("Internal Server Error: The server encountered an "
                         "unexpected condition.");
+        }
+        if (type == ResponseType::NotImplemented) {
+            set_header("Content-Type", "text/plain");
+            set_content("Not Implemented: The server does not implement the "
+                        "requested method.");
         }
 
         std::string resp;
