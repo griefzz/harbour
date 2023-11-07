@@ -4,8 +4,6 @@
 #include "io.h"
 #include "config.h"
 
-// static cache of our files generated at run-time
-
 enum class CacheError {
     NotFound
 };
@@ -44,4 +42,5 @@ private:
     FileMap files;
 };
 
+// static cache of our files generated at run-time
 static Cache cache;
