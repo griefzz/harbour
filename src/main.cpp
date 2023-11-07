@@ -15,7 +15,7 @@ auto favicon(const Request &req, Response &resp) -> void {
             resp.set_header("Content-Type", "image/x-icon");
             resp.set_content(content.value());
         } else {
-            resp.set_type(ResponseType::InternalServerError);
+            resp = Response(ResponseType::InternalServerError);
         }
     }
 }
@@ -31,10 +31,9 @@ auto file_server(const Request &req, Response &resp) -> void {
     if (auto content = cache[path]; content.has_value()) {
         resp.set_type(ResponseType::Ok);
         resp.set_content(content.value());
+    } else {
+        resp = Response(ResponseType::InternalServerError);
     }
-
-    // 404 file not found
-    resp = Response(ResponseType::NotFound);
 }
 
 // Handle file not found

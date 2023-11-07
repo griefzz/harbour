@@ -91,11 +91,12 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
             // Accept a new connection
             clientSocket = accept(listenSocket, NULL, NULL);
             if (clientSocket == INVALID_SOCKET) {
-                printf("accept failed with error: %d\n", WSAGetLastError());
+                printf("Accept failed with error: %d\n", WSAGetLastError());
                 closesocket(listenSocket);
                 break;
             }
 
+            std::cout << "Client connected.\n";
             continue;
         }
         if (bytesRead < 0) {
@@ -114,7 +115,7 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
     }
 
     if (shutdown(clientSocket, SD_SEND) == SOCKET_ERROR) {
-        printf("shutdown failed with error: %d\n", WSAGetLastError());
+        printf("Shutdown failed with error: %d\n", WSAGetLastError());
         closesocket(clientSocket);
         WSACleanup();
         return;
