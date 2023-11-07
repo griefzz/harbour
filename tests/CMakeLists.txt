@@ -1,6 +1,6 @@
 enable_testing()
 
-macro(add_test_executable TARGET_NAME EXTRA_SOURCES)
+macro(add_test_executable TARGET_NAME)
     # Add the test executable and with servers sources
     add_executable(${TARGET_NAME} ${TARGET_NAME}.cpp ${EXTRA_SOURCES})
 
@@ -19,4 +19,4 @@ macro(add_test_executable TARGET_NAME EXTRA_SOURCES)
 endmacro()
 
 # Router test
-add_test_executable(test_router ${PROJECT_SOURCE_DIR}/src/server.cpp)
+add_test_executable(test_router)

@@ -4,9 +4,8 @@
 #include <string>
 #include <string_view>
 #include <winsock2.h>
-#include "../defines.h"
 
-auto start_server(u32 port, std::function<std::string(std::string_view)> handler) -> int {
+auto start_server(uint32_t port, const std::function<std::string(std::string_view)> &handler) -> int {
     // Initialize Winsock
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
