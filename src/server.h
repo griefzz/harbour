@@ -62,8 +62,13 @@ auto Server::route(Args &&...args) -> void {
 auto Server::serve() -> void {
     auto request_handler = [&](std::string_view data) -> std::string {
         Response resp(ResponseType::InternalServerError);
+        bool is_head = false;
 
         if (auto req = Request::encode(data); req.has_value()) {
+            // Is this a HEAD method?
+            if (req->type == RequestType::HEAD) {
+                is_head = true;
+            }
             // Handle middleware
             for (auto handler: this->middlewares) {
                 handler(*req, resp);
@@ -73,7 +78,7 @@ auto Server::serve() -> void {
             for (auto route: this->routes) {
                 if (auto s = this->routes.find(req->path); s != this->routes.end()) {
                     s->second(*req, resp);
-                    return resp.decode();
+                    return resp.decode(is_head);
                 }
             }
         } else if (req.error() == RequestError::Unsupported) {

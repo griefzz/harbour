@@ -12,6 +12,7 @@ enum class ResponseType {
     NotImplemented      = 501
 };
 
+// Convert a ResponseType enum to a string_view
 auto rt2sv(ResponseType type) -> std::string_view {
     switch (type) {
         case ResponseType::Ok:
@@ -27,6 +28,8 @@ auto rt2sv(ResponseType type) -> std::string_view {
     }
 }
 
+// A response to be sent to clients
+// use decode to create a raw buffer to send
 struct Response {
     Response() {}
     Response(ResponseType type) : type(type) {}
@@ -36,15 +39,20 @@ struct Response {
     std::unordered_map<std::string_view, std::string> header;
     std::string content;
 
+    // set the type of our Response
     auto set_type(ResponseType t) { type = t; }
 
+    // set a custom header value
     auto set_header(std::string_view key, std::string_view val) -> void {
         header[key] = val;
     }
 
+    // Set the content for our header
     auto set_content(std::string_view c) -> void { content = c; }
 
-    auto decode() -> std::string {
+    // Decode a response into a raw http header.
+    // If is_head is true, then do not append file content
+    auto decode(bool is_head = false) -> std::string {
         // determine content type
         if (type == ResponseType::Raw) {
             return content;
@@ -67,9 +75,13 @@ struct Response {
         }
 
         if (!content.empty()) {
-            resp += std::format("Content-Length: {}\n\n{}", content.size(),
-                                content);
+            if (is_head) {
+                resp += std::format("Content-Length: {}\n\n", content.size());
+            } else {
+                resp += std::format("Content-Length: {}\n\n{}", content.size(), content);
+            }
         }
+
         return resp;
     }
 };

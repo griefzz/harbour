@@ -8,11 +8,14 @@ enum class RequestError {
     Invalid,
 };
 
-struct Request {
-    enum class RequestType {
-        GET
-    };
+enum class RequestType {
+    GET,
+    HEAD
+};
 
+// A request object recieved from a user
+// use encode to create the Request object type
+struct Request {
     RequestType type;
     std::string_view path;
     std::string_view body;
@@ -29,10 +32,13 @@ auto Request::encode(std::string_view req)
     size_t firstSpacePos = req.find(' ');
     if (firstSpacePos != std::string::npos) {
         auto type = req.substr(0, firstSpacePos);
-        if (type != "GET") {
+        if (type == "GET") {
+            result.type = RequestType::GET;
+        } else if (type == "HEAD") {
+            result.type = RequestType::HEAD;
+        } else {
             return std::unexpected(RequestError::Unsupported);
         }
-        result.type = RequestType::GET;
     } else {
         return std::unexpected(RequestError::Invalid);
     }
