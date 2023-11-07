@@ -4,6 +4,7 @@
 #include <expected>
 
 enum class RequestError {
+    Unsupported,
     Invalid,
 };
 
@@ -23,17 +24,15 @@ struct Request {
 auto Request::encode(std::string_view req)
         -> std::expected<Request, RequestError> {
     Request result;
-    result.body = req;
 
     // Find type
     size_t firstSpacePos = req.find(' ');
     if (firstSpacePos != std::string::npos) {
         auto type = req.substr(0, firstSpacePos);
-        if (type == "GET") {
-            result.type = RequestType::GET;
-        } else {
-            return std::unexpected(RequestError::Invalid);
+        if (type != "GET") {
+            return std::unexpected(RequestError::Unsupported);
         }
+        result.type = RequestType::GET;
     } else {
         return std::unexpected(RequestError::Invalid);
     }
@@ -46,6 +45,9 @@ auto Request::encode(std::string_view req)
     } else {
         return std::unexpected(RequestError::Invalid);
     }
+
+    // Parsed successfully, transfer body to Request
+    result.body = req;
 
     return result;
 }
