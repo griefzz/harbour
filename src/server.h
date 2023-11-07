@@ -28,8 +28,7 @@ auto HttpResponseOk(std::string_view file) -> std::string;
 
 struct HttpRequest {
     enum class HttpRequestType {
-        GET,
-        // Maybe handle POST?
+        GET
     };
 
     HttpRequestType type;
@@ -46,8 +45,7 @@ struct Route {
     Handler handler;
 };
 
-class Server {
-public:
+struct Server {
     Server() : port(80) {}
     Server(uint32_t port) : port(port) {}
 
@@ -60,7 +58,6 @@ public:
     // Serve the http server
     auto serve() -> void;
 
-private:
     // Handler used for serve
     auto request_handler(std::string_view data) -> std::string;
 
@@ -165,3 +162,5 @@ auto Server::serve() -> void {
     auto wrapper = [this](std::string_view v) -> std::string { return this->request_handler(v); };
     start_server(port, wrapper);
 }
+
+static Server server(ServerPort);

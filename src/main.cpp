@@ -16,12 +16,18 @@ auto default_index(const HttpRequest &req) -> std::optional<std::string> {
 
 // Handle requested path
 auto file_server(const HttpRequest &req) -> std::optional<std::string> {
+    // is our request a route?
+    if (auto s = server.routes.find(req.path); s != server.routes.end()) {
+        return {};
+    }
+
     auto path = fs::path(req.path).filename();
     if (auto content = cache[path]; content.has_value()) {
         return HttpResponseOk(content.value());
-    } else {// File not found 404
-        return HttpResponseError();
     }
+
+    // 404 file not found
+    return HttpResponseError();
 }
 
 // Handle test path
@@ -35,7 +41,6 @@ auto echo_handler(const HttpRequest &req) -> std::optional<std::string> {
 }
 
 auto main() -> int {
-    Server server(8080);
     server.middleware(default_index,
                       file_server);
     server.route(

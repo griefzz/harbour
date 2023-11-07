@@ -8,5 +8,8 @@ std::string_view ServerWebPath = "../../web";
 // Name of our server
 std::string_view ServerName = "TestServer";
 
+// Port our server runs on
+constexpr uint32_t ServerPort = 8080;
+
 // Server version
 std::string_view ServerVersion = read_file("../../VERSION").value_or("null");
