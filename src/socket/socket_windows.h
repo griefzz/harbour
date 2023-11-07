@@ -1,12 +1,18 @@
 #pragma once
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include <format>
 #include <iostream>
 #include <functional>
 #include <string>
 #include <string_view>
-#include <winsock2.h>
 
 auto start_server(uint32_t port, const std::function<std::string(std::string_view)> &handler) -> void {
+    SOCKET listenSocket = INVALID_SOCKET;
+    SOCKET clientSocket = INVALID_SOCKET;
+
     // Initialize Winsock
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -14,30 +20,45 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
         return;
     }
 
-    // Create a socket for the server
-    SOCKET listenSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (listenSocket == INVALID_SOCKET) {
-        std::cerr << std::format("Failed to create socket.\n");
+    struct addrinfo *result = NULL;
+    struct addrinfo hints;
+    ZeroMemory(&hints, sizeof(hints));
+    hints.ai_family   = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_flags    = AI_PASSIVE;
+
+    // Resolve the server address and port
+    if (getaddrinfo(NULL, std::to_string(port).c_str(), &hints, &result) != 0) {
+        printf("getaddrinfo failed.");
         WSACleanup();
         return;
     }
 
-    // Bind the socket to an IP address and port
-    sockaddr_in serverAddress;
-    serverAddress.sin_family      = AF_INET;
-    serverAddress.sin_addr.s_addr = INADDR_ANY; // Use any available network interface
-    serverAddress.sin_port        = htons(port);// Port to listen on
+    // Create a SOCKET for the server to listen for client connections.
+    listenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+    if (listenSocket == INVALID_SOCKET) {
+        printf("socket failed with error: %ld\n", WSAGetLastError());
+        freeaddrinfo(result);
+        WSACleanup();
+        return;
+    }
 
-    if (bind(listenSocket, (sockaddr *) &serverAddress, sizeof(serverAddress)) == SOCKET_ERROR) {
-        std::cerr << std::format("Bind failed.\n");
+
+    // Setup the TCP listening socket
+    if (bind(listenSocket, result->ai_addr, (int) result->ai_addrlen) == SOCKET_ERROR) {
+        printf("bind failed with error: %d\n", WSAGetLastError());
+        freeaddrinfo(result);
         closesocket(listenSocket);
         WSACleanup();
         return;
     }
 
+    freeaddrinfo(result);
+
     // Start listening for incoming connections
     if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) {
-        std::cerr << std::format("Listen failed.\n");
+        std::cerr << "Listen failed.\n";
         closesocket(listenSocket);
         WSACleanup();
         return;
@@ -45,16 +66,17 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
 
     std::cout << std::format("Server is listening on port {}...\n", port);
 
-    // Accept an incoming connection
-    sockaddr_in clientAddress;
-    int clientAddressSize = sizeof(clientAddress);
-    SOCKET clientSocket   = accept(listenSocket, (sockaddr *) &clientAddress, &clientAddressSize);
+    // Accept a client socket
+    clientSocket = accept(listenSocket, NULL, NULL);
     if (clientSocket == INVALID_SOCKET) {
-        std::cerr << std::format("Accept failed.\n");
+        printf("accept failed with error: %d\n", WSAGetLastError());
         closesocket(listenSocket);
         WSACleanup();
         return;
     }
+
+    // No longer need server socket
+    //closesocket(listenSocket);
 
     std::cout << "Client connected.\n";
 
@@ -65,7 +87,16 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
         auto bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
         if (bytesRead == 0) {
             std::cerr << "Connection closing...\n";
-            break;
+
+            // Accept a new connection
+            clientSocket = accept(listenSocket, NULL, NULL);
+            if (clientSocket == INVALID_SOCKET) {
+                printf("accept failed with error: %d\n", WSAGetLastError());
+                closesocket(listenSocket);
+                break;
+            }
+
+            continue;
         }
         if (bytesRead < 0) {
             std::cerr << std::format("recv failed\n");
@@ -73,8 +104,6 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
         }
 
         std::string_view request(buffer, bytesRead);
-        std::cout << std::format("Received: {}\n", request);
-
         auto response = handler(request);
 
         auto re = send(clientSocket, response.c_str(), static_cast<int>(response.size()), 0);
@@ -82,13 +111,16 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
             std::cerr << std::format("Connection closed or error in sending data.\n");
             break;
         }
-
-        std::cout << std::format("got: {}\n", re);
     }
 
+    if (shutdown(clientSocket, SD_SEND) == SOCKET_ERROR) {
+        printf("shutdown failed with error: %d\n", WSAGetLastError());
+        closesocket(clientSocket);
+        WSACleanup();
+        return;
+    };
 
     // Close the sockets and clean up
     closesocket(clientSocket);
-    closesocket(listenSocket);
     WSACleanup();
 }
