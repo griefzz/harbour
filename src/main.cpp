@@ -31,8 +31,6 @@ auto file_server(const Request &req, Response &resp) -> void {
     if (auto content = cache[path]; content.has_value()) {
         resp.set_type(ResponseType::Ok);
         resp.set_content(content.value());
-    } else {
-        resp = Response(ResponseType::InternalServerError);
     }
 }
 
