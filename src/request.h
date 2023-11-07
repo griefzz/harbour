@@ -18,7 +18,6 @@ struct Request {
 
     // Create an Request from raw request data
     static auto encode(std::string_view req) -> std::expected<Request, RequestError>;
-    auto decode() -> std::string;// not implemented
 };
 
 auto Request::encode(std::string_view req)
