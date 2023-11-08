@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <unordered_map>
 
+#include "logger.h"
 #include "cache.h"
 #include "request.h"
 #include "response.h"
@@ -62,12 +63,12 @@ auto Server::route(Args &&...args) -> void {
 auto Server::serve() -> void {
     auto request_handler = [&](std::string_view data) -> std::string {
         Response resp(ResponseType::InternalServerError);
-        bool is_head = false;
+        bool no_body = false;
 
         if (auto req = Request::encode(data); req.has_value()) {
             // Is this a HEAD method?
             if (req->type == RequestType::HEAD) {
-                is_head = true;
+                no_body = true;
             }
             // Handle middleware
             for (auto handler: this->middlewares) {
@@ -78,11 +79,14 @@ auto Server::serve() -> void {
             for (auto route: this->routes) {
                 if (auto s = this->routes.find(req->path); s != this->routes.end()) {
                     s->second(*req, resp);
-                    return resp.decode(is_head);
+                    return resp.decode(no_body);
                 }
             }
         } else if (req.error() == RequestError::Unsupported) {
+            Logger::info("User requested an unsupported method");
             resp = Response(ResponseType::NotImplemented);
+        } else if (req.error() == RequestError::Invalid) {
+            Logger::warning(std::format("User sent an invalid request: {}", req->body));
         }
 
         return resp.decode();

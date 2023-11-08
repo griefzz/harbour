@@ -1,6 +1,6 @@
 #pragma once
-#include <print>
 #include <expected>
+#include "logger.h"
 #include "io.h"
 #include "config.h"
 
@@ -14,7 +14,7 @@ public:
         if (auto cache = cache_files(ServerWebPath); cache.has_value()) {
             files = *cache;
         } else {
-            std::print(stderr, "Failed to initialize cache: {}\n", fme_to_string(cache.error()));
+            Logger::error(std::format("Failed to initialize cache: {}\n", fme_to_string(cache.error())));
             abort();
         }
     }

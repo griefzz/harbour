@@ -20,6 +20,10 @@ add_executable("${PROJECT_NAME}" src/main.cpp)
 target_compile_features("${PROJECT_NAME}" PRIVATE cxx_std_23)
 
 if(WIN32)
+    # Disable dumb warnings
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
+    # Link winsock for sockets
     target_link_libraries("${PROJECT_NAME}" wsock32 ws2_32)
 endif()
 

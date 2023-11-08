@@ -1,5 +1,6 @@
 #include "cache.h"// initialize the cache at startup
 #include "server.h"
+#include "logger.h"
 
 // Handle favicons
 auto favicon(const Request &req, Response &resp) -> void {
@@ -15,6 +16,7 @@ auto favicon(const Request &req, Response &resp) -> void {
             resp.set_header("Content-Type", "image/x-icon");
             resp.set_content(content.value());
         } else {
+            Logger::error("Unable to load favicon!");
             resp = Response(ResponseType::InternalServerError);
         }
     }
@@ -47,7 +49,9 @@ auto not_found(const Request &req, Response &resp) -> void {
             resp.set_type(ResponseType::NotFound);
             resp.set_header("Content-Type", "text/html");
             resp.set_content(file.value());
+            Logger::info(std::format("Client got 404: {}", req.path));
         } else {
+            Logger::error("Unable to find 404 page!");
             resp = Response(ResponseType::InternalServerError);
         }
     }
@@ -55,12 +59,13 @@ auto not_found(const Request &req, Response &resp) -> void {
 
 // Handle default index
 auto index_handler(const Request &req, Response &resp) -> void {
-    if (req.path == "/") {
+    if (req.path == fs::path("/")) {
         if (auto index = cache["index.html"]; index.has_value()) {
             resp.set_type(ResponseType::Ok);
             resp.set_header("Content-Type", "text/html");
             resp.set_content(*index);
         } else {
+            Logger::error("Unable to find index page!");
             resp = Response(ResponseType::InternalServerError);
         }
     }
