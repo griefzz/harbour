@@ -1,7 +1,7 @@
 #pragma once
 #include <string_view>
 #include <string>
-#include <expected>
+#include "result.h"
 
 enum class RequestError {
     Unsupported,
@@ -20,11 +20,10 @@ struct Request {
     std::string_view body;
 
     // Create an Request from raw request data
-    static auto encode(std::string_view req) -> std::expected<Request, RequestError>;
+    static auto encode(std::string_view req) -> Result<Request, RequestError>;
 };
 
-auto Request::encode(std::string_view req)
-        -> std::expected<Request, RequestError> {
+auto Request::encode(std::string_view req) -> Result<Request, RequestError> {
     Request result;
 
     result.body = req;
@@ -36,10 +35,10 @@ auto Request::encode(std::string_view req)
         if (type == "GET") {
             result.type = RequestType::GET;
         } else {
-            return std::unexpected(RequestError::Unsupported);
+            return Err(RequestError::Unsupported);
         }
     } else {
-        return std::unexpected(RequestError::Invalid);
+        return Err(RequestError::Invalid);
     }
 
     // Find path
@@ -47,7 +46,7 @@ auto Request::encode(std::string_view req)
     if (second != std::string::npos) {
         result.path = req.substr(first + 1, second - first - 1);
     } else {
-        return std::unexpected(RequestError::Invalid);
+        return Err(RequestError::Invalid);
     }
 
     return result;

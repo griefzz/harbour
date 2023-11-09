@@ -1,8 +1,8 @@
 #pragma once
-#include <expected>
 #include "logger.h"
 #include "io.h"
 #include "config.h"
+#include "result.h"
 
 enum class CacheError {
     NotFound
@@ -23,19 +23,19 @@ public:
     using T   = FileMap::mapped_type;
 
     // returns an error if there isnt a value in the cache
-    auto operator[](const Key &key) -> std::expected<T, CacheError> {
+    auto operator[](const Key &key) -> Result<T, CacheError> {
         if (auto s = files.find(key); s != files.end())
             return s->second;
         else
-            return std::unexpected(CacheError::NotFound);
+            return Err(CacheError::NotFound);
     }
 
     // returns an error if there isnt a value in the cache
-    auto operator[](Key &&key) -> std::expected<T, CacheError> {
+    auto operator[](Key &&key) -> Result<T, CacheError> {
         if (auto s = files.find(key); s != files.end())
             return s->second;
         else
-            return std::unexpected(CacheError::NotFound);
+            return Err(CacheError::NotFound);
     }
 
 private:

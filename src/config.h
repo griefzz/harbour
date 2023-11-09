@@ -3,19 +3,19 @@
 #include "io.h"
 
 // Path to our files to serve
-std::string_view ServerWebPath = "../../web";
+std::string ServerWebPath = "../../web";
 
 // Name of our server
-std::string_view ServerName = "TestServer";
+std::string ServerName = "TestServer";
 
 // Port our server runs on
 constexpr uint32_t ServerPort = 8080;
 
 // Server version
-std::string_view ServerVersion = read_file("../../VERSION").value_or("null");
+std::string ServerVersion = read_file("../../VERSION").value_or("null");
 
 // Accepted MIME Types
-std::vector<std::pair<std::vector<std::string_view>, std::string_view>> ServerAcceptedMimeTypes = {
+std::vector<std::pair<std::vector<std::string>, std::string>> ServerAcceptedMimeTypes = {
         {{".txt", ".text", ".conf", ".log", ".ini"}, "text/plain"},
         {{".html", ".htm"}, "text/html"},
         {{".pdf"}, "application/pdf"},

@@ -1,5 +1,4 @@
 #pragma once
-#include <expected>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -7,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <streambuf>
+#include "result.h"
 
 namespace fs = std::filesystem;
 
@@ -38,29 +38,32 @@ auto fme_to_string(FileMapError error) {
 using FileMap = std::unordered_map<fs::path, std::string>;
 
 // Read the full contents of a file into a std::string
-auto read_file(fs::path p) -> std::expected<std::string, FileMapError> {
-    if (!fs::exists(p)) return std::unexpected(FileMapError::FileNotFound);
-    if (!fs::is_regular_file(p)) return std::unexpected(FileMapError::NotAFile);
+auto read_file(fs::path p) -> Result<std::string, FileMapError> {
+    if (!fs::exists(p)) return Err(FileMapError::FileNotFound);
+    if (!fs::is_regular_file(p)) return Err(FileMapError::NotAFile);
 
     std::ifstream ifs(p);
-    if (!ifs) return std::unexpected(FileMapError::ReadFailed);
+    if (!ifs) return Err(FileMapError::ReadFailed);
 
     using It = std::istreambuf_iterator<char>;
     return std::string(It(ifs), It());
 }
 
 // Cache all files in path
-auto cache_files(fs::path p) -> std::expected<FileMap, FileMapError> {
-    if (!fs::exists(p)) return std::unexpected(FileMapError::FolderNotFound);
-    if (!fs::is_directory(p)) return std::unexpected(FileMapError::NotAFolder);
+auto cache_files(fs::path p) -> Result<FileMap, FileMapError> {
+    if (!fs::exists(p)) return Err(FileMapError::FolderNotFound);
+    if (!fs::is_directory(p)) return Err(FileMapError::NotAFolder);
 
     FileMap files;
-    for (const auto &entry: fs::directory_iterator(p))
-        if (!entry.is_directory())
-            if (const auto content = read_file(entry); content.has_value())
+    for (const auto &entry: fs::directory_iterator(p)) {
+        if (!entry.is_directory()) {
+            if (const auto content = read_file(entry); content.has_value()) {
                 files[entry.path().filename()] = *content;
-            else
-                return std::unexpected(content.error());
+            } else {
+                return Err(content.error());
+            }
+        }
+    }
 
     return files;
 }
