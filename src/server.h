@@ -18,28 +18,47 @@
 #include "server.h"
 #include "socket/socket.h"
 
-using Handler = std::function<void(const Request &, Response &)>;
+struct Server;
+using Handler = std::function<void(Server &ctx, const Request &, Response &)>;
+
+template<typename T>
+concept HandlerConcept = requires(T handler, Server &ctx, const Request &req, Response &res) {
+    { handler(ctx, req, res) } -> std::same_as<void>;
+};
 
 struct Route {
     fs::path path;
     Handler handler;
 };
 
+template<typename T>
+concept RouteConcept = requires(T t) {
+    { t } -> std::same_as<Route>;
+};
+
 struct Server {
     Server() : port(80) {}
     Server(uint32_t port) : port(port) {}
 
-    template<typename... Args>
-    auto middleware(Args &&...args) -> void;
+    // Include middleware in the server
+    template<HandlerConcept... M>
+    auto middleware(M &&...m) -> void;
 
-    template<typename... Args>
-    auto route(Args &&...args) -> void;
+    // Include a route in the server: Route{"/path", Handler}
+    template<typename... R>
+    auto route(R &&...r) -> void;
 
     // Serve the http server
     auto serve() -> void;
 
+    // Determine if a request is a route
+    auto is_route(const Request &req) -> bool;
+
     // Port used for the server
     uint32_t port;
+
+    // File cache
+    Cache cache;
 
     // middlewares for the server
     std::vector<Handler> middlewares;
@@ -48,38 +67,32 @@ struct Server {
     std::unordered_map<fs::path, Handler> routes;
 };
 
-template<typename... Args>
-auto Server::middleware(Args &&...args) -> void {
-    static_assert((std::is_constructible_v<Handler, Args &&> && ...));
-    (middlewares.push_back(std::forward<Args>(args)), ...);
+template<HandlerConcept... M>
+auto Server::middleware(M &&...m) -> void {
+    (middlewares.push_back(std::forward<M>(m)), ...);
 }
 
-template<typename... Args>
-auto Server::route(Args &&...args) -> void {
-    static_assert((std::is_constructible_v<Route, Args &&> && ...));
-    ((routes[args.path] = args.handler), ...);
+template<typename... R>
+auto Server::route(R &&...r) -> void {
+    static_assert((std::is_constructible_v<Route, R &&> && ...));
+    ((routes[r.path] = r.handler), ...);
 }
 
 auto Server::serve() -> void {
     auto request_handler = [&](std::string_view data) -> std::string {
         Response resp(ResponseType::InternalServerError);
-        bool no_body = false;
 
         if (auto req = Request::encode(data); req.has_value()) {
-            // Is this a HEAD method?
-            if (req->type == RequestType::HEAD) {
-                no_body = true;
-            }
             // Handle middleware
             for (auto handler: this->middlewares) {
-                handler(*req, resp);
+                handler(*this, *req, resp);
             }
 
             // Handle routes
             for (auto route: this->routes) {
                 if (auto s = this->routes.find(req->path); s != this->routes.end()) {
-                    s->second(*req, resp);
-                    return resp.decode(no_body);
+                    s->second(*this, *req, resp);
+                    return resp.decode();
                 }
             }
         } else if (req.error() == RequestError::Unsupported) {
@@ -95,4 +108,6 @@ auto Server::serve() -> void {
     start_server(port, request_handler);
 }
 
-static Server server(8080);
+auto Server::is_route(const Request &req) -> bool {
+    return routes.find(req.path) != routes.end();
+}

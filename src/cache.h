@@ -41,6 +41,3 @@ public:
 private:
     FileMap files;
 };
-
-// static cache of our files generated at run-time
-static Cache cache;

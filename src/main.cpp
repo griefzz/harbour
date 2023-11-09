@@ -3,39 +3,28 @@
 #include "logger.h"
 #include "middleware.h"
 
-// Serve our index.html file when requesting /
-auto index_handler(const Request &req, Response &resp) -> void {
-    if (req.path == fs::path("/")) {
-        if (auto index = cache["index.html"]; index.has_value()) {
-            resp.set_type(ResponseType::Ok);
-            resp.set_header("Content-Type", "text/html");
-            resp.set_content(*index);
-        } else {
-            Logger::error("Unable to find index page!");
-            resp = Response(ResponseType::InternalServerError);
-        }
-    }
-}
-
 // Test out a raw response
-auto test_handler(const Request &req, Response &resp) -> void {
+auto TestHandler(Server &ctx, const Request &req, Response &resp) -> void {
     resp.set_type(ResponseType::Raw);
     resp.set_content("oh hey there");
 }
 
 // Echo the clients request back
-auto echo_handler(const Request &req, Response &resp) -> void {
+auto EchoHandler(Server &ctx, const Request &req, Response &resp) -> void {
     resp.set_type(ResponseType::Ok);
     resp.set_header("Content-Type", "text/plain");
     resp.set_content(req.body);
 }
 
 auto main() -> int {
-    server.middleware(file_server, not_found);
+    Server server(8080);
+    server.middleware(Middleware::Logger,
+                      Middleware::FileServer,
+                      Middleware::NotFound,
+                      Middleware::DefaultIndex);
     server.route(
-            Route{"/", index_handler},
-            Route{"/test", test_handler},
-            Route{"/echo", echo_handler});
+            Route{"/test", TestHandler},
+            Route{"/echo", EchoHandler});
     server.serve();
 
     return 0;

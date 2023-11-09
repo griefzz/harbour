@@ -5,11 +5,6 @@
 #include <source_location>
 #include <string>
 
-#define LOGGER_FORMAT(type, time, message, loc)                \
-    std::format("{} {}: {}({}:{}) `{}`: {}\n", (type), (time), \
-                loc.file_name(), loc.line(), loc.column(),     \
-                loc.function_name(), message);
-
 namespace Logger {
     auto current_time() -> std::string {
         auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
@@ -18,15 +13,17 @@ namespace Logger {
         return buffer;
     }
 
-    auto info(const std::string_view message, const std::source_location location = std::source_location::current()) -> void {
-        std::clog << LOGGER_FORMAT("INFO", current_time(), message, location);
+    auto info(const std::string_view message) -> void {
+        std::clog << std::format("{} {}: {}\n", "INFO", current_time(), message);
     }
 
-    auto warning(const std::string_view message, const std::source_location location = std::source_location::current()) -> void {
-        std::clog << LOGGER_FORMAT("WARNING", current_time(), message, location);
+    auto warning(const std::string_view message) -> void {
+        std::clog << std::format("{} {}: {}\n", "WARNING", current_time(), message);
     }
 
     auto error(const std::string_view message, const std::source_location location = std::source_location::current()) -> void {
-        std::clog << LOGGER_FORMAT("ERROR", current_time(), message, location);
+        std::clog << std::format("{} {}: {}({}:{}) `{}`: {}\n", "ERROR", current_time(),
+                                 location.file_name(), location.line(), location.column(),
+                                 location.function_name(), message);
     }
 };// namespace Logger

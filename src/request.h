@@ -9,8 +9,7 @@ enum class RequestError {
 };
 
 enum class RequestType {
-    GET,
-    HEAD
+    GET
 };
 
 // A request object recieved from a user
@@ -31,13 +30,11 @@ auto Request::encode(std::string_view req)
     result.body = req;
 
     // Find type
-    size_t firstSpacePos = req.find(' ');
-    if (firstSpacePos != std::string::npos) {
-        auto type = req.substr(0, firstSpacePos);
+    size_t first = req.find(' ');
+    if (first != std::string::npos) {
+        auto type = req.substr(0, first);
         if (type == "GET") {
             result.type = RequestType::GET;
-        } else if (type == "HEAD") {
-            result.type = RequestType::HEAD;
         } else {
             return std::unexpected(RequestError::Unsupported);
         }
@@ -46,10 +43,9 @@ auto Request::encode(std::string_view req)
     }
 
     // Find path
-    size_t secondSpacePos = req.find(' ', firstSpacePos + 1);
-    if (secondSpacePos != std::string::npos) {
-        result.path =
-                req.substr(firstSpacePos + 1, secondSpacePos - firstSpacePos - 1);
+    size_t second = req.find(' ', first + 1);
+    if (second != std::string::npos) {
+        result.path = req.substr(first + 1, second - first - 1);
     } else {
         return std::unexpected(RequestError::Invalid);
     }

@@ -51,8 +51,7 @@ struct Response {
     auto set_content(std::string_view c) -> void { content = c; }
 
     // Decode a response into a raw http header.
-    // If no_body is true, only transmit the header
-    auto decode(bool no_body = false) -> std::string {
+    auto decode() -> std::string {
         // determine content type
         if (type == ResponseType::Raw) {
             return content;
@@ -75,11 +74,7 @@ struct Response {
         }
 
         if (!content.empty()) {
-            if (no_body) {
-                resp += std::format("Content-Length: {}\n\n", content.size());
-            } else {
-                resp += std::format("Content-Length: {}\n\n{}", content.size(), content);
-            }
+            resp += std::format("Content-Length: {}\n\n{}", content.size(), content);
         }
 
         return resp;
