@@ -4,7 +4,7 @@
 #elif __linux__
     #include "socket_linux.h"
 #elif defined(__APPLE__)
-    #include "socket_mac.h"
+    #include "socket_darwin.h"
 #else
     #error Unsupported OS Architecture
 #endif
