@@ -8,6 +8,8 @@
 #include <functional>
 #include <string>
 #include <string_view>
+#include <format>
+#include "../logger.h"
 
 auto start_server(uint32_t port, const std::function<std::string(std::string_view)> &handler) -> void {
     SOCKET listenSocket = INVALID_SOCKET;
@@ -16,7 +18,7 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
     // Initialize Winsock
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        std::cerr << std::format("WSAStartup failed.");
+        Logger::error(std::format("WSAStartup failed with error: {}\n", WSAGetLastError()));
         return;
     }
 
@@ -30,7 +32,7 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
 
     // Resolve the server address and port
     if (getaddrinfo(NULL, std::to_string(port).c_str(), &hints, &result) != 0) {
-        printf("getaddrinfo failed.");
+        Logger::error(std::format("getaddrinfo failed with error: {}\n", WSAGetLastError()));
         WSACleanup();
         return;
     }
@@ -38,7 +40,7 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
     // Create a SOCKET for the server to listen for client connections.
     listenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
     if (listenSocket == INVALID_SOCKET) {
-        printf("socket failed with error: %ld\n", WSAGetLastError());
+        Logger::error(std::format("socket failed with error: {}\n", WSAGetLastError()));
         freeaddrinfo(result);
         WSACleanup();
         return;
@@ -47,7 +49,7 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
 
     // Setup the TCP listening socket
     if (bind(listenSocket, result->ai_addr, (int) result->ai_addrlen) == SOCKET_ERROR) {
-        printf("bind failed with error: %d\n", WSAGetLastError());
+        Logger::error(std::format("bind failed with error: : {}\n", WSAGetLastError()));
         freeaddrinfo(result);
         closesocket(listenSocket);
         WSACleanup();
@@ -58,27 +60,22 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
 
     // Start listening for incoming connections
     if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) {
-        std::cerr << "Listen failed.\n";
+        Logger::error(std::format("Listen failedwith error: {}\n", WSAGetLastError()));
         closesocket(listenSocket);
         WSACleanup();
         return;
     }
 
-    std::cout << std::format("Server is listening on port {}...\n", port);
+    std::clog << std::format("Server is listening on port {}...\n", port);
 
     // Accept a client socket
     clientSocket = accept(listenSocket, NULL, NULL);
     if (clientSocket == INVALID_SOCKET) {
-        printf("accept failed with error: %d\n", WSAGetLastError());
+        Logger::error(std::format("Accept failed with error: {}\n", WSAGetLastError()));
         closesocket(listenSocket);
         WSACleanup();
         return;
     }
-
-    // No longer need server socket
-    //closesocket(listenSocket);
-
-    std::cout << "Client connected.\n";
 
     // Receive and send data
     char buffer[2048];
@@ -86,39 +83,34 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
     while (true) {
         auto bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
         if (bytesRead == 0) {
-            std::cerr << "Connection closing...\n";
-
+        ACCEPT:
             // Accept a new connection
             clientSocket = accept(listenSocket, NULL, NULL);
             if (clientSocket == INVALID_SOCKET) {
-                printf("Accept failed with error: %d\n", WSAGetLastError());
+                Logger::error(std::format("Accept failed with error: {}\n", WSAGetLastError()));
                 closesocket(listenSocket);
                 break;
             }
-
-            std::cout << "Client connected.\n";
-            continue;
+            continue;// recv the new connection
         }
+
         if (bytesRead < 0) {
-            std::cerr << std::format("recv failed\n");
-            break;
+            Logger::error(std::format("Recv failed with error: {}\n", WSAGetLastError()));
+            goto ACCEPT;
         }
 
         std::string_view request(buffer, bytesRead);
         auto response = handler(request);
 
-        auto re = send(clientSocket, response.c_str(), static_cast<int>(response.size()), 0);
-        if (re == SOCKET_ERROR) {
-            std::cerr << std::format("Connection closed or error in sending data.\n");
-            break;
+        auto result = send(clientSocket, response.c_str(), static_cast<int>(response.size()), 0);
+        if (result == SOCKET_ERROR) {
+            Logger::error(std::format("Connection closed or error in sending data with error: {}\n", WSAGetLastError()));
+            goto ACCEPT;
         }
     }
 
     if (shutdown(clientSocket, SD_SEND) == SOCKET_ERROR) {
-        printf("Shutdown failed with error: %d\n", WSAGetLastError());
-        closesocket(clientSocket);
-        WSACleanup();
-        return;
+        Logger::error(std::format("Shutdown failed with error: %d\n", WSAGetLastError()));
     };
 
     // Close the sockets and clean up
