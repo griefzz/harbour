@@ -10,8 +10,8 @@ public:
 
     const E &error() const & noexcept { return e; }
     E &error() & noexcept { return e; }
-    const E &&error() const && noexcept { return e; }
-    E &&error() && noexcept { return e; }
+    const E &&error() const && noexcept { return std::move(e); }
+    E &&error() && noexcept { return std::move(e); }
 
     const char *what() const noexcept override {
         return "Tried to return a value when Result contains an error";

@@ -55,7 +55,7 @@ auto cache_files(fs::path p) -> Result<FileMap, FileMapError> {
     if (!fs::is_directory(p)) return Err(FileMapError::NotAFolder);
 
     FileMap files;
-    for (const auto &entry: fs::directory_iterator(p)) {
+    for (const auto &entry: fs::recursive_directory_iterator(p)) {
         if (!entry.is_directory()) {
             if (const auto content = read_file(entry); content.has_value()) {
                 files[entry.path().filename()] = *content;

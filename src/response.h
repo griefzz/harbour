@@ -43,9 +43,7 @@ struct Response {
     auto set_type(ResponseType t) { type = t; }
 
     // set a custom header value
-    auto set_header(std::string_view key, std::string_view val) -> void {
-        header[key] = val;
-    }
+    auto set_header(std::string_view key, std::string_view val) -> void { header[key] = val; }
 
     // Set the content for our header
     auto set_content(std::string_view c) -> void { content = c; }
