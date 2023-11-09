@@ -36,4 +36,5 @@ std::vector<std::pair<std::vector<std::string_view>, std::string_view>> ServerAc
         {{".bmp"}, "image/bmp"},
         {{".csv"}, "text/csv"},
         {{".js"}, "application/javascript"},
-        {{".ico"}, "image/x-icon"}};
+        {{".ico"}, "image/x-icon"},
+        {{".svg", ".svgz"}, "image/svg+xml"}};
