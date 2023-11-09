@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>example.html</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://unpkg.com/highlight.js@10.7.2/styles/a11y-dark.css">
+    <script src="https://unpkg.com/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        body,
+        html {
+            padding: 0;
+            margin: auto;
+            font-size: 1.25em;
+            height: 100%;
+            width: 100%;
+            background: #2b2b2b;
+        }
+
+        .breadcrumb {
+            font-size: 0.7em;
+            color: gray;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="breadcrumb">
+        /<a href="/src/">src</a>/<a href="/src/socket.h">socket.h</a>
+        <hr>
+    </div>
+    <pre><code class="language-cpp">
+#pragma once
+#include &lt;exception&gt;
+#include &lt;type_traits&gt;
+#include &lt;variant>
+
+template&lt;class E&gt;
+class bad_expected_access : public std::exception {
+public:
+    explicit bad_expected_access(E e) : e(e) {}
+
+    const E &error() const & noexcept { return e; }
+    E &error() & noexcept { return e; }
+    const E &&error() const && noexcept { return std::move(e); }
+    E &&error() && noexcept { return std::move(e); }
+
+    const char *what() const noexcept override {
+        return "Tried to return a value when Result contains an error";
+    }
+
+private:
+    E e;
+};
+    </code></pre>
+</body>
+
+</html>
