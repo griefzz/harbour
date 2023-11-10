@@ -1,5 +1,4 @@
 #include "server.h"
-#include "logger.h"
 #include "middleware.h"
 #include "handlers.h"
 

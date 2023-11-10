@@ -54,6 +54,7 @@ struct Response {
         if (type == ResponseType::Raw) {
             return content;
         }
+
         if (type == ResponseType::InternalServerError) {
             set_header("Content-Type", "text/plain");
             set_content("Internal Server Error: The server encountered an "
@@ -64,6 +65,8 @@ struct Response {
             set_content("Not Implemented: The server does not implement the "
                         "requested method.");
         }
+
+        set_header("Server", ServerName + '/' + ServerVersion);
 
         std::string resp;
         resp += std::format("HTTP/1.1 {}\n", rt2sv(type));

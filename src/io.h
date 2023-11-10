@@ -89,7 +89,6 @@ auto create_source_index(std::vector<fs::path> src_list) -> std::string {
                          "\"https://cdn.jsdelivr.net/npm/marked/marked.min.js\"></script><script>table = `\n";
 
     std::string index;
-    index += "Source code\n===========\n";
     for (auto &path: src_list) {
         auto p = path.string();
         std::size_t pos;
