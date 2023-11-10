@@ -83,7 +83,7 @@ auto create_source_index(std::vector<fs::path> src_list) -> std::string {
                          "name=\"viewport\" content=\"width=device-width,initial-scale=1\"><style>body,html{p"
                          "adding:0;margin:auto;font-size:1.1em;height:100%;width:100%;background:#2b2b2b;colo"
                          "r:gray}.breadcrumb{font-size:.7em;color:gray}</style></head><body><div class=\"brea"
-                         "dcrumb\"><a href=\"/src/\">Home</a><hr></div><div id=\"content\"></div><script src="
+                         "dcrumb\"><a href=\"/\">Home</a><hr></div><div id=\"content\"></div><script src="
                          "\"https://cdn.jsdelivr.net/npm/marked/marked.min.js\"></script><script>table = `\n";
     std::string index;
 
