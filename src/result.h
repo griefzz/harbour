@@ -2,6 +2,9 @@
 #include <exception>
 #include <type_traits>
 #include <variant>
+#include <string>
+
+using namespace std::string_literals;
 
 template<class E>
 class bad_expected_access : public std::exception {
@@ -36,7 +39,7 @@ private:
     E e;
 };
 
-template<class T, class E>
+template<class T, class E = std::string>
 class Result {
     std::variant<T, E> data;
 

@@ -16,8 +16,8 @@ enum class RequestType {
 // use encode to create the Request object type
 struct Request {
     RequestType type;
-    std::string_view path;
-    std::string_view body;
+    std::string path;
+    std::string body;
 
     // Create an Request from raw request data
     static auto encode(std::string_view req) -> Result<Request, RequestError>;
