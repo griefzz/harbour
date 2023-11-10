@@ -6,14 +6,14 @@ git pull
 
 if [ $? -ne 0 ]; then
     rm -rf build
-    mkdir build && cd build
-    cmake .. -C Release -GNinja
-    ninja
+    mkdir build
+    cmake .. -D build -C Release -GNinja
+    ninja -C build
 
     if pgrep "$PROGRAM_NAME" > /dev/null; then
        pkill "$PROGRAM_NAME"
        sleep 2
     fi
-    
-    ./Release/$PROGRAM_NAME
+
+    ./build/Release/$PROGRAM_NAME
 fi
