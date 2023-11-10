@@ -47,11 +47,11 @@ struct Server {
     template<typename... R>
     auto route(R &&...r) -> void;
 
-    // Serve the http server
-    auto serve() -> void;
-
     // Determine if a request is a route
     auto is_route(const Request &req) -> bool;
+
+    // Serve the http server
+    auto serve() -> void;
 
     // Port used for the server
     uint32_t port;
@@ -77,23 +77,19 @@ auto Server::route(R &&...r) -> void {
     ((routes[r.path] = r.handler), ...);
 }
 
+auto Server::is_route(const Request &req) -> bool {
+    return routes.find(req.path) != routes.end();
+}
+
 auto Server::serve() -> void {
     auto request_handler = [&](std::string_view data) -> std::string {
         Response resp(ResponseType::InternalServerError);
 
-        if (auto req = Request::encode(data); req.has_value()) {
-            // Handle middleware
-            for (auto handler: this->middlewares) {
-                handler(*this, *req, resp);
-            }
-
-            // Handle routes
-            for (auto route: this->routes) {
-                if (auto s = this->routes.find(req->path); s != this->routes.end()) {
-                    s->second(*this, *req, resp);
-                    return resp.decode();
-                }
-            }
+        // We decode the request and pass it to our middleware
+        // Then we determine if its a route and apply the route handler to the resp
+        if (auto req = Request::encode(data)) {
+            for (auto handler: middlewares) { handler(*this, *req, resp); }
+            if (is_route(*req)) { routes[req->path](*this, *req, resp); }
         } else if (req.error() == RequestError::Unsupported) {
             Logger::info("User requested an unsupported method");
             resp = Response(ResponseType::NotImplemented);
@@ -105,8 +101,4 @@ auto Server::serve() -> void {
     };
 
     start_server(port, request_handler);
-}
-
-auto Server::is_route(const Request &req) -> bool {
-    return routes.find(req.path) != routes.end();
 }

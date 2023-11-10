@@ -1,7 +1,7 @@
-#include "cache.h"// initialize the cache at startup
 #include "server.h"
 #include "logger.h"
 #include "middleware.h"
+#include "handlers.h"
 
 // Test out a raw response
 auto TestHandler(Server &ctx, const Request &req, Response &resp) -> void {
@@ -18,7 +18,7 @@ auto EchoHandler(Server &ctx, const Request &req, Response &resp) -> void {
 
 // Display our source code index
 auto SrcIndexHandler(Server &ctx, const Request &req, Response &resp) -> void {
-    if (auto index = ctx.cache["src/index.html"]) {
+    if (auto index = ctx.cache["/src/index.html"]) {
         resp.set_type(ResponseType::Ok);
         resp.set_header("Content-Type", "text/html");
         resp.set_content(*index);
@@ -37,7 +37,8 @@ auto main() -> int {
             Route{"/test", TestHandler},
             Route{"/echo", EchoHandler},
             Route{"/src", SrcIndexHandler},
-            Route{"/src/", SrcIndexHandler});
+            Route{"/src/", SrcIndexHandler},
+            Route{"/awd", Handlers::ServeFile("/a.html")});
     server.serve();
 
     return 0;

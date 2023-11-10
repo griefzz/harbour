@@ -95,7 +95,7 @@ auto create_source_index(std::vector<fs::path> src_list) -> std::string {
         std::size_t pos;
         while ((pos = p.find("\\")) != std::string::npos)
             p.replace(pos, 1, "/");
-        index += std::format("- [{}]({})\n", p, "/" + p);
+        index += std::format("- [{}]({})\n", p, p);
     }
 
     auto footer = "`;\ndocument.getElementById('content').innerHTML = marked.parse(table);</script></body></html>";
@@ -117,7 +117,8 @@ auto cache_files(fs::path web_path, fs::path src_path) -> Result<FileMap, FileMa
         if (!entry.is_directory()) {
             if (const auto content = read_file(entry); content.has_value()) {
                 // trim off the actual path to the directory
-                auto rel   = fs::relative(entry.path(), fs::path(web_path));
+                auto rel = fs::path("/");
+                rel += fs::relative(entry.path(), fs::path(web_path));
                 files[rel] = *content;
             } else {
                 return Err(content.error());
@@ -130,7 +131,8 @@ auto cache_files(fs::path web_path, fs::path src_path) -> Result<FileMap, FileMa
     for (const auto &entry: fs::recursive_directory_iterator(src_path)) {
         if (!entry.is_directory()) {
             if (const auto content = read_file(entry); content.has_value()) {
-                fs::path rel = "src/" + fs::relative(entry.path(), fs::path(src_path)).string();
+                auto rel = fs::path("/");
+                rel += "src/" + fs::relative(entry.path(), fs::path(src_path)).string();
                 src_list.emplace_back(rel);
                 files[rel] = create_source_file(rel, *content);
             } else {
@@ -139,7 +141,7 @@ auto cache_files(fs::path web_path, fs::path src_path) -> Result<FileMap, FileMa
         }
     }
 
-    files["src/index.html"] = create_source_index(src_list);
+    files["/src/index.html"] = create_source_index(src_list);
 
     return files;
 }

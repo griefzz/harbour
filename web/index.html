@@ -56,8 +56,9 @@
                         </div>
                         <div
                             class="text-emerald-200 text-sm leading-5 rounded bg-black self-stretch w-full mt-4 pl-4 pr-20 py-5 max-md:pr-5">
+                            $ brew install cmake ninja clang</p>
                             $ mkdir build && cd build</p>
-                            $ cmake .. & make
+                            $ cmake --config Release && ninja
                         </div>
                         <div class="text-neutral-600 text-center text-sm leading-5 self-center whitespace-nowrap mt-3">
                             Windows
@@ -65,15 +66,16 @@
                         <div
                             class="text-emerald-200 text-sm leading-5 rounded bg-black self-stretch w-full mt-5 pl-4 pr-20 py-6 max-md:pr-5">
                             $ mkdir build && cd build</p>
-                            $ cmake .. & msbuild server.vcproj
+                            $ cmake .. && msbuild server.vcproj
                         </div>
                         <div class="text-neutral-600 text-center text-sm leading-5 self-center whitespace-nowrap mt-3">
                             Linux
                         </div>
                         <div
                             class="text-emerald-200 text-sm leading-5 rounded bg-black self-stretch w-full grow mt-4 pl-4 pr-20 py-5 max-md:pr-5">
+                            $ sudo apt install cmake build-essential ninja clang</p>
                             $ mkdir build && cd build</p>
-                            $ cmake .. & make
+                            $ cmake --config Release && ninja
                         </div>
                     </div>
                 </div>
