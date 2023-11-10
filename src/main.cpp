@@ -16,6 +16,17 @@ auto EchoHandler(Server &ctx, const Request &req, Response &resp) -> void {
     resp.set_content(req.body);
 }
 
+// Display our source code index
+auto SrcIndexHandler(Server &ctx, const Request &req, Response &resp) -> void {
+    if (auto index = ctx.cache["src/index.html"]) {
+        resp.set_type(ResponseType::Ok);
+        resp.set_header("Content-Type", "text/html");
+        resp.set_content(*index);
+    } else {
+        resp = Response(ResponseType::InternalServerError);
+    }
+}
+
 auto main() -> int {
     Server server(8080);
     server.middleware(Middleware::Logger,
@@ -24,7 +35,9 @@ auto main() -> int {
                       Middleware::DefaultIndex);
     server.route(
             Route{"/test", TestHandler},
-            Route{"/echo", EchoHandler});
+            Route{"/echo", EchoHandler},
+            Route{"/src", SrcIndexHandler},
+            Route{"/src/", SrcIndexHandler});
     server.serve();
 
     return 0;

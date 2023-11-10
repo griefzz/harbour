@@ -210,7 +210,7 @@ struct sender_reciever {
         auto message  = std::string_view(per_io_data->sdata, per_io_data->bytes_read);
         auto response = handler(message);
         WSABUF wsa_buf;
-        wsa_buf.len = response.size();
+        wsa_buf.len = static_cast<ULONG>(response.size());
         wsa_buf.buf = response.data();
 
         unsigned int flags = 0;

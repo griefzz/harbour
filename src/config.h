@@ -5,6 +5,9 @@
 // Path to our files to serve
 std::string ServerWebPath = "../../web";
 
+// Path to our source code
+std::string ServerSrcPath = "../../src";
+
 // Name of our server
 std::string ServerName = "TestServer";
 
@@ -37,4 +40,5 @@ std::vector<std::pair<std::vector<std::string>, std::string>> ServerAcceptedMime
         {{".csv"}, "text/csv"},
         {{".js"}, "application/javascript"},
         {{".ico"}, "image/x-icon"},
-        {{".svg", ".svgz"}, "image/svg+xml"}};
+        {{".svg", ".svgz"}, "image/svg+xml"},
+        {{".c", ".cpp", ".h", ".hpp"}, "text/html"}};

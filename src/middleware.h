@@ -50,8 +50,9 @@ namespace Middleware {
             return {};// Extension not found
         };
 
-        // this needs to be a little better with relative pathing, doesnt work recusively yet
-        auto path = fs::path(req.path).filename();
+        // this really needs some testing and fuzzing to make sure its safe or even a good idea
+        // we replace the begining slash since fs::path wont match foo/bar with /foo/bar
+        fs::path path = req.path.starts_with("/") ? req.path.substr(1, req.path.size() - 1) : req.path;
         if (auto content = ctx.cache[path]; content.has_value()) {
             auto ext = fs::path(req.path).extension().string();
             if (auto mime = get_mime_type(ext)) {
@@ -72,7 +73,9 @@ namespace Middleware {
             return;
         }
 
-        auto path = fs::path(req.path).filename();
+        // this really needs some testing and fuzzing to make sure its safe or even a good idea
+        // we replace the begining slash since fs::path wont match foo/bar with /foo/bar
+        fs::path path = req.path.starts_with("/") ? req.path.substr(1, req.path.size() - 1) : req.path;
         if (auto content = ctx.cache[path]; !content.has_value()) {
             if (auto file = ctx.cache["404.html"]; file.has_value()) {
                 resp.set_type(ResponseType::NotFound);
