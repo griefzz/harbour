@@ -117,7 +117,7 @@ struct sender_reciever {
             }
 
             if (bytes_read == 0 && (type == State::Read || type == State::Write)) {
-                Logger::info("Accepted and closed");
+                //Logger::info("Accepted and closed");
                 closesocket(sock_data->socket);
                 free(sock_data);
                 free(per_io_data);
@@ -125,7 +125,7 @@ struct sender_reciever {
             }
 
             if (type == State::Accept) {
-                Logger::info(std::format("New con: {}\n", sock_data->socket));
+                //Logger::info(std::format("New con: {}\n", sock_data->socket));
                 accept_con(listener);
                 HANDLE read_port = CreateIoCompletionPort((HANDLE) sock_data->socket, comp_port, (ULONG_PTR) sock_data, 0);
                 rec_data(sock_data);
@@ -133,7 +133,7 @@ struct sender_reciever {
             }
 
             if (type == State::Read) {
-                Logger::info(std::format("Received data to {}\n", (int) sock_data->socket));
+                //Logger::info(std::format("Received data to {}\n", (int) sock_data->socket));
 
                 per_io_data->bytes_read = bytes_read;
                 char *sdata             = (char *) malloc(sizeof(char) * bytes_read + 1);

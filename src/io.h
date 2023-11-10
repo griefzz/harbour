@@ -51,13 +51,14 @@ auto read_file(fs::path p) -> Result<std::string, FileMapError> {
 }
 
 auto create_source_file(fs::path path, std::string_view data) -> std::string {
-    // replace characters that interfere with the rendered html
+    // replace characters '<' and '>' that interfere with the rendered html
     std::string escaped(data.begin(), data.end());
     std::size_t pos;
     while ((pos = escaped.find("<")) != std::string::npos)
         escaped.replace(pos, 1, "&lt;");
     while ((pos = escaped.find(">")) != std::string::npos)
         escaped.replace(pos, 1, "&gt;");
+
     std::string header = "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>" + path.string() +
                          "</title>"
                          "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><link r"
@@ -73,6 +74,7 @@ auto create_source_file(fs::path path, std::string_view data) -> std::string {
                          "lid #ccc;vertical-align:top;padding-right:5px}.hljs-ln-code{padding-left:10px}"
                          "</style></head><body><div class=\"breadcrumb\"><a href=\"/src/\">Back</a>- " +
                          path.string() + "<hr></div><pre><code class=\"language-cpp\">";
+
     std::string footer = "</code></pre></body></html>";
 
     return header + escaped + footer;
@@ -85,8 +87,8 @@ auto create_source_index(std::vector<fs::path> src_list) -> std::string {
                          "r:gray}.breadcrumb{font-size:.7em;color:gray}</style></head><body><div class=\"brea"
                          "dcrumb\"><a href=\"/\">Home</a><hr></div><div id=\"content\"></div><script src="
                          "\"https://cdn.jsdelivr.net/npm/marked/marked.min.js\"></script><script>table = `\n";
-    std::string index;
 
+    std::string index;
     index += "Source code\n===========\n";
     for (auto &path: src_list) {
         auto p = path.string();
@@ -95,6 +97,7 @@ auto create_source_index(std::vector<fs::path> src_list) -> std::string {
             p.replace(pos, 1, "/");
         index += std::format("- [{}]({})\n", p, "/" + p);
     }
+
     auto footer = "`;\ndocument.getElementById('content').innerHTML = marked.parse(table);</script></body></html>";
 
     return header + index + footer;
@@ -102,11 +105,8 @@ auto create_source_index(std::vector<fs::path> src_list) -> std::string {
 
 // Cache all files in path
 auto cache_files(fs::path web_path, fs::path src_path) -> Result<FileMap, FileMapError> {
-    fs::path posix_path("a/b/c");
-    posix_path.make_preferred();
     if (!fs::exists(web_path)) return Err(FileMapError::FolderNotFound);
     if (!fs::is_directory(web_path)) return Err(FileMapError::NotAFolder);
-
     if (!fs::exists(src_path)) return Err(FileMapError::FolderNotFound);
     if (!fs::is_directory(src_path)) return Err(FileMapError::NotAFolder);
 
@@ -125,8 +125,7 @@ auto cache_files(fs::path web_path, fs::path src_path) -> Result<FileMap, FileMa
         }
     }
 
-
-    // Cache our web files
+    // Cache and create our source code files
     std::vector<fs::path> src_list;
     for (const auto &entry: fs::recursive_directory_iterator(src_path)) {
         if (!entry.is_directory()) {
