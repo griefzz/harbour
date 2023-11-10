@@ -80,10 +80,10 @@ auto main() -> int {
 
 This will launch the server and listen on port 80 for connections. This isnt very useful though since we dont have any handlers or middleware to do anything with the connections.
 
-All middleware and handlers have the same api
+All middleware and handlers have the same api:
 
 ```cpp
-auto handler(Server &ctx, const Request &req, Response &resp) -> void;
+auto func(Server &ctx, const Request &req, Response &resp) -> void;
 ```
 
 The Request type holds information about a clients request and the Response type holds what we wish to send to the client. 
@@ -145,9 +145,9 @@ Serving index files is *also* a very common task so there's middleware that will
 
 auto main() -> {
     Server server(80);
-    server.middleware(Middleware::Logger, // Log every request to console
+    server.middleware(Middleware::Logger,       // Log every request to console
                       Middleware::DefaultIndex, // Attempt to serve an index.html
-                      MiddleWare::FileServer); // Serve all files stored in our cache     
+                      MiddleWare::FileServer);  // Serve all files stored in our cache     
     server.serve();
 }
 ```
