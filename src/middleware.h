@@ -1,11 +1,6 @@
 #pragma once
-#include <optional>
 #include <string_view>
-#include "config.h"
-#include "cache.h"
 #include "server.h"
-#include "logger.h"
-#include "config.h"
 
 namespace Middleware {
     // Log all connections to the server
@@ -40,14 +35,14 @@ namespace Middleware {
         }
 
         // Get the mime type to use, return empty if its not in our accepted list
-        auto get_mime_type = [](const std::string_view ext) -> std::optional<std::string_view> {
+        auto get_mime_type = [](const std::string_view ext) -> Result<std::string_view> {
             for (const auto &mimes: ServerAcceptedMimeTypes) {
                 const auto &extensions = mimes.first;
                 if (std::find(extensions.begin(), extensions.end(), ext) != extensions.end()) {
                     return mimes.second;
                 }
             }
-            return {};
+            return Err(std::format("Client requested invalid extension: {}", ext));
         };
 
         if (auto content = ctx.cache[req.path]) {
@@ -58,7 +53,7 @@ namespace Middleware {
                 resp.set_content(*content);
             } else {
                 // Mime type was not accepted
-                Logger::warning(std::format("Client requested invalid extension: {}", ext));
+                Logger::warning(mime.error());
                 resp = Response(ResponseType::InternalServerError);
             }
         }

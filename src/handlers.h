@@ -6,14 +6,14 @@ namespace Handlers {
         constexpr explicit ServeFile(std::filesystem::path path) : path(path) {}
         auto operator()(Server &ctx, const Request &req, Response &resp) -> void {
             // Get the mime type to use, return empty if its not in our accepted list
-            auto get_mime_type = [](const std::string_view ext) -> std::optional<std::string_view> {
+            auto get_mime_type = [](const std::string_view ext) -> Result<std::string_view> {
                 for (const auto &mimes: ServerAcceptedMimeTypes) {
                     const auto &extensions = mimes.first;
                     if (std::find(extensions.begin(), extensions.end(), ext) != extensions.end()) {
                         return mimes.second;
                     }
                 }
-                return {};
+                return Err(std::format("Client requested invalid extension: {}", ext));
             };
 
             if (auto cached = ctx.cache[path]) {
@@ -27,7 +27,7 @@ namespace Handlers {
                         resp.set_header("Content-Type", *mime);
                         resp.set_content(*disk);
                     } else {
-                        Logger::error("Invalid mime type for file");
+                        Logger::error(mime.error());
                         resp = Response(ResponseType::InternalServerError);
                     }
 
@@ -40,4 +40,4 @@ namespace Handlers {
 
         std::filesystem::path path;
     };
-};// namespace Handler
+};// namespace Handlers

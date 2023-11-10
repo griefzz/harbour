@@ -41,51 +41,53 @@ private:
 
 template<class T, class E = std::string>
 class Result {
-    std::variant<T, E> data;
+    bool err;
+    T t;
+    E e;
 
 public:
     ///
-    constexpr explicit Result(const T &v) : data(v) {}
-    constexpr explicit Result(const E &v) : data(v) {}
+    constexpr explicit Result(const T &v) : t(v) {}
+    constexpr explicit Result(const E &v) : e(v) {}
 
     template<class U = T>
-    constexpr explicit(!std::is_convertible_v<U, T>) Result(U &&v) : data(v) {}
+    constexpr explicit(!std::is_convertible_v<U, T>) Result(U &&v) : t(v), err(false) {}
 
     template<class G>
     constexpr explicit(!std::is_convertible_v<const G &, E>)
-            Result(const Err<G> &e) : data(e.error()) {}
+            Result(const Err<G> &e) : e(e.error()), err(true) {}
 
     template<class G>
     constexpr explicit(!std::is_convertible_v<G, E>)
-            Result(Err<G> &&e) : data(e.error()) {}
+            Result(Err<G> &&e) : e(e.error()), err(true) {}
 
     ///
-    constexpr bool has_value() const noexcept { return std::holds_alternative<T>(data); }
+    constexpr bool has_value() const noexcept { return !err; }
     constexpr explicit operator bool() const noexcept { return has_value(); }
 
     ///
     constexpr T &value() & {
         if (!has_value())
             throw bad_expected_access<std::decay_t<E>>(error());
-        return std::get<T>(data);
+        return t;
     }
     constexpr const T &value() const & { return value(); }
     constexpr T &&value() && { return std::move(value()); }
     constexpr const T &&value() const && { return std::move(value()); }
 
     ///
-    constexpr const E &error() const & noexcept { return std::get<E>(data); }
-    constexpr E &error() & noexcept { return std::get<E>(data); }
-    constexpr const E &&error() const && noexcept { return std::move(std::get<E>(data)); }
-    constexpr E &&error() && noexcept { return std::move(std::get<E>(data)); }
+    constexpr const E &error() const & noexcept { return e; }
+    constexpr E &error() & noexcept { return e; }
+    constexpr const E &&error() const && noexcept { return std::move(e); }
+    constexpr E &&error() && noexcept { return std::move(e); }
 
     ///
-    constexpr const T *operator->() const noexcept { return &std::get<T>(data); }
-    constexpr T *operator->() noexcept { return &std::get<T>(data); }
-    constexpr const T &operator*() const & noexcept { return std::get<T>(data); }
-    constexpr T &operator*() & noexcept { return std::get<T>(data); }
-    constexpr const T &&operator*() const && noexcept { return std::move(std::get<T>(data)); }
-    constexpr T &&operator*() && noexcept { return std::move(std::get<T>(data)); }
+    constexpr const T *operator->() const noexcept { return &t; }
+    constexpr T *operator->() noexcept { return &t; }
+    constexpr const T &operator*() const & noexcept { return t; }
+    constexpr T &operator*() & noexcept { return t; }
+    constexpr const T &&operator*() const && noexcept { return std::move(t); }
+    constexpr T &&operator*() && noexcept { return std::move(t); }
 
     ///
     template<class U>
