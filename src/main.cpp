@@ -39,7 +39,7 @@ auto main() -> int {
             Route{"/echo", EchoHandler},
             Route{"/src", SrcIndexHandler},
             Route{"/src/", SrcIndexHandler},
-            Route{"/awd", Handlers::ServeFile("/a.html")});
+            Route{"/awd", Handlers::ServeFile("/index.html")});
     server.serve();
 
     return 0;
