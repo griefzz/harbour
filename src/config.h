@@ -2,11 +2,19 @@
 #include <string_view>
 #include "io.h"
 
+// Fixup for relative pathing
+#if _WIN32
+std::string ServerRelPath = "../../";
+#else
+std::string ServerRelPath = "../";
+#endif
+
+
 // Path to our files to serve
-std::string ServerWebPath = "../web";
+std::string ServerWebPath = ServerRelPath + "web";
 
 // Path to our source code
-std::string ServerSrcPath = "../src";
+std::string ServerSrcPath = ServerRelPath + "src";
 
 // Name of our server
 std::string ServerName = "TestServer";
@@ -15,7 +23,7 @@ std::string ServerName = "TestServer";
 constexpr uint32_t ServerPort = 8080;
 
 // Server version
-std::string ServerVersion = read_file("../VERSION").value_or("null");
+std::string ServerVersion = read_file(ServerRelPath + "VERSION").value_or("null");
 
 // Accepted MIME Types
 std::vector<std::pair<std::vector<std::string>, std::string>> ServerAcceptedMimeTypes = {
