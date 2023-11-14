@@ -26,7 +26,7 @@ You'll need a recent C++ compiler to actual compile the code. Ninja is used here
 #### Linux
 
 ```bash
-sudo apt install cmake git build-essential ninja
+sudo apt install cmake git clang ninja
 ```
 
 #### Windows
