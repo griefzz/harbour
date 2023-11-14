@@ -47,7 +47,7 @@ brew install cmake git clang
 #### Linux & Mac
 
 ```bash
-git clone https://github.com/griefzz/griefzspace
+git clone https://github.com/griefzz/footman
 chmod u+x deploy.sh
 ./deploy.sh
 ```
@@ -55,7 +55,7 @@ chmod u+x deploy.sh
 #### Windows
 
 ```bash
-git clone https://github.com/griefzz/griefzspace
+git clone https://github.com/griefzz/footman
 mkdir build && cd build
 cmake ..
 # Build the .vcproj file
