@@ -1,4 +1,4 @@
-# Footman
+# Harbour
 
 A C++ webserver and personal website hosting its own source code.
 
@@ -47,7 +47,7 @@ brew install cmake git clang
 #### Linux & Mac
 
 ```bash
-git clone https://github.com/griefzz/footman
+git clone https://github.com/griefzz/harbour
 chmod u+x deploy.sh
 ./deploy.sh
 ```
@@ -55,7 +55,7 @@ chmod u+x deploy.sh
 #### Windows
 
 ```bash
-git clone https://github.com/griefzz/footman
+git clone https://github.com/griefzz/harbour
 mkdir build && cd build
 cmake ..
 # Build the .vcproj file
