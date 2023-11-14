@@ -7,11 +7,11 @@ namespace base64 {
             "abcdefghijklmnopqrstuvwxyz"
             "0123456789+/";
 
-    bool is_base64(unsigned char c) {
+    auto is_base64(unsigned char c) noexcept -> bool {
         return (isalnum(c) || (c == '+') || (c == '/'));
     }
 
-    std::string encode(const std::string &input) {
+    auto encode(const std::string &input) noexcept -> std::string {
         std::string encoded;
         unsigned char input3[3];
         unsigned char output4[4];
@@ -56,7 +56,7 @@ namespace base64 {
         return encoded;
     }
 
-    std::string decode(const std::string &input) {
+    auto decode(const std::string &input) noexcept -> std::string {
         std::string decoded;
         size_t in_len = input.size();
         int i         = 0;

@@ -49,18 +49,18 @@ struct Response {
     std::string content;
 
     // set the type of our Response
-    auto set_type(ResponseType t) { type = t; }
+    auto set_type(ResponseType t) noexcept { type = t; }
 
     // set a custom header value
-    auto set_header(std::string_view key, std::string_view val) -> void { header[key] = val; }
+    auto set_header(std::string_view key, std::string_view val) noexcept -> void { header[key] = val; }
 
-    auto operator[](std::string_view key) -> std::string & { return header[key]; }
+    auto operator[](std::string_view key) noexcept -> std::string & { return header[key]; }
 
     // Set the content for our header
-    auto set_content(std::string_view c) -> void { content = c; }
+    auto set_content(std::string_view c) noexcept -> void { content = c; }
 
     // Decode a response into a raw http header.
-    auto decode() -> std::string {
+    auto decode() noexcept -> std::string {
         // determine content type
         if (type == ResponseType::Raw) {
             return content;

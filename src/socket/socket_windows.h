@@ -159,7 +159,7 @@ struct sender_reciever {
         }
     }
 
-    int accept_con(SOCKET listener) {
+    auto accept_con(SOCKET listener) noexcept -> int {
         SOCKET accept        = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
         SOCK_DATA *sock_data = (SOCK_DATA *) malloc(sizeof(SOCK_DATA));
         sock_data->socket    = accept;
@@ -179,7 +179,7 @@ struct sender_reciever {
         return 1;
     }
 
-    int rec_data(SOCK_DATA *sock_data) {
+    auto rec_data(SOCK_DATA *sock_data) noexcept -> int {
         PER_IO_DATA *per_io_data = (PER_IO_DATA *) malloc(sizeof(PER_IO_DATA));
         per_io_data->socket      = sock_data->socket;
         ZeroMemory(&(per_io_data->overlapped), sizeof(OVERLAPPED));
@@ -203,7 +203,7 @@ struct sender_reciever {
         return 1;
     }
 
-    int send_data(SOCK_DATA *sock_data, PER_IO_DATA *per_io_data) {
+    auto send_data(SOCK_DATA *sock_data, PER_IO_DATA *per_io_data) noexcept -> int {
         ZeroMemory(&(per_io_data->overlapped), sizeof(OVERLAPPED));
         per_io_data->type = State::Write;
 
@@ -234,6 +234,6 @@ struct sender_reciever {
     std::function<std::string(std::string_view)> handler;
 };
 
-auto start_server(uint32_t port, const std::function<std::string(std::string_view)> &handler) -> void {
+auto start_server(uint32_t port, const std::function<std::string(std::string_view)> &handler) noexcept -> void {
     sender_reciever sender(port, handler);
 }

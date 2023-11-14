@@ -4,12 +4,12 @@
 
 namespace Middleware {
     // Log all connections to the server
-    auto Logger(Server &ctx, const Request &req, Response &resp) -> void {
+    auto Logger(Server &ctx, const Request &req, Response &resp) noexcept -> void {
         Logger::info(req.path);
     }
 
     // Serve an index.html if it exists for any path ending in /
-    auto DefaultIndex(Server &ctx, const Request &req, Response &resp) -> void {
+    auto DefaultIndex(Server &ctx, const Request &req, Response &resp) noexcept -> void {
         // if our path ends in / and it isnt a route, serve that dirs index.html
         if (req.path.ends_with("/") && !ctx.is_route(req)) {
             if (auto index = ctx.cache[req.path + "index.html"]) {
@@ -26,7 +26,7 @@ namespace Middleware {
     // Serve any arbitrary file stored in our cache
     // If the file doesnt exist or its not a supported mime type
     // Return an InternalServerError
-    auto FileServer(Server &ctx, const Request &req, Response &resp) -> void {
+    auto FileServer(Server &ctx, const Request &req, Response &resp) noexcept -> void {
         // Get the mime type to use, return empty if its not in our accepted list
         auto get_mime_type = [](const std::string_view ext) -> Result<std::string_view> {
             for (const auto &mimes: ServerAcceptedMimeTypes) {
@@ -54,7 +54,7 @@ namespace Middleware {
     }
 
     // Handle file not found
-    auto NotFound(Server &ctx, const Request &req, Response &resp) -> void {
+    auto NotFound(Server &ctx, const Request &req, Response &resp) noexcept -> void {
         // If the path doesnt exist and isnt a route, serve our 404 page
         if (!ctx.cache[req.path].has_value() && !ctx.is_route(req)) {
             if (auto file = ctx.cache["/404.html"]) {

@@ -36,17 +36,17 @@ struct Server {
 
     // Include middleware in the server
     template<HandlerConcept... M>
-    auto middleware(M &&...m) -> void;
+    auto middleware(M &&...m) noexcept -> void;
 
     // Include a route in the server: Route{"/path", Handler}
     template<typename... R>
-    auto route(R &&...r) -> void;
+    auto route(R &&...r) noexcept -> void;
 
     // Determine if a requests path is a route
-    auto is_route(const Request &req) -> bool;
+    auto is_route(const Request &req) noexcept -> bool;
 
     // Serve the http server
-    auto serve() -> void;
+    auto serve() noexcept -> void;
 
     // Port used for the server
     uint32_t port;
@@ -62,21 +62,21 @@ struct Server {
 };
 
 template<HandlerConcept... M>
-auto Server::middleware(M &&...m) -> void {
+auto Server::middleware(M &&...m) noexcept -> void {
     (middlewares.push_back(std::forward<M>(m)), ...);
 }
 
 template<typename... R>
-auto Server::route(R &&...r) -> void {
+auto Server::route(R &&...r) noexcept -> void {
     static_assert((std::is_constructible_v<Route, R &&> && ...));
     ((routes[r.path] = r.handler), ...);
 }
 
-auto Server::is_route(const Request &req) -> bool {
+auto Server::is_route(const Request &req) noexcept -> bool {
     return routes.contains(req.path);
 }
 
-auto Server::serve() -> void {
+auto Server::serve() noexcept -> void {
     auto request_handler = [&](std::string_view data) -> std::string {
         Response resp(ResponseType::InternalServerError);
 

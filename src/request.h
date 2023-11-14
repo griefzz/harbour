@@ -32,7 +32,7 @@ struct Request {
     std::string body;
 
     // Get the specified header value from key if it exists
-    auto get_header(const std::string &key) const -> std::optional<std::string> {
+    auto get_header(const std::string &key) const noexcept -> std::optional<std::string> {
         if (auto value = headers.find(key); value != headers.end()) {
             return value->second;
         } else {
@@ -41,10 +41,10 @@ struct Request {
     }
 
     // Convenience overload for get_header()
-    auto operator[](const std::string &key) const -> std::optional<std::string> { return get_header(key); }
+    auto operator[](const std::string &key) const noexcept -> std::optional<std::string> { return get_header(key); }
 
     // Create an Request from raw request data
-    static auto encode(std::string_view req) -> Result<Request, RequestError> {
+    static auto encode(std::string_view req) noexcept -> Result<Request, RequestError> {
         // dont accept requests larger than 10kB
         if (req.size() > 1024 * 10) {
             return Err(RequestError::Invalid);

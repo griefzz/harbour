@@ -23,7 +23,7 @@ public:
     using T   = FileMap::mapped_type;
 
     // returns an error if there isnt a value in the cache
-    auto operator[](const Key &key) -> Result<T, CacheError> {
+    auto operator[](const Key &key) noexcept -> Result<T, CacheError> {
         if (auto s = files.find(key); s != files.end())
             return s->second;
         else
@@ -31,7 +31,7 @@ public:
     }
 
     // returns an error if there isnt a value in the cache
-    auto operator[](Key &&key) -> Result<T, CacheError> {
+    auto operator[](Key &&key) noexcept -> Result<T, CacheError> {
         if (auto s = files.find(key); s != files.end())
             return s->second;
         else

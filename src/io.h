@@ -39,7 +39,7 @@ auto fme_to_string(FileMapError error) {
 using FileMap = std::unordered_map<fs::path, std::string>;
 
 // Read the full contents of a file into a std::string
-auto read_file(fs::path p) -> Result<std::string, FileMapError> {
+auto read_file(fs::path p) noexcept -> Result<std::string, FileMapError> {
     if (!fs::exists(p)) return Err(FileMapError::FileNotFound);
     if (!fs::is_regular_file(p)) return Err(FileMapError::NotAFile);
 
@@ -50,7 +50,7 @@ auto read_file(fs::path p) -> Result<std::string, FileMapError> {
     return std::string(It(ifs), It());
 }
 
-auto create_source_file(fs::path path, std::string_view data) -> std::string {
+auto create_source_file(fs::path path, std::string_view data) noexcept -> std::string {
     // replace characters '<' and '>' that interfere with the rendered html
     std::string escaped(data.begin(), data.end());
     std::size_t pos;
@@ -80,7 +80,7 @@ auto create_source_file(fs::path path, std::string_view data) -> std::string {
     return header + escaped + footer;
 }
 
-auto create_source_index(std::vector<fs::path> src_list) -> std::string {
+auto create_source_index(std::vector<fs::path> src_list) noexcept -> std::string {
     std::string header = "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>Source Code</title><meta"
                          "name=\"viewport\" content=\"width=device-width,initial-scale=1\"><style>body,html{p"
                          "adding:0;margin:auto;font-size:1.1em;height:100%;width:100%;background:#2b2b2b;colo"
@@ -103,7 +103,7 @@ auto create_source_index(std::vector<fs::path> src_list) -> std::string {
 }
 
 // Cache all files in path
-auto cache_files(fs::path web_path, fs::path src_path) -> Result<FileMap, FileMapError> {
+auto cache_files(fs::path web_path, fs::path src_path) noexcept -> Result<FileMap, FileMapError> {
     if (!fs::exists(web_path)) return Err(FileMapError::FolderNotFound);
     if (!fs::is_directory(web_path)) return Err(FileMapError::NotAFolder);
     if (!fs::exists(src_path)) return Err(FileMapError::FolderNotFound);

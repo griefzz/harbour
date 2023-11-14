@@ -11,7 +11,7 @@
 
 constexpr int MAX_EVENTS = 10000;
 
-auto start_server(uint32_t port, const std::function<std::string(std::string_view)> &handler) -> void {
+auto start_server(uint32_t port, const std::function<std::string(std::string_view)> &handler) noexcept -> void {
     // Create a socket
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket == -1) {

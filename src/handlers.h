@@ -5,7 +5,7 @@ namespace Handlers {
     // Serve a file either from cache or from disk if not stored
     struct ServeFile {
         explicit ServeFile(std::filesystem::path path) : path(path) {}
-        auto operator()(Server &ctx, const Request &req, Response &resp) -> void {
+        auto operator()(Server &ctx, const Request &req, Response &resp) noexcept -> void {
             // Get the mime type to use, return empty if its not in our accepted list
             auto get_mime_type = [](const std::string_view ext) -> Result<std::string_view> {
                 for (const auto &mimes: ServerAcceptedMimeTypes) {
@@ -46,7 +46,7 @@ namespace Handlers {
         // Require authentication to access the route of this handler
         // key should be of the form username:password
         explicit RequireAuth(const std::string &key, Handler handler) : key(base64::encode(key)), handler(handler) {}
-        auto operator()(Server &ctx, const Request &req, Response &resp) -> void {
+        auto operator()(Server &ctx, const Request &req, Response &resp) noexcept -> void {
             if (req["Authorization"] == "Basic " + key) {
                 handler(ctx, req, resp);
             } else {
