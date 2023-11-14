@@ -1,6 +1,6 @@
-#include "server.h"
-#include "middleware.h"
-#include "handlers.h"
+#include "server.hpp"
+#include "middleware.hpp"
+#include "handlers.hpp"
 
 // Test out a raw response
 auto TestHandler(Server &ctx, const Request &req, Response &resp) -> void {

@@ -66,7 +66,7 @@ cmake ..
 Using the server as a library is also very straight forward.
 
 ```cpp
-#include "server.h"
+#include "server.hpp"
 
 auto main() -> int {
     Server server(80);
@@ -106,7 +106,7 @@ auto IndexHandler(Server &ctx, const Request &req, Response &resp) -> void {
 Now you can add a new Route to the webserver to handle this path
 
 ```cpp
-#include "server.h"
+#include "server.hpp"
 
 auto main() -> int {
     Server server(80);
@@ -122,8 +122,8 @@ auto main() -> int {
 This is a very common task so theres a Handler that can do this for you.
 
 ```cpp
-#include "server.h"
-#include "handlers.h"
+#include "server.hpp"
+#include "handlers.hpp"
 
 auto main() -> int {
     Server server(80);
@@ -139,8 +139,8 @@ auto main() -> int {
 Serving index files is *also* a very common task so there's middleware that will automatically serve up index files for all directories that arent declared routes.
 
 ```cpp
-#include "server.h"
-#include "middleware.h"
+#include "server.hpp"
+#include "middleware.hpp"
 
 auto main() -> {
     Server server(80);
