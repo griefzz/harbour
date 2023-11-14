@@ -9,7 +9,6 @@ std::string ServerRelPath = "../../";
 std::string ServerRelPath = "../";
 #endif
 
-
 // Path to our files to serve
 std::string ServerWebPath = ServerRelPath + "web";
 
