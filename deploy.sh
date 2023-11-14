@@ -4,7 +4,7 @@ NAME="server"
 
 git pull
 
-if [ $? -ne 1 ]; then
+if [ $? -ne 0 ]; then
     rm -rf build
     mkdir build
     cd build 
