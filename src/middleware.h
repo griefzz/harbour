@@ -8,13 +8,10 @@ namespace Middleware {
         Logger::info(req.path);
     }
 
-    // Serve an index.html fif it exists for any path ending in /
+    // Serve an index.html if it exists for any path ending in /
     auto DefaultIndex(Server &ctx, const Request &req, Response &resp) -> void {
-        if (ctx.is_route(req)) {
-            return;
-        }
-
-        if (req.path.ends_with("/")) {
+        // if our path ends in / and it isnt a route, serve that dirs index.html
+        if (req.path.ends_with("/") && !ctx.is_route(req)) {
             if (auto index = ctx.cache[req.path + "index.html"]) {
                 resp.set_type(ResponseType::Ok);
                 resp.set_header("Content-Type", "text/html");
@@ -30,10 +27,6 @@ namespace Middleware {
     // If the file doesnt exist or its not a supported mime type
     // Return an InternalServerError
     auto FileServer(Server &ctx, const Request &req, Response &resp) -> void {
-        if (ctx.is_route(req)) {
-            return;
-        }
-
         // Get the mime type to use, return empty if its not in our accepted list
         auto get_mime_type = [](const std::string_view ext) -> Result<std::string_view> {
             for (const auto &mimes: ServerAcceptedMimeTypes) {
@@ -45,7 +38,8 @@ namespace Middleware {
             return Err(std::format("Client requested invalid extension: {}", ext));
         };
 
-        if (auto content = ctx.cache[req.path]) {
+        // If our path exists and isnt a route serve the requested file
+        if (auto content = ctx.cache[req.path]; !ctx.is_route(req)) {
             auto ext = fs::path(req.path).extension().string();
             if (auto mime = get_mime_type(ext)) {
                 resp.set_type(ResponseType::Ok);
@@ -61,11 +55,8 @@ namespace Middleware {
 
     // Handle file not found
     auto NotFound(Server &ctx, const Request &req, Response &resp) -> void {
-        if (ctx.is_route(req)) {
-            return;
-        }
-
-        if (auto content = ctx.cache[req.path]; !content.has_value()) {
+        // If the path doesnt exist and isnt a route, serve our 404 page
+        if (auto content = ctx.cache[req.path]; !content.has_value() && !ctx.is_route(req)) {
             if (auto file = ctx.cache["/404.html"]) {
                 resp.set_type(ResponseType::NotFound);
                 resp.set_header("Content-Type", "text/html");
