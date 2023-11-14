@@ -30,6 +30,9 @@ struct Route {
     Handler handler;
 };
 
+template<typename T>
+concept RouteConcept = std::is_same_v<T, Route>;
+
 struct Server {
     Server() : port(80) {}
     Server(uint32_t port) : port(port) {}
@@ -39,7 +42,7 @@ struct Server {
     auto middleware(M &&...m) noexcept -> void;
 
     // Include a route in the server: Route{"/path", Handler}
-    template<typename... R>
+    template<RouteConcept... R>
     auto route(R &&...r) noexcept -> void;
 
     // Determine if a requests path is a route
@@ -66,9 +69,8 @@ auto Server::middleware(M &&...m) noexcept -> void {
     (middlewares.push_back(std::forward<M>(m)), ...);
 }
 
-template<typename... R>
+template<RouteConcept... R>
 auto Server::route(R &&...r) noexcept -> void {
-    static_assert((std::is_constructible_v<Route, R &&> && ...));
     ((routes[r.path] = r.handler), ...);
 }
 
