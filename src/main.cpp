@@ -38,7 +38,8 @@ auto main() -> int {
             Route{"/test", TestHandler},
             Route{"/echo", EchoHandler},
             Route{"/src", SrcIndexHandler},
-            Route{"/src/", SrcIndexHandler});
+            Route{"/src/", SrcIndexHandler},
+            Route{"/auth", Handlers::RequireAuth("admin:admin", Handlers::ServeFile("/index.html"))});
     server.serve();
 
     return 0;

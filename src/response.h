@@ -8,6 +8,7 @@
 enum class ResponseType {
     Raw                 = 0,
     Ok                  = 200,
+    Unauthorized        = 401,
     NotFound            = 404,
     InternalServerError = 500,
     NotImplemented      = 501
@@ -18,6 +19,8 @@ auto rt2sv(ResponseType type) -> std::string_view {
     switch (type) {
         case ResponseType::Ok:
             return "200 OK";
+        case ResponseType::Unauthorized:
+            return "401 Unauthorized";
         case ResponseType::NotFound:
             return "404 Not Found";
         case ResponseType::InternalServerError:
@@ -68,10 +71,15 @@ struct Response {
             set_content("Internal Server Error: The server encountered an "
                         "unexpected condition.");
         }
+
         if (type == ResponseType::NotImplemented) {
             set_header("Content-Type", "text/plain");
             set_content("Not Implemented: The server does not implement the "
                         "requested method.");
+        }
+
+        if (type == ResponseType::Unauthorized) {
+            set_header("WWW-Authenticate", "Basic realm=\"Access to staging site\"");
         }
 
         set_header("Server", ServerName + '/' + ServerVersion);

@@ -87,6 +87,12 @@ struct Request {
                 value.erase(0, value.find_first_not_of(" \t"));
                 value.erase(value.find_last_not_of(" \t") + 1);
 
+                // strip all newline characters
+                value.erase(std::remove_if(value.begin(), value.end(), [](char c) {
+                                return c == '\r' || c == '\n';
+                            }),
+                            value.end());
+
                 request.headers[key] = value;
             }
         }

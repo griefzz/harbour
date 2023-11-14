@@ -1,4 +1,5 @@
 #include "server.h"
+#include "base64.h"
 
 namespace Handlers {
     // Serve a file either from cache or from disk if not stored
@@ -40,4 +41,20 @@ namespace Handlers {
 
         std::filesystem::path path;
     };
-};// namespace Handlers
+
+    struct RequireAuth {
+        // Require authentication to access the route of this handler
+        // key should be of the form username:password
+        explicit RequireAuth(const std::string &key, Handler handler) : key(base64::encode(key)), handler(handler) {}
+        auto operator()(Server &ctx, const Request &req, Response &resp) -> void {
+            if (req["Authorization"] == "Basic " + key) {
+                handler(ctx, req, resp);
+            } else {
+                resp = Response(ResponseType::Unauthorized);
+            }
+        }
+
+        std::string key;
+        Handler handler;
+    };
+}// namespace Handlers

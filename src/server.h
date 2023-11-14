@@ -73,7 +73,7 @@ auto Server::route(R &&...r) -> void {
 }
 
 auto Server::is_route(const Request &req) -> bool {
-    return routes.find(req.path) != routes.end();
+    return routes.contains(req.path);
 }
 
 auto Server::serve() -> void {
