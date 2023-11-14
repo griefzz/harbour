@@ -1,6 +1,6 @@
-# Griefz Space
+# Footman
 
-A C++ webserver and personal website.
+A C++ webserver and personal website hosting its own source code.
 
 ## Table of Contents
 - [Overview](#overview)
