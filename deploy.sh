@@ -4,10 +4,11 @@ NAME="server.exe"
 
 git pull
 
-if [ $? -ne 0 ]; then
+if [ $? -ne 1 ]; then
     rm -rf build
     mkdir build
-    cmake -D build -C Release -GNinja
+    cd build 
+    cmake .. -C Release -GNinja
     ninja -C build
 
     if pgrep "$NAME" > /dev/null; then
