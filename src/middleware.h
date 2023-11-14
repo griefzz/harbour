@@ -56,7 +56,7 @@ namespace Middleware {
     // Handle file not found
     auto NotFound(Server &ctx, const Request &req, Response &resp) -> void {
         // If the path doesnt exist and isnt a route, serve our 404 page
-        if (auto content = ctx.cache[req.path]; !content.has_value() && !ctx.is_route(req)) {
+        if (!ctx.cache[req.path].has_value() && !ctx.is_route(req)) {
             if (auto file = ctx.cache["/404.html"]) {
                 resp.set_type(ResponseType::NotFound);
                 resp.set_header("Content-Type", "text/html");
