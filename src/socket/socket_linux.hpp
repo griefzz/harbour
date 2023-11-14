@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <sys/epoll.h>
 
-#include "../logger.h"
+#include "../logger.hpp"
 
 constexpr int MAX_EVENTS = 10000;
 

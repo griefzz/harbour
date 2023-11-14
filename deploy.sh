@@ -1,20 +1,20 @@
 #!/bin/bash
 
-NAME="server.exe"
+NAME="server"
 
 git pull
 
-if [ $? -ne 0 ]; then
+if [ $? -ne 1 ]; then
     rm -rf build
     mkdir build
     cd build 
-    cmake .. -C Release -GNinja
-    ninja -C build
+    cmake .. -DCMAKE_BUILD_TYPE=Release -GNinja
+    ninja
 
     if pgrep "$NAME" > /dev/null; then
        pkill "$NAME"
        sleep 2
     fi
 
-    ./build/Release/$NAME
+    ./$NAME
 fi
