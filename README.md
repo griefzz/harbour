@@ -10,8 +10,6 @@ A C++ webserver and personal website.
 - [Usage](#usage)
 - [Features](#features)
 - [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
 
 ## Overview
 
@@ -96,6 +94,7 @@ auto IndexHandler(Server &ctx, const Request &req, Response &resp) -> void {
     if (auto index = ctx.cache["/index.html"]) {
         resp.set_type(ResponseType::Ok);
         resp.set_header("Content-Type", "text/html");
+        // or like this resp["Content-Type"] = "text/html";
         resp.set_content(*index);
     } else {
         // if the cached file doesnt exist, send an Internal Server Error reponse
@@ -147,7 +146,7 @@ auto main() -> {
     Server server(80);
     server.middleware(Middleware::Logger,       // Log every request to console
                       Middleware::DefaultIndex, // Attempt to serve an index.html
-                      MiddleWare::FileServer);  // Serve all files stored in our cache     
+                      MiddleWare::FileServer);  // Serve all files stored in our cache   
     server.serve();
 }
 ```

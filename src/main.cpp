@@ -19,8 +19,10 @@ auto EchoHandler(Server &ctx, const Request &req, Response &resp) -> void {
 auto SrcIndexHandler(Server &ctx, const Request &req, Response &resp) -> void {
     if (auto index = ctx.cache["/src/index.html"]) {
         resp.set_type(ResponseType::Ok);
-        resp.set_header("Content-Type", "text/html");
+        //resp.set_header("Content-Type", "text/html");
+        resp["Content-Type"] = "text/html";
         resp.set_content(*index);
+        if (auto v = req["Host"]) Logger::info(std::format("Host: {}\n", *v));
     } else {
         resp = Response(ResponseType::InternalServerError);
     }

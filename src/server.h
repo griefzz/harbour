@@ -30,11 +30,6 @@ struct Route {
     Handler handler;
 };
 
-template<typename T>
-concept RouteConcept = requires(T t) {
-    { t } -> std::same_as<Route>;
-};
-
 struct Server {
     Server() : port(80) {}
     Server(uint32_t port) : port(port) {}
@@ -47,7 +42,7 @@ struct Server {
     template<typename... R>
     auto route(R &&...r) -> void;
 
-    // Determine if a request is a route
+    // Determine if a requests path is a route
     auto is_route(const Request &req) -> bool;
 
     // Serve the http server

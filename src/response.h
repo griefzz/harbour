@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <format>
+#include "config.h"
 
 enum class ResponseType {
     Raw                 = 0,
@@ -35,8 +36,13 @@ struct Response {
     Response(ResponseType type) : type(type) {}
     Response(ResponseType type, std::string_view content) : type(type), content(content) {}
 
+    // Response type 200, 404 etc
     ResponseType type;
+
+    // Key value store for all HTTP response header values
     std::unordered_map<std::string_view, std::string> header;
+
+    // Optional content to send to the client
     std::string content;
 
     // set the type of our Response
@@ -44,6 +50,8 @@ struct Response {
 
     // set a custom header value
     auto set_header(std::string_view key, std::string_view val) -> void { header[key] = val; }
+
+    auto operator[](std::string_view key) -> std::string & { return header[key]; }
 
     // Set the content for our header
     auto set_content(std::string_view c) -> void { content = c; }
