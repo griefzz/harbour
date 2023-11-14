@@ -3,7 +3,7 @@
 namespace Handlers {
     // Serve a file either from cache or from disk if not stored
     struct ServeFile {
-        constexpr explicit ServeFile(std::filesystem::path path) : path(path) {}
+        explicit ServeFile(std::filesystem::path path) : path(path) {}
         auto operator()(Server &ctx, const Request &req, Response &resp) -> void {
             // Get the mime type to use, return empty if its not in our accepted list
             auto get_mime_type = [](const std::string_view ext) -> Result<std::string_view> {

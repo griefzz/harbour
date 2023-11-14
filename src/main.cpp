@@ -35,11 +35,11 @@ auto main() -> int {
                       Middleware::NotFound,
                       Middleware::DefaultIndex);
     server.route(
+            Route{"/", Handlers::ServeFile("/index.html")},
             Route{"/test", TestHandler},
             Route{"/echo", EchoHandler},
             Route{"/src", SrcIndexHandler},
-            Route{"/src/", SrcIndexHandler},
-            Route{"/awd", Handlers::ServeFile("/index.html")});
+            Route{"/src/", SrcIndexHandler});
     server.serve();
 
     return 0;
