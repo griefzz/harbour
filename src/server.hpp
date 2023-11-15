@@ -14,7 +14,6 @@
 #include "request.hpp"
 #include "response.hpp"
 #include "config.hpp"
-#include "server.hpp"
 #include "socket/socket.hpp"
 
 struct Server;
