@@ -75,6 +75,7 @@ namespace Middleware {
     }
 
 #if SERVER_ENABLE_COMPRESSION
+    // Enable brotli compression
     auto Compression(Server &ctx, const Request &req, Response &resp) -> void {
         if (auto encoding = req["Accept-Encoding"]) {
             if (encoding->find("br") != std::string::npos) {
@@ -90,7 +91,6 @@ namespace Middleware {
                                 reinterpret_cast<const uint8_t *>(resp.content.c_str()),
                                 &max_compressed_size,
                                 reinterpret_cast<uint8_t *>(&compressed[0]))) {
-                        resp.set_type(ResponseType::Ok);
                         resp.set_header("Content-Encoding", "br");
                         resp.set_content(compressed);
                     } else {
