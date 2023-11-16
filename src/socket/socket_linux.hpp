@@ -19,6 +19,19 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
         return;
     }
 
+    int reuse = 1;
+    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (const char *) &reuse, sizeof(reuse)) < 0) {
+        Logger::error("setsockopt(SO_REUSEADDR) failed");
+        close(server_socket);
+        return;
+    }
+
+    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEPORT, (const char *) &reuse, sizeof(reuse)) < 0) {
+        Logger::error("setsockopt(SO_REUSEPORT) failed");
+        close(server_socket);
+        return;
+    }
+
     // Set up the server address structure
     sockaddr_in server_address{};
     server_address.sin_family      = AF_INET;
