@@ -1,6 +1,11 @@
 #pragma once
 #include <string_view>
+#include "config.hpp"
 #include "server.hpp"
+
+#if SERVER_ENABLE_COMPRESSION
+    #include <brotli/encode.h>
+#endif
 
 namespace Middleware {
     // Log all connections to the server
@@ -39,7 +44,7 @@ namespace Middleware {
         };
 
         // If our path exists and isnt a route serve the requested file
-        if (auto content = ctx.cache[req.path]; !ctx.is_route(req)) {
+        if (auto content = ctx.cache[req.path]; !ctx.is_route(req) && !req.path.ends_with("/")) {
             auto ext = fs::path(req.path).extension().string();
             if (auto mime = get_mime_type(ext)) {
                 resp.set_type(ResponseType::Ok);
@@ -56,7 +61,7 @@ namespace Middleware {
     // Handle file not found
     auto NotFound(Server &ctx, const Request &req, Response &resp) noexcept -> void {
         // If the path doesnt exist and isnt a route, serve our 404 page
-        if (!ctx.cache[req.path].has_value() && !ctx.is_route(req)) {
+        if (!ctx.cache[req.path] && !ctx.cache[req.path + "index.html"] && !ctx.is_route(req)) {
             if (auto file = ctx.cache["/404.html"]) {
                 resp.set_type(ResponseType::NotFound);
                 resp.set_header("Content-Type", "text/html");
@@ -68,4 +73,34 @@ namespace Middleware {
             }
         }
     }
+
+#if SERVER_ENABLE_COMPRESSION
+    auto Compression(Server &ctx, const Request &req, Response &resp) -> void {
+        if (auto encoding = req["Accept-Encoding"]) {
+            if (encoding->find("br") != std::string::npos) {
+                if (!resp.content.empty()) {
+                    std::string compressed;
+                    size_t max_compressed_size = BrotliEncoderMaxCompressedSize(resp.content.size());
+                    compressed.resize(max_compressed_size);
+                    if (BrotliEncoderCompress(
+                                BROTLI_DEFAULT_QUALITY,
+                                BROTLI_DEFAULT_WINDOW,
+                                BROTLI_MODE_GENERIC,
+                                resp.content.size(),
+                                reinterpret_cast<const uint8_t *>(resp.content.c_str()),
+                                &max_compressed_size,
+                                reinterpret_cast<uint8_t *>(&compressed[0]))) {
+                        resp.set_type(ResponseType::Ok);
+                        resp.set_header("Content-Encoding", "br");
+                        resp.set_content(compressed);
+                    } else {
+                        // Compression failure
+                        Logger::error("Brotli compression failed\n");
+                        resp = Response(ResponseType::InternalServerError);
+                    }
+                }
+            }
+        }
+    }
+#endif
 }// namespace Middleware

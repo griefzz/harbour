@@ -6,6 +6,9 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/epoll.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 
 #include "../logger.hpp"
 
@@ -28,6 +31,13 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
 
     if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEPORT, (const char *) &reuse, sizeof(reuse)) < 0) {
         Logger::error("setsockopt(SO_REUSEPORT) failed");
+        close(server_socket);
+        return;
+    }
+
+    int quickack = 1;
+    if (setsockopt(server_socket, IPPROTO_TCP, TCP_QUICKACK, (const char *) &quickack, sizeof(quickack)) < 0) {
+        Logger::error("setsockopt(TCP_QUICKACK) failed");
         close(server_socket);
         return;
     }

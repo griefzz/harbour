@@ -21,3 +21,16 @@ if(WIN32)
     # Link winsock for sockets
     target_link_libraries("${PROJECT_NAME}" wsock32 ws2_32)
 endif()
+
+# Include brotli compression when not on windows
+if (NOT WIN32)
+    include(FetchContent)
+    FetchContent_Declare(
+        Brotli
+        GIT_REPOSITORY https://github.com/google/brotli
+        GIT_TAG master
+    )
+    FetchContent_MakeAvailable(Brotli)
+
+    target_link_libraries("${PROJECT_NAME}" ${BROTLI_LIBRARIES})
+endif()

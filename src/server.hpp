@@ -84,8 +84,8 @@ auto Server::serve() noexcept -> void {
         // We decode the request and pass it to our middleware
         // Then we determine if its a route and apply the route handler to the resp
         if (auto req = Request::encode(data)) {
-            for (auto handler: middlewares) { handler(*this, *req, resp); }
             if (is_route(*req)) { routes[req->path](*this, *req, resp); }
+            for (auto handler: middlewares) { handler(*this, *req, resp); }
         } else if (req.error() == RequestError::Unsupported) {
             Logger::info("User requested an unsupported method");
             resp = Response(ResponseType::NotImplemented);

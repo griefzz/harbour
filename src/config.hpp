@@ -2,6 +2,13 @@
 #include <string_view>
 #include "io.hpp"
 
+// Enable compression when on linux
+#if _WIN32
+    #define SERVER_ENABLE_COMPRESSION false
+#else
+    #define SERVER_ENABLE_COMPRESSION true
+#endif
+
 // Fixup for relative pathing
 #if _WIN32
 std::string ServerRelPath = "../../";
