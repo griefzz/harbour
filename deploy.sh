@@ -16,5 +16,5 @@ if [ $? -ne 0 ]; then
        sleep 2
     fi
 
-    ./$NAME
+    ./$NAME 2>&1 | tee -a log.txt
 fi
