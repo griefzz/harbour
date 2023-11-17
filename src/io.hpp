@@ -7,6 +7,10 @@
 #include <iostream>
 #include <streambuf>
 #include <algorithm>
+#if !defined(_WIN32)
+    #include <sys/stat.h>
+    #include <ctime>
+#endif
 #include "result.hpp"
 
 namespace fs = std::filesystem;
@@ -50,6 +54,24 @@ auto read_file(fs::path p) noexcept -> Result<std::string, FileMapError> {
     return std::string(It(ifs), It());
 }
 
+std::string last_modified(const std::string &path) {
+#if _WIN32
+    return "";
+#else
+    struct stat result;
+    auto rp = ".." + path;
+    if (stat(rp.c_str(), &result) == 0) {
+        std::time_t modTime = result.st_mtime;
+        char buffer[11];// "YYYY-MM-DD\0"
+        std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", std::localtime(&modTime));
+        return buffer;
+    } else {
+        Logger::error("Error getting file stat.\n");
+        return "";
+    }
+#endif
+}
+
 auto create_source_file(fs::path path, std::string_view data) noexcept -> std::string {
     // replace characters '<' and '>' that interfere with the rendered html
     std::string escaped(data.begin(), data.end());
@@ -89,7 +111,7 @@ auto create_source_index(std::vector<fs::path> src_list) noexcept -> std::string
 
     constexpr std::string_view source_file_format = "<div class=\"body-bg border border-gray-700 flex items-center justify-between mb-0 p-2\""
                                                     "><a href={}><p class=\"text-sm hover:text-blue-400 hover:underline\">{}</p></a><p class="
-                                                    "\"text-sm text-gray-400\">2023-11-16</div>";
+                                                    "\"text-sm text-gray-400\">{}</div>";
 
     std::string index;
     for (auto &path: src_list) {
@@ -97,7 +119,7 @@ auto create_source_index(std::vector<fs::path> src_list) noexcept -> std::string
         std::size_t pos;
         while ((pos = p.find("\\")) != std::string::npos)
             p.replace(pos, 1, "/");
-        index += std::format(source_file_format, p, p);
+        index += std::format(source_file_format, p, p, last_modified(p));
     }
 
     auto footer = "</div></div></body></html>";
