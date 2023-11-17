@@ -54,7 +54,7 @@ auto read_file(fs::path p) noexcept -> Result<std::string, FileMapError> {
     return std::string(It(ifs), It());
 }
 
-std::string last_modified(const std::string &path) {
+auto last_modified(const std::string &path) -> std::string {
 #if _WIN32
     return "";
 #else
