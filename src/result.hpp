@@ -76,9 +76,21 @@ public:
             throw bad_expected_access<std::decay_t<E>>(error());
         return t;
     }
-    constexpr const T &value() const & { return value(); }
-    constexpr T &&value() && { return std::move(value()); }
-    constexpr const T &&value() const && { return std::move(value()); }
+    constexpr const T &value() const & {
+        if (!has_value())
+            throw bad_expected_access<std::decay_t<E>>(error());
+        return t;
+    }
+    constexpr T &&value() && {
+        if (!has_value())
+            throw bad_expected_access<std::decay_t<E>>(error());
+        return std::move(t);
+    }
+    constexpr const T &&value() const && {
+        if (!has_value())
+            throw bad_expected_access<std::decay_t<E>>(error());
+        return std::move(t);
+    }
 
     ///
     constexpr E &error() & {
@@ -86,9 +98,21 @@ public:
             throw bad_expected_access<std::decay_t<T>>(value());
         return e;
     }
-    constexpr const E &error() const & { return error(); }
-    constexpr const E &&error() const && { return std::move(error()); }
-    constexpr E &&error() && { return std::move(error()); }
+    constexpr const E &error() const & {
+        if (has_value())
+            throw bad_expected_access<std::decay_t<T>>(value());
+        return e;
+    }
+    constexpr E &&error() && {
+        if (has_value())
+            throw bad_expected_access<std::decay_t<T>>(value());
+        return std::move(e);
+    }
+    constexpr const E &&error() const && {
+        if (has_value())
+            throw bad_expected_access<std::decay_t<T>>(value());
+        return std::move(e);
+    }
 
     ///
     constexpr const T *operator->() const noexcept { return &t; }
