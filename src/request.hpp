@@ -45,15 +45,15 @@ struct Request {
 
     // Create an Request from raw request data
     static auto encode(std::string_view req) noexcept -> Result<Request, RequestError> {
-        // dont accept requests larger than 10kB
-        if (req.size() > 1024 * 10) {
+        // dont accept requests larger than 1kB
+        if (req.size() > 1024) {
             return Err(RequestError::Invalid);
         }
 
         Request request;
-        request.body = req;
+        request.body = std::string(req);
 
-        std::istringstream iss(std::string(req), std::ios_base::in);
+        std::istringstream iss(request.body, std::ios_base::in);
         std::string line;
 
         // Read the first line to get the HTTP method and path
@@ -74,12 +74,11 @@ struct Request {
         request.method = RequestMethod::GET;
         request.path   = path;
 
-        // Read each subsequent line for headers
-        while (std::getline(iss, line)) {
+        while (std::getline(iss, line) && !line.empty()) {
             size_t pos = line.find(':');
             if (pos != std::string::npos) {
                 std::string key   = line.substr(0, pos);
-                std::string value = line.substr(pos + 1);
+                std::string value = line.substr(pos + 2);
 
                 key.erase(0, key.find_first_not_of(" \t"));
                 key.erase(key.find_last_not_of(" \t") + 1);
@@ -88,12 +87,10 @@ struct Request {
                 value.erase(value.find_last_not_of(" \t") + 1);
 
                 // strip all newline characters
-                value.erase(std::remove_if(value.begin(), value.end(), [](char c) {
-                                return c == '\r' || c == '\n';
-                            }),
-                            value.end());
+                value.erase(std::remove(value.begin(), value.end(), '\n'), value.end());
+                value.erase(std::remove(value.begin(), value.end(), '\r'), value.end());
 
-                request.headers[key] = value;
+                request.headers.emplace(std::move(key), std::move(value));
             }
         }
 
