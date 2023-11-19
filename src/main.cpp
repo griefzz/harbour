@@ -18,8 +18,12 @@ auto EchoHandler(Server &ctx, const Request &req, Response &resp) -> void {
 // Deserialze a person and send to client
 auto PersonHandler(Server &ctx, const Request &req, Response &resp) -> void {
     struct Person {
-        int age;
         std::string name;
+        int age;
+
+        auto string() -> std::string {
+            return std::format("Person ( name: {}, age: {} )\n", name, age);
+        }
 
         SERVER_DESERIALIZABLE(Person, age, name)
     };
@@ -28,7 +32,7 @@ auto PersonHandler(Server &ctx, const Request &req, Response &resp) -> void {
         if (auto p = Person::from_form(req.form)) {
             resp.set_type(ResponseType::Ok);
             resp.set_header("Content-Type", "text/plain");
-            resp.set_content(std::format("Person ( name: {}, age: {} )\n", p->name, p->age));
+            resp.set_content(p->string());
         } else {
             Logger::warning("Unable to deserialize a Person!");
         }

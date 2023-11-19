@@ -165,6 +165,11 @@ auto PersonHandler(Server &ctx, const Request &req, Response &resp) -> void {
         int age;
         std::string name;
 
+        // format the struct to a string
+        auto string() -> std::string {
+            return std::format("Person ( name: {}, age: {} )\n", name, age);
+        }
+
         // Use this macro to generate a static from_form method
         // SERVER_DESERIALIZABLE(Name, T1, T2, ...)
         SERVER_DESERIALIZABLE(Person, age, name)
@@ -176,7 +181,7 @@ auto PersonHandler(Server &ctx, const Request &req, Response &resp) -> void {
         if (auto p = Person::from_form(req.form)) {
             resp.set_type(ResponseType::Ok);
             resp.set_header("Content-Type", "text/plain");
-            resp.set_content(std::format("Person ( name: {}, age: {} )\n", p->name, p->age));
+            resp.set_content(p->string());
         } else {
             Logger::warning("Unable to deserialize a Person!");
         }
