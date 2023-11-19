@@ -13,7 +13,7 @@ A C++ webserver and personal website hosting its own source code.
 
 ## Overview
 
-The webserver itself is pretty straightforward. All configuration is done inside [config.h](/src/config.h). The server itself does not support TLS or any method other than GET for simplicities sake.
+The webserver itself is pretty straightforward. All configuration is done inside [config.h](/src/config.h). The server itself does not support TLS, but it does handle GET and POST.
 
 ## Getting Started
 
@@ -154,6 +154,37 @@ auto main() -> {
 Middleware are functions that get applied to every single request.
 
 Routes are functions that only get applied to a specific Route.
+
+If you want to handle POST requests you can easily deserialze the post data like so:
+
+```cpp
+// Deserialze a person and send to client
+auto PersonHandler(Server &ctx, const Request &req, Response &resp) -> void {
+    // Object to deserialize into
+    struct Person {
+        int age;
+        std::string name;
+
+        // Use this macro to generate a static from_form method
+        // SERVER_DESERIALIZABLE(Name, T1, T2, ...)
+        SERVER_DESERIALIZABLE(Person, age, name)
+    };
+
+    // Only accept POST requests
+    if (req.method == RequestMethod::POST) {
+        // Attempt to deserialze a Person from a Form
+        if (auto p = Person::from_form(req.form)) {
+            resp.set_type(ResponseType::Ok);
+            resp.set_header("Content-Type", "text/plain");
+            resp.set_content(std::format("Person ( name: {}, age: {} )\n", p->name, p->age));
+        } else {
+            Logger::warning("Unable to deserialize a Person!");
+        }
+    }
+}
+```
+
+Then simply add a route to your PersonHandler.
 
 ## Features
 

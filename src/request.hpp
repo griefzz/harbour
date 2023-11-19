@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <optional>
 #include "result.hpp"
+#include "forms.hpp"
 
 // Error types associated with decoding an HTTP request
 enum class RequestError {
@@ -13,7 +14,8 @@ enum class RequestError {
 
 // Accepted request methods
 enum class RequestMethod {
-    GET
+    GET,
+    POST
 };
 
 // A request object recieved from a user
@@ -30,6 +32,9 @@ struct Request {
 
     // The entire raw request body
     std::string body;
+
+    // Form data
+    Form form;
 
     // Get the specified header value from key if it exists
     auto get_header(const std::string &key) const noexcept -> std::optional<std::string> {
@@ -62,7 +67,7 @@ struct Request {
         std::string method, path;
         firstLineStream >> method >> path;
 
-        if (method != "GET") {
+        if (method != "GET" && method != "POST") {
             return Err(RequestError::Unsupported);
         }
 
@@ -71,8 +76,10 @@ struct Request {
             return Err(RequestError::Invalid);
         }
 
-        request.method = RequestMethod::GET;
-        request.path   = path;
+        if (method == "GET") request.method = RequestMethod::GET;
+        if (method == "POST") request.method = RequestMethod::POST;
+
+        request.path = path;
 
         while (std::getline(iss, line) && !line.empty()) {
             size_t pos = line.find(':');
@@ -92,6 +99,10 @@ struct Request {
 
                 request.headers.emplace(std::move(key), std::move(value));
             }
+        }
+
+        if (request.method == RequestMethod::POST) {
+            request.form = Forms::parse(line);
         }
 
         return request;
