@@ -3,7 +3,7 @@
 #include "config.hpp"
 #include "server.hpp"
 
-#if SERVER_ENABLE_COMPRESSION
+#if HARBOUR_ENABLE_COMPRESSION
     #include <brotli/encode.h>
 #endif
 
@@ -74,7 +74,7 @@ namespace Middleware {
         }
     }
 
-#if SERVER_ENABLE_COMPRESSION
+#if HARBOUR_ENABLE_COMPRESSION
     // Enable brotli compression
     auto Compression(Server &ctx, const Request &req, Response &resp) -> void {
         if (auto encoding = req["Accept-Encoding"]) {

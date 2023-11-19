@@ -25,7 +25,7 @@ auto PersonHandler(Server &ctx, const Request &req, Response &resp) -> void {
             return std::format("Person ( name: {}, age: {} )\n", name, age);
         }
 
-        SERVER_DESERIALIZABLE(Person, age, name)
+        HARBOUR_DESERIALIZABLE(Person, age, name)
     };
 
     if (req.method == RequestMethod::POST) {
@@ -43,7 +43,7 @@ auto main() -> int {
     Server server(8080);
     server.middleware(Middleware::Logger,
                       Middleware::FileServer,
-#if SERVER_ENABLE_COMPRESSION
+#if HARBOUR_ENABLE_COMPRESSION
                       Middleware::Compression,
 #endif
                       Middleware::DefaultIndex,

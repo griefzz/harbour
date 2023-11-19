@@ -4,9 +4,9 @@
 
 // Enable compression when on linux
 #if _WIN32
-    #define SERVER_ENABLE_COMPRESSION false
+    #define HARBOUR_ENABLE_COMPRESSION false
 #else
-    #define SERVER_ENABLE_COMPRESSION true
+    #define HARBOUR_ENABLE_COMPRESSION true
 #endif
 
 // Fixup for relative pathing

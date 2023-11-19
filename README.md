@@ -171,8 +171,8 @@ auto PersonHandler(Server &ctx, const Request &req, Response &resp) -> void {
         }
 
         // Use this macro to generate a static from_form method
-        // SERVER_DESERIALIZABLE(Name, T1, T2, ...)
-        SERVER_DESERIALIZABLE(Person, age, name)
+        // HARBOUR_DESERIALIZABLE(Name, T1, T2, ...)
+        HARBOUR_DESERIALIZABLE(Person, age, name)
     };
 
     // Only accept POST requests
