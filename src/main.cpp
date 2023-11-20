@@ -1,6 +1,7 @@
 #include "server.hpp"
 #include "middleware.hpp"
 #include "handlers.hpp"
+#include "stringable.h"
 
 // Test out a raw response
 auto TestHandler(Server &ctx, const Request &req, Response &resp) -> void {
@@ -16,23 +17,22 @@ auto EchoHandler(Server &ctx, const Request &req, Response &resp) -> void {
 }
 
 // Deserialze a person and send to client
+struct Person {
+    std::string name;
+    int age;
+
+    HARBOUR_STRINGABLE(Person, name, age);
+    HARBOUR_DESERIALIZABLE(Person, name, age);
+};
+HARBOUR_FORMATTABLE(Person);
+
 auto PersonHandler(Server &ctx, const Request &req, Response &resp) -> void {
-    struct Person {
-        std::string name;
-        int age;
-
-        auto string() -> std::string {
-            return std::format("Person ( name: {}, age: {} )\n", name, age);
-        }
-
-        HARBOUR_DESERIALIZABLE(Person, age, name)
-    };
-
     if (req.method == RequestMethod::POST) {
         if (auto p = Person::from_form(req.form)) {
             resp.set_type(ResponseType::Ok);
             resp.set_header("Content-Type", "text/plain");
             resp.set_content(p->string());
+            Logger::info(std::format("Client sent: {}", *p));
         } else {
             Logger::warning("Unable to deserialize a Person!");
         }
