@@ -69,7 +69,7 @@ struct std::formatter<Stringable> {
     };
 
 // Inspired by https://github.com/nlohmann/json/blob/6eab7a2b187b10b2494e39c1961750bfd1bda500/include/nlohmann/detail/macro_scope.hpp#L261
-#define HARBOUR_STRINGABLE_END_COMMA                                                                                                                                                                                                                                                                                                                                   HARBOUR_SINGABLE_END_COMMA = true;
+#define HARBOUR_STRINGABLE_END_COMMA_STATEMENT                                                                                                                                                                                                                                                                                                                                   HARBOUR_STRINGABLE_END_COMMA = true;
 #define HARBOUR_STRINGABLE_EXPAND(x)                                                                                                                                                                                                                                                                                                                                   x
 #define HARBOUR_STRINGABLE_GET_MACRO(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, _61, _62, _63, _64, NAME, ...) NAME
 #define HARBOUR_STRINGABLE_PASTE(...)                                                                                                                                                                                                                                                                                                                                  HARBOUR_STRINGABLE_EXPAND(HARBOUR_STRINGABLE_GET_MACRO(__VA_ARGS__, \
@@ -137,7 +137,7 @@ struct std::formatter<Stringable> {
                                                                                              HARBOUR_STRINGABLE_PASTE3,                                                                                                                                                                                                                                                                                                                    \
                                                                                              HARBOUR_STRINGABLE_PASTE2,                                                                                                                                                                                                                                                                                                                    \
                                                                                              HARBOUR_STRINGABLE_PASTE1)(__VA_ARGS__))
-#define HARBOUR_STRINGABLE_PASTE2(func, v1)                                                                                                                                                                                                                                                                                                           func(v1) HARBOUR_STRINGABLE_END_COMMA
+#define HARBOUR_STRINGABLE_PASTE2(func, v1)                                                                                                                                                                                                                                                                                                           func(v1) HARBOUR_STRINGABLE_END_COMMA_STATEMENT
 #define HARBOUR_STRINGABLE_PASTE3(func, v1, v2)                                                                                                                                                                                                                                                                                                       HARBOUR_STRINGABLE_PASTE2(func, v1) HARBOUR_STRINGABLE_PASTE2(func, v2)
 #define HARBOUR_STRINGABLE_PASTE4(func, v1, v2, v3)                                                                                                                                                                                                                                                                                                   HARBOUR_STRINGABLE_PASTE2(func, v1) HARBOUR_STRINGABLE_PASTE3(func, v2, v3)
 #define HARBOUR_STRINGABLE_PASTE5(func, v1, v2, v3, v4)                                                                                                                                                                                                                                                                                               HARBOUR_STRINGABLE_PASTE2(func, v1) HARBOUR_STRINGABLE_PASTE4(func, v2, v3, v4)
@@ -201,14 +201,14 @@ struct std::formatter<Stringable> {
 #define HARBOUR_STRINGABLE_PASTE63(func, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v26, v27, v28, v29, v30, v31, v32, v33, v34, v35, v36, v37, v38, v39, v40, v41, v42, v43, v44, v45, v46, v47, v48, v49, v50, v51, v52, v53, v54, v55, v56, v57, v58, v59, v60, v61, v62) HARBOUR_STRINGABLE_PASTE2(func, v1) HARBOUR_STRINGABLE_PASTE62(func, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v26, v27, v28, v29, v30, v31, v32, v33, v34, v35, v36, v37, v38, v39, v40, v41, v42, v43, v44, v45, v46, v47, v48, v49, v50, v51, v52, v53, v54, v55, v56, v57, v58, v59, v60, v61, v62)
 
 #define HARBOUR_STRINGABLE_APPEND_VALUE(v) \
-    HARBOUR_SINGABLE_APPENDED_STR += std::format("{}{} ", harbour_stringify_type(#v, v), (HARBOUR_SINGABLE_END_COMMA ? "" : ","));
+    HARBOUR_STRINGABLE_APPENDED_STR += std::format("{}{} ", harbour_stringify_type(#v, v), (HARBOUR_STRINGABLE_END_COMMA ? "" : ","));
 
 // Create a string() method for the struct
 #define HARBOUR_STRINGABLE(Type, ...)                                                                     \
     constexpr auto string() noexcept -> std::string {                                                     \
-        auto HARBOUR_SINGABLE_END_COMMA    = false;                                                       \
-        auto HARBOUR_SINGABLE_APPENDED_STR = std::format("{} {} ", #Type, "{");                           \
+        auto HARBOUR_STRINGABLE_END_COMMA    = false;                                                     \
+        auto HARBOUR_STRINGABLE_APPENDED_STR = std::format("{} {} ", #Type, "{");                         \
         HARBOUR_STRINGABLE_EXPAND(HARBOUR_STRINGABLE_PASTE(HARBOUR_STRINGABLE_APPEND_VALUE, __VA_ARGS__)) \
-        HARBOUR_SINGABLE_APPENDED_STR += std::format("{}", "}");                                          \
-        return HARBOUR_SINGABLE_APPENDED_STR;                                                             \
+        HARBOUR_STRINGABLE_APPENDED_STR += std::format("{}", "}");                                        \
+        return HARBOUR_STRINGABLE_APPENDED_STR;                                                           \
     }
