@@ -14,20 +14,7 @@ using Handler = std::function<void(Server &ctx, const Request &, Response &)>;
 
 struct Route {
     explicit Route(const std::string &path, Handler &&handler)
-        : path(path), handler(handler) {
-        auto start = path.find("<");
-        if (start != std::string::npos) {
-            root = path.substr(0, start);
-        } else {
-            root = path;
-        }
-        while (start != std::string::npos) {
-            auto end = path.find(">", start);
-            auto var = path.substr(start + 1, end - start - 1);
-            table.push_back(std::move(var));
-            start = path.find("<", end);
-        }
-    }
+        : path(path), handler(handler) { make_path_table(); }
 
     auto parse(const std::string &reqPath) -> std::optional<RouteMap> {
         if (table.empty())
@@ -53,6 +40,21 @@ struct Route {
         }
 
         return map;
+    }
+
+    constexpr auto make_path_table() -> void {
+        auto start = path.find("<");
+        if (start != std::string::npos) {
+            root = path.substr(0, start);
+        } else {
+            root = path;
+        }
+        while (start != std::string::npos) {
+            auto end = path.find(">", start);
+            auto var = path.substr(start + 1, end - start - 1);
+            table.push_back(std::move(var));
+            start = path.find("<", end);
+        }
     }
 
     std::string root;
