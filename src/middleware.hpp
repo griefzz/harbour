@@ -16,7 +16,7 @@ namespace Middleware {
     // Serve an index.html if it exists for any path ending in /
     auto DefaultIndex(Server &ctx, const Request &req, Response &resp) noexcept -> void {
         // if our path ends in / and it isnt a route, serve that dirs index.html
-        if (req.path.ends_with("/") && !ctx.is_route(req)) {
+        if (req.path.ends_with("/") && !ctx.get_route(req).has_value()) {
             if (auto index = ctx.cache[req.path + "index.html"]) {
                 resp.set_type(ResponseType::Ok);
                 resp.set_header("Content-Type", "text/html");
@@ -44,7 +44,7 @@ namespace Middleware {
         };
 
         // If our path exists and isnt a route serve the requested file
-        if (auto content = ctx.cache[req.path]; !ctx.is_route(req) && !req.path.ends_with("/")) {
+        if (auto content = ctx.cache[req.path]; !ctx.get_route(req).has_value() && !req.path.ends_with("/")) {
             auto ext = fs::path(req.path).extension().string();
             if (auto mime = get_mime_type(ext)) {
                 resp.set_type(ResponseType::Ok);
@@ -61,7 +61,7 @@ namespace Middleware {
     // Handle file not found
     auto NotFound(Server &ctx, const Request &req, Response &resp) noexcept -> void {
         // If the path doesnt exist and isnt a route, serve our 404 page
-        if (!ctx.cache[req.path] && !ctx.cache[req.path + "index.html"] && !ctx.is_route(req)) {
+        if (!ctx.cache[req.path] && !ctx.cache[req.path + "index.html"] && !ctx.get_route(req).has_value()) {
             if (auto file = ctx.cache["/404.html"]) {
                 resp.set_type(ResponseType::NotFound);
                 resp.set_header("Content-Type", "text/html");
@@ -77,7 +77,7 @@ namespace Middleware {
 #if HARBOUR_ENABLE_COMPRESSION
     // Enable brotli compression
     auto Compression(Server &ctx, const Request &req, Response &resp) -> void {
-        if (auto encoding = req["Accept-Encoding"]) {
+        if (auto encoding = req.get_header("Accept-Encoding")) {
             if (encoding->find("br") != std::string::npos) {
                 if (!resp.content.empty()) {
                     std::string compressed;

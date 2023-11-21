@@ -6,6 +6,8 @@
 #include "result.hpp"
 #include "forms.hpp"
 
+using RouteMap = std::unordered_map<std::string, std::string>;
+
 // Error types associated with decoding an HTTP request
 enum class RequestError {
     Unsupported,
@@ -36,6 +38,9 @@ struct Request {
     // Form data
     Form form;
 
+    // Route map data
+    RouteMap route;
+
     // Get the specified header value from key if it exists
     auto get_header(const std::string &key) const noexcept -> std::optional<std::string> {
         if (auto value = headers.find(key); value != headers.end()) {
@@ -45,8 +50,18 @@ struct Request {
         }
     }
 
-    // Convenience overload for get_header()
-    auto operator[](const std::string &key) const noexcept -> std::optional<std::string> { return get_header(key); }
+    // Convenience overload for getting Form data or RouteMap data
+    auto operator[](const std::string &key) const noexcept -> std::optional<std::string> {
+        if (auto v = form.find(key); v != form.end()) {
+            return v->second;
+        }
+
+        if (auto v = route.find(key); v != route.end()) {
+            return v->second;
+        }
+
+        return {};
+    }
 
     // Create an Request from raw request data
     static auto encode(std::string_view req) noexcept -> Result<Request, RequestError> {

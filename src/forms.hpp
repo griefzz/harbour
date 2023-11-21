@@ -149,7 +149,7 @@
     }
 
 // Construct a from_form method for Type
-#define HARBOUR_DESERIALIZABLE(Type, ...)                                          \
+#define HARBOUR_FROM_FORM(Type, ...)                                               \
     static auto from_form(const Form &HARBOUR_FORM_VAR) -> std::optional<Type> {   \
         Type HARBOUR_DESERIALIZABLE_TYPE;                                          \
         HARBOUR_FORMS_EXPAND(HARBOUR_FORMS_PASTE(HARBOUR_FORMS_FROM, __VA_ARGS__)) \

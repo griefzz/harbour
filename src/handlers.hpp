@@ -47,7 +47,7 @@ namespace Handlers {
     struct RequireAuth {
         explicit RequireAuth(const std::string &key, Handler handler) : key(base64::encode(key)), handler(handler) {}
         auto operator()(Server &ctx, const Request &req, Response &resp) noexcept -> void {
-            if (req["Authorization"] == "Basic " + key) {
+            if (req.get_header("Authorization") == "Basic " + key) {
                 handler(ctx, req, resp);
             } else {
                 resp = Response(ResponseType::Unauthorized);

@@ -111,8 +111,8 @@ Now you can add a new Route to the webserver to handle this path
 auto main() -> int {
     Server server(80);
     server.route(
-        Route{"/", IndexHandler},
-        Route{"/index.html", IndexHandler});
+        Route("/", IndexHandler),
+        Route("/index.html", IndexHandler));
     server.serve();
 
     return 0;
@@ -128,8 +128,8 @@ This is a very common task so theres a Handler that can do this for you.
 auto main() -> int {
     Server server(80);
     server.route(
-        Route{"/", Handlers::ServeFile("/index.html")},
-        Route{"/index.html", Handlers::ServeFile("/index.html")});
+        Route("/", Handlers::ServeFile("/index.html")),
+        Route("/index.html", Handlers::ServeFile("/index.html")));
     server.serve();
 
     return 0;
@@ -191,15 +191,52 @@ auto PersonHandler(Server &ctx, const Request &req, Response &resp) -> void {
 
 Then simply add a route to your PersonHandler.
 
+If you need API style routing you can do that with the following routing syntax:
+```
+/<name>/<age>/
+```
+Then name and age can be accessed from your Request in the handler like so:
+
+```cpp
+// Deserialize a Person from an API and send to the client
+auto ApiHandler(Server &ctx, const Request &req, Response &resp) -> void {
+    // Make sure we have exactly 2 values in the route "name" and "age"
+    // The route table will return exactly the specified amount
+    // or 0 in the event parsing the route failed
+    if (req.route.size() == 2) {
+        // Get the values from the route and store them in a Person
+        Person p;
+        p.name = req["name"].value_or("nil");
+        p.age  = std::stoi(req["age"].value_or("0"));
+        // Return that person to the client
+        resp.set_type(ResponseType::Ok);
+        resp.set_header("Content-Type", "text/plain");
+        resp.set_content(p.string());
+        Logger::info(std::format("Client sent: {}", p));
+    } else {
+        Logger::warning("Unable to deserialize a Person!");
+        resp = Response(ResponseType::InternalServerError);
+    }
+}
+
+auto main() -> int {
+    Server server(80);
+    server.route(Route("/api/<name>/<age>/", ApiHandler));
+    server.serve();
+
+    return 0;
+}
+```
+
 ## Features
 
 The key features for this webserver are:
 
-- Routing
+- API style routing
 - Middleware
 - File caching
 - Self hosted source
-- No third-party libraries
+- No third-party libraries (Optional)
 
 ## Contributing
 
