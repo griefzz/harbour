@@ -58,7 +58,7 @@ auto ApiHandler(Server &ctx, const Request &req, Response &resp) -> void {
 }
 
 auto main() -> int {
-    Server server(8080);
+    Server server;
     server.middleware(Middleware::Logger,
                       Middleware::FileServer,
 #if HARBOUR_ENABLE_COMPRESSION

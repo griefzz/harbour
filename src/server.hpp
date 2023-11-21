@@ -27,8 +27,7 @@ concept HandlerConcept = requires(T handler, Server &ctx, const Request &req, Re
 };
 
 struct Server {
-    Server() : port(ServerPort) {}
-    Server(uint32_t port = ServerPort) : port(port) {}
+    explicit Server(uint32_t port = ServerPort) : port(port) {}
 
     // Include middleware in the server
     template<HandlerConcept... M>
