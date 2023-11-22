@@ -26,7 +26,7 @@ You'll need a recent C++ compiler to actual compile the code. Ninja is used here
 #### Linux
 
 ```bash
-sudo apt install cmake git clang ninja
+sudo apt install cmake git clang ninja libssl-dev
 ```
 
 #### Windows
@@ -39,7 +39,7 @@ sudo apt install cmake git clang ninja
 #### Mac
 
 ```bash
-brew install cmake git clang
+brew install cmake git clang libssl-dev
 ```
 
 ### Installation
@@ -49,6 +49,7 @@ brew install cmake git clang
 ```bash
 git clone https://github.com/griefzz/harbour
 chmod u+x deploy.sh
+./gen_key.sh
 ./deploy.sh
 ```
 
@@ -236,7 +237,8 @@ The key features for this webserver are:
 - Middleware
 - File caching
 - Self hosted source
-- No third-party libraries (Optional)
+- TLS provided by OpenSSL (optional)
+- Compression provided by Brotli (optional)
 
 ## Contributing
 
