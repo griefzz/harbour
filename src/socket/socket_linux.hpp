@@ -9,12 +9,40 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 
+#include "../config.hpp"
 #include "../logger.hpp"
+#include "../request.hpp"
+#include "../response.hpp"
 
 constexpr int MAX_EVENTS = 10000;
 
 auto start_server(uint32_t port, const std::function<std::string(std::string_view)> &handler) noexcept -> void {
+    SSL_load_error_strings();
+    OpenSSL_add_ssl_algorithms();
+    const SSL_METHOD *method = TLS_server_method();
+    SSL_CTX *ctx             = SSL_CTX_new(method);
+    if (!ctx) {
+        Logger::error("Unable to create SSL context");
+        ERR_print_errors_fp(stderr);
+        return;
+    }
+
+    SSL_CTX_set_ecdh_auto(ctx, 1);
+
+    // Set the key and cert
+    if (SSL_CTX_use_certificate_file(ctx, ServerCertificatePath.c_str(), SSL_FILETYPE_PEM) <= 0) {
+        ERR_print_errors_fp(stderr);
+        return;
+    }
+
+    if (SSL_CTX_use_PrivateKey_file(ctx, ServerPrivateKeyPath.c_str(), SSL_FILETYPE_PEM) <= 0) {
+        ERR_print_errors_fp(stderr);
+        return;
+    }
+
     // Create a socket
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket == -1) {
@@ -117,9 +145,34 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
                 }
             } else {
                 // Handle data from a client
-                int client_socket  = events[i].data.fd;
-                int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
-                if (bytes_received <= 0) {
+                int client_socket = events[i].data.fd;
+                SSL *ssl          = SSL_new(ctx);
+                SSL_set_fd(ssl, client_socket);
+
+                if (auto code = SSL_accept(ssl); code <= 0) {
+                    ERR_print_errors_fp(stderr);
+                    // Send a 301 Response if you request http
+                    if (SSL_get_error(ssl, code) == SSL_ERROR_SYSCALL) {
+                        SSL_shutdown(ssl);
+                        SSL_free(ssl);
+                        int bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
+                        if (bytes_received <= 0) {
+                            Logger::error("Error in doing a 301 recovery!");
+                        } else {
+                            std::string msg = "HTTP/1.1 301 Moved Permanently\nLocation: https://127.0.0.1:8080/\nConnection: close\n\n";
+                            if (send(client_socket, msg.data(), msg.size(), 0) == -1) {
+                                Logger::error("Error sending 301 recovery data to client");
+                            }
+                        }
+
+                        epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_socket, nullptr);
+                        close(client_socket);
+                        continue;
+                    }
+                }
+
+                size_t bytes_received = 0;
+                if (SSL_read_ex(ssl, buffer, BUFFER_SIZE, &bytes_received) <= 0) {
                     // Connection closed or error
                     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_socket, nullptr);
                     close(client_socket);
@@ -130,9 +183,12 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
                     auto message  = std::string_view(buffer, bytes_received);
                     auto response = handler(message);
 
-                    if (send(client_socket, response.c_str(), response.size(), 0) == -1) {
+                    if (SSL_write(ssl, response.c_str(), response.size()) <= 0) {
                         Logger::error("Error sending data to client");
                     }
+
+                    SSL_shutdown(ssl);
+                    SSL_free(ssl);
 
                     // For simplicity, just close the connection after handling data
                     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_socket, nullptr);
@@ -143,6 +199,8 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
     }
 
     // Cleanup
+    SSL_CTX_free(ctx);
+    EVP_cleanup();
     close(server_socket);
     close(epoll_fd);
 }

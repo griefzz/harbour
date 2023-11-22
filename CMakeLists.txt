@@ -32,5 +32,12 @@ if (NOT WIN32)
     )
     FetchContent_MakeAvailable(Brotli)
 
+    find_package(OpenSSL REQUIRED)
+
+    if(OPENSSL_FOUND)
+        include_directories(${OPENSSL_INCLUDE_DIR})
+        target_link_libraries("${PROJECT_NAME}" ${OPENSSL_LIBRARIES})
+    endif()
+
     target_link_libraries("${PROJECT_NAME}" ${BROTLI_LIBRARIES})
 endif()

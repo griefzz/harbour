@@ -9,6 +9,14 @@
     #define HARBOUR_ENABLE_COMPRESSION true
 #endif
 
+#if !_WIN32
+// Path to x509 certificate
+std::string ServerCertificatePath = "/home/stone/harbour/cert.pem";
+
+// Path to private key
+std::string ServerPrivateKeyPath = "/home/stone/harbour/key.pem";
+#endif
+
 // Fixup for relative pathing
 #if _WIN32
 std::string ServerRelPath = "../../";
