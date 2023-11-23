@@ -45,6 +45,19 @@ struct harbour_client {
     }
 };
 
+// Redirect clients to HTTPS
+void handle_redirect(harbour_client *client, char *buffer, int BUFFER_SIZE) {
+    int bytes_received = recv(client->socket, buffer, BUFFER_SIZE, 0);
+    if (bytes_received <= 0) {
+        Logger::error("Error in doing a 301 recovery!");
+    } else {
+        std::string msg = "HTTP/1.1 301 Moved Permanently\nLocation: https://127.0.0.1:8080/\nConnection: close\n\n";
+        if (send(client->socket, msg.data(), msg.size(), 0) == -1) {
+            Logger::error("Error sending 301 recovery data to client");
+        }
+    }
+}
+
 // Initialize a TLS capable server on port, passing all data to handler and returning its result to the client
 auto start_server(uint32_t port, const std::function<std::string(std::string_view)> &handler) noexcept -> void {
     SSL_load_error_strings();
@@ -130,7 +143,7 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
         return;
     }
 
-    Logger::info(std::format("Listening on {}\n", port));
+    Logger::info(std::format("Listening on {}", port));
 
     // Buffer to store incoming data
     constexpr int BUFFER_SIZE = 1024;
@@ -176,16 +189,7 @@ auto start_server(uint32_t port, const std::function<std::string(std::string_vie
                     // SSL_ERROR_SYSCALL looked to be the error i got when requesting HTTP...
                     // needs more testing to be really stable
                     if (SSL_get_error(ssl.get(), code) == SSL_ERROR_SYSCALL) {
-                        int bytes_received = recv(client->socket, buffer, BUFFER_SIZE, 0);
-                        if (bytes_received <= 0) {
-                            Logger::error("Error in doing a 301 recovery!");
-                        } else {
-                            std::string msg = "HTTP/1.1 301 Moved Permanently\nLocation: https://127.0.0.1:8080/\nConnection: close\n\n";
-                            if (send(client->socket, msg.data(), msg.size(), 0) == -1) {
-                                Logger::error("Error sending 301 recovery data to client");
-                            }
-                        }
-
+                        handle_redirect(client.get(), buffer, BUFFER_SIZE);
                         continue;
                     }
                 }
