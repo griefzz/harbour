@@ -131,8 +131,8 @@ This is a very common task so theres a Handler that can do this for you.
 auto main() -> int {
     Server server(80);
     server.route(
-        Route("/", Handlers::ServeFile("/index.html")),
-        Route("/index.html", Handlers::ServeFile("/index.html")));
+        Route("/", Http::ServeFile("/index.html")),
+        Route("/index.html", Http::ServeFile("/index.html")));
     server.serve();
 
     return 0;
@@ -147,9 +147,9 @@ Serving index files is *also* a very common task so there's middleware that will
 
 auto main() -> {
     Server server(80);
-    server.middleware(Middleware::Logger,       // Log every request to console
-                      Middleware::DefaultIndex, // Attempt to serve an index.html
-                      MiddleWare::FileServer);  // Serve all files stored in our cache   
+    server.middleware(Http::Logger,       // Log every request to console
+                      Http::DefaultIndex, // Attempt to serve an index.html
+                      Http::FileServer);  // Serve all files stored in our cache   
     server.serve();
 }
 ```
