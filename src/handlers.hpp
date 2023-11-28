@@ -1,11 +1,11 @@
 #include "server.hpp"
 #include "base64.hpp"
 
-namespace Handlers {
+namespace Http {
     // Serve a file either from cache or from disk if not stored
     struct ServeFile {
         explicit ServeFile(std::filesystem::path path) : path(path) {}
-        auto operator()(Server &ctx, const Request &req, Response &resp) noexcept -> void {
+        auto operator()(Server &ctx, const Request &req) -> Response {
             // Get the mime type to use, return empty if its not in our accepted list
             auto get_mime_type = [](const std::string_view ext) -> Result<std::string_view> {
                 for (const auto &mimes: ServerAcceptedMimeTypes) {
@@ -18,23 +18,22 @@ namespace Handlers {
             };
 
             if (auto cached = ctx.cache[path]) {
-                resp.set_type(ResponseType::Ok);
-                resp.set_header("Content-Type", "text/html");
-                resp.set_content(*cached);
+                return Html(*cached);
             } else {
                 if (auto disk = read_file(path)) {
                     if (auto mime = get_mime_type(path.extension().string())) {
-                        resp.set_type(ResponseType::Ok);
+                        auto resp = Response(ResponseType::Ok);
                         resp.set_header("Content-Type", *mime);
                         resp.set_content(*disk);
+                        return resp;
                     } else {
                         Logger::error(mime.error());
-                        resp = Response(ResponseType::InternalServerError);
+                        return ResponseType::InternalServerError;
                     }
 
                 } else {
                     Logger::error(fme_to_string(disk.error()));
-                    resp = Response(ResponseType::InternalServerError);
+                    return ResponseType::InternalServerError;
                 }
             }
         }
@@ -46,15 +45,15 @@ namespace Handlers {
     // key should be of the form username:password
     struct RequireAuth {
         explicit RequireAuth(const std::string &key, Handler handler) : key(base64::encode(key)), handler(handler) {}
-        auto operator()(Server &ctx, const Request &req, Response &resp) noexcept -> void {
+        auto operator()(Server &ctx, const Request &req) -> Response {
             if (req.get_header("Authorization") == "Basic " + key) {
-                handler(ctx, req, resp);
+                return handler(ctx, req);
             } else {
-                resp = Response(ResponseType::Unauthorized);
+                return ResponseType::Unauthorized;
             }
         }
 
         std::string key;
         Handler handler;
     };
-}// namespace Handlers
+}// namespace Http

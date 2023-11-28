@@ -5,6 +5,32 @@
 #include <format>
 #include "config.hpp"
 
+struct Raw {
+    Raw(const std::string &body) : body(std::move(body)) {}
+    std::string body;
+};
+
+struct Plain {
+    Plain(const std::string &body) : body(std::move(body)) {}
+    std::string body;
+};
+
+struct Html {
+    Html(const std::string &body) : body(std::move(body)) {}
+    std::string body;
+};
+
+template<typename T>
+concept jsonableConcept = requires(T x) {
+    { x.json() } -> std::same_as<std::string>;
+};
+
+template<jsonableConcept T>
+struct Json {
+    Json(T t) : body(std::move(t.json())) {}
+    std::string body;
+};
+
 enum class ResponseType {
     Raw                 = 0,
     Ok                  = 200,
@@ -36,6 +62,26 @@ auto rt2sv(ResponseType type) -> std::string_view {
 // use decode to create a raw buffer to send
 struct Response {
     Response() {}
+    Response(const Raw &raw) {
+        type = ResponseType::Ok;
+        set_content(std::move(raw.body));
+    }
+    Response(const Plain &plain) {
+        type                   = ResponseType::Ok;
+        header["Content-Type"] = "text/plain";
+        set_content(std::move(plain.body));
+    }
+    Response(const Html &html) {
+        type                   = ResponseType::Ok;
+        header["Content-Type"] = "text/html";
+        set_content(std::move(html.body));
+    }
+    template<jsonableConcept T>
+    Response(const Json<T> &json) {
+        type                   = ResponseType::Ok;
+        header["Content-Type"] = "application/json";
+        set_content(std::move(json.body));
+    }
     Response(ResponseType type) : type(type) {}
     Response(ResponseType type, std::string_view content) : type(type), content(content) {}
 

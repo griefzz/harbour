@@ -10,7 +10,8 @@
 using RouteMap = std::unordered_map<std::string, std::string>;
 
 struct Server;
-using Handler = std::function<void(Server &ctx, const Request &, Response &)>;
+using Middleware = std::function<void(Server &ctx, const Request &, Response &)>;
+using Handler    = std::function<Response(Server &ctx, const Request &)>;
 
 struct Route {
     explicit Route(const std::string &path, Handler &&handler)

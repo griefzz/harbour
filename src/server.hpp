@@ -19,18 +19,17 @@
 #include "route.hpp"
 
 struct Server;
-using Handler = std::function<void(Server &ctx, const Request &, Response &)>;
 
 template<typename T>
-concept HandlerConcept = requires(T handler, Server &ctx, const Request &req, Response &res) {
-    { handler(ctx, req, res) } -> std::same_as<void>;
+concept MiddlewareConcept = requires(T middleware, Server &ctx, const Request &req, Response &res) {
+    { middleware(ctx, req, res) } -> std::same_as<void>;
 };
 
 struct Server {
     explicit Server(uint32_t port = ServerPort) : port(port) {}
 
     // Include middleware in the server
-    template<HandlerConcept... M>
+    template<MiddlewareConcept... M>
     auto middleware(M &&...m) noexcept -> void;
 
     // Include a route in the server: Route{"/path", Handler}
@@ -50,13 +49,13 @@ struct Server {
     Cache cache;
 
     // middlewares for the server
-    std::vector<Handler> middlewares;
+    std::vector<Middleware> middlewares;
 
     // routes for the server
     std::vector<Route> routes;
 };
 
-template<HandlerConcept... M>
+template<MiddlewareConcept... M>
 auto Server::middleware(M &&...m) noexcept -> void {
     (middlewares.push_back(std::forward<M>(m)), ...);
 }
@@ -86,7 +85,7 @@ auto Server::serve() noexcept -> void {
                 if (auto map = route->parse(req->path)) {
                     req->route = *map;
                 }
-                route->handler(*this, *req, resp);
+                resp = route->handler(*this, *req);
             }
             for (auto handler: middlewares) { handler(*this, *req, resp); }
         } else if (req.error() == RequestError::Unsupported) {

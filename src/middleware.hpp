@@ -7,7 +7,7 @@
     #include <brotli/encode.h>
 #endif
 
-namespace Middleware {
+namespace Http {
     // Log all connections to the server
     auto Logger(Server &ctx, const Request &req, Response &resp) noexcept -> void {
         Logger::info(req.path);
@@ -103,4 +103,4 @@ namespace Middleware {
         }
     }
 #endif
-}// namespace Middleware
+}// namespace Http
