@@ -13,7 +13,7 @@ A C++ webserver and personal website hosting its own source code.
 
 ## Overview
 
-The webserver itself is pretty straightforward. All configuration is done inside [config.h](/src/config.h). The server itself does not support TLS, but it does handle GET and POST.
+The webserver itself is pretty straightforward. All configuration is done inside [config.hpp](/src/config.hpp). The server itself does not support TLS, but it does handle GET and POST.
 
 ## Getting Started
 
