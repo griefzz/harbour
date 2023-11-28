@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <format>
+#include "result.hpp"
 #include "config.hpp"
 
 struct Raw {
@@ -31,7 +32,7 @@ struct Json {
     std::string body;
 };
 
-enum class ResponseType {
+enum class Status {
     Raw                 = 0,
     Ok                  = 200,
     Unauthorized        = 401,
@@ -41,17 +42,17 @@ enum class ResponseType {
 };
 
 // Convert a ResponseType enum to a string_view
-auto rt2sv(ResponseType type) -> std::string_view {
+auto rt2sv(Status type) -> std::string_view {
     switch (type) {
-        case ResponseType::Ok:
+        case Status::Ok:
             return "200 OK";
-        case ResponseType::Unauthorized:
+        case Status::Unauthorized:
             return "401 Unauthorized";
-        case ResponseType::NotFound:
+        case Status::NotFound:
             return "404 Not Found";
-        case ResponseType::InternalServerError:
+        case Status::InternalServerError:
             return "500 Internal Server Error";
-        case ResponseType::NotImplemented:
+        case Status::NotImplemented:
             return "501 Not Implemented";
         default:
             return "418 I'm a teapot";// when all else fails
@@ -62,31 +63,46 @@ auto rt2sv(ResponseType type) -> std::string_view {
 // use decode to create a raw buffer to send
 struct Response {
     Response() {}
+
     Response(const Raw &raw) {
-        type = ResponseType::Ok;
+        type = Status::Ok;
         set_content(std::move(raw.body));
     }
+
     Response(const Plain &plain) {
-        type                   = ResponseType::Ok;
+        type                   = Status::Ok;
         header["Content-Type"] = "text/plain";
         set_content(std::move(plain.body));
     }
+
     Response(const Html &html) {
-        type                   = ResponseType::Ok;
+        type                   = Status::Ok;
         header["Content-Type"] = "text/html";
         set_content(std::move(html.body));
     }
+
     template<jsonableConcept T>
     Response(const Json<T> &json) {
-        type                   = ResponseType::Ok;
+        type                   = Status::Ok;
         header["Content-Type"] = "application/json";
         set_content(std::move(json.body));
     }
-    Response(ResponseType type) : type(type) {}
-    Response(ResponseType type, std::string_view content) : type(type), content(content) {}
+
+    Response(Status type) : type(type) {}
+
+    Response(Status type, std::string_view content) : type(type), content(content) {}
+
+    template<typename T = Response, typename E = Status>
+    Response(const Result<T, E> result) {
+        if (auto r = result.value(); result.has_value()) {
+            *this = r;
+        } else {
+            *this = result.error();
+        }
+    }
 
     // Response type 200, 404 etc
-    ResponseType type;
+    Status type;
 
     // Key value store for all HTTP response header values
     std::unordered_map<std::string_view, std::string> header;
@@ -94,12 +110,13 @@ struct Response {
     // Optional content to send to the client
     std::string content;
 
-    // set the type of our Response
-    auto set_type(ResponseType t) noexcept { type = t; }
+    // Set the status type of our Response
+    auto set_status(Status t) noexcept { type = t; }
 
-    // set a custom header value
+    // Set a custom header value
     auto set_header(std::string_view key, std::string_view val) noexcept -> void { header[key] = val; }
 
+    // Convenience wrapper for setting header values
     auto operator[](std::string_view key) noexcept -> std::string & { return header[key]; }
 
     // Set the content for our header
@@ -108,23 +125,23 @@ struct Response {
     // Decode a response into a raw http header.
     auto decode() noexcept -> std::string {
         // determine content type
-        if (type == ResponseType::Raw) {
+        if (type == Status::Raw) {
             return content;
         }
 
-        if (type == ResponseType::InternalServerError) {
+        if (type == Status::InternalServerError) {
             set_header("Content-Type", "text/plain");
             set_content("Internal Server Error: The server encountered an "
                         "unexpected condition.");
         }
 
-        if (type == ResponseType::NotImplemented) {
+        if (type == Status::NotImplemented) {
             set_header("Content-Type", "text/plain");
             set_content("Not Implemented: The server does not implement the "
                         "requested method.");
         }
 
-        if (type == ResponseType::Unauthorized) {
+        if (type == Status::Unauthorized) {
             set_header("WWW-Authenticate", "Basic realm=\"Access to staging site\"");
         }
 

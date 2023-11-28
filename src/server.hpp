@@ -76,7 +76,7 @@ auto Server::get_route(const Request &req) noexcept -> std::optional<Route> {
 
 auto Server::serve() noexcept -> void {
     auto request_handler = [&](std::string_view data) -> std::string {
-        Response resp(ResponseType::InternalServerError);
+        Response resp(Status::InternalServerError);
 
         // We decode the request and pass it to our middleware
         // Then we determine if its a route and apply the route handler to the resp
@@ -90,7 +90,7 @@ auto Server::serve() noexcept -> void {
             for (auto handler: middlewares) { handler(*this, *req, resp); }
         } else if (req.error() == RequestError::Unsupported) {
             Logger::info("User requested an unsupported method");
-            resp = Response(ResponseType::NotImplemented);
+            resp = Response(Status::NotImplemented);
         } else if (req.error() == RequestError::Invalid) {
             Logger::warning(std::format("User sent an invalid request: {}", req->body));
         }

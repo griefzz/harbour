@@ -18,12 +18,12 @@ namespace Http {
         // if our path ends in / and it isnt a route, serve that dirs index.html
         if (req.path.ends_with("/") && !ctx.get_route(req).has_value()) {
             if (auto index = ctx.cache[req.path + "index.html"]) {
-                resp.set_type(ResponseType::Ok);
+                resp.set_status(Status::Ok);
                 resp.set_header("Content-Type", "text/html");
                 resp.set_content(*index);
             } else {
                 Logger::error("Unable to find index page!");
-                resp = Response(ResponseType::InternalServerError);
+                resp = Response(Status::InternalServerError);
             }
         }
     }
@@ -47,13 +47,13 @@ namespace Http {
         if (auto content = ctx.cache[req.path]; !ctx.get_route(req).has_value() && !req.path.ends_with("/")) {
             auto ext = fs::path(req.path).extension().string();
             if (auto mime = get_mime_type(ext)) {
-                resp.set_type(ResponseType::Ok);
+                resp.set_status(Status::Ok);
                 resp.set_header("Content-Type", *mime);
                 resp.set_content(*content);
             } else {
                 // Mime type was not accepted
                 Logger::warning(mime.error());
-                resp = Response(ResponseType::InternalServerError);
+                resp = Response(Status::InternalServerError);
             }
         }
     }
@@ -63,13 +63,13 @@ namespace Http {
         // If the path doesnt exist and isnt a route, serve our 404 page
         if (!ctx.cache[req.path] && !ctx.cache[req.path + "index.html"] && !ctx.get_route(req).has_value()) {
             if (auto file = ctx.cache["/404.html"]) {
-                resp.set_type(ResponseType::NotFound);
+                resp.set_status(Status::NotFound);
                 resp.set_header("Content-Type", "text/html");
                 resp.set_content(*file);
                 Logger::info(std::format("Client got 404: {}", req.path));
             } else {
                 Logger::error("Unable to find 404 page!");
-                resp = Response(ResponseType::InternalServerError);
+                resp = Response(Status::InternalServerError);
             }
         }
     }
@@ -96,7 +96,7 @@ namespace Http {
                     } else {
                         // Compression failure
                         Logger::error("Brotli compression failed\n");
-                        resp = Response(ResponseType::InternalServerError);
+                        resp = Response(Status::InternalServerError);
                     }
                 }
             }

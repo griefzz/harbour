@@ -33,10 +33,10 @@ auto PersonHandler(Server &ctx, const Request &req) -> Response {
             return Json(*p);
         } else {
             Logger::warning("Unable to deserialize a Person!");
-            return ResponseType::InternalServerError;
+            return Status::InternalServerError;
         }
     } else {
-        return ResponseType::InternalServerError;
+        return Status::InternalServerError;
     }
 }
 
@@ -50,21 +50,20 @@ auto ApiHandler(Server &ctx, const Request &req) -> Response {
         Logger::info(std::format("Client sent: {}", p));
     } else {
         Logger::warning("Unable to deserialize a Person!");
-        return ResponseType::InternalServerError;
+        return Status::InternalServerError;
     }
 }
 
-struct JsonExample {
-    std::string a              = "test123";
-    std::vector<int> b         = {1, 2, 3};
-    std::vector<float> c       = {1.1, 2.2, 3.3};
-    std::vector<std::string> d = {"test", "1", "23"};
-    Person e{"Bob", 23};
-
-    HARBOUR_JSONABLE(a, b, c, d, e);
-};
-
 auto JsonHandler(Server &ctx, const Request &req) -> Response {
+    struct JsonExample {
+        std::string a              = "test123";
+        std::vector<int> b         = {1, 2, 3};
+        std::vector<float> c       = {1.1, 2.2, 3.3};
+        std::vector<std::string> d = {"test", "1", "23"};
+        Person e{"Bob", 23};
+
+        HARBOUR_JSONABLE(a, b, c, d, e);
+    };
     return Json(JsonExample{});
 }
 

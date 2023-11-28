@@ -125,10 +125,10 @@ public:
     ///
     template<class U>
     constexpr T value_or(U &&default_value) const & {
-        return has_value() ? t : static_cast<T>(std::forward<U>(default_value));
+        return has_value() ? value() : static_cast<T>(std::forward<U>(default_value));
     }
     template<class U>
     constexpr T value_or(U &&default_value) && {
-        return has_value() ? std::move(t) : static_cast<T>(std::forward<U>(default_value));
+        return has_value() ? std::move(value()) : static_cast<T>(std::forward<U>(default_value));
     };
 };

@@ -22,18 +22,18 @@ namespace Http {
             } else {
                 if (auto disk = read_file(path)) {
                     if (auto mime = get_mime_type(path.extension().string())) {
-                        auto resp = Response(ResponseType::Ok);
+                        auto resp = Response(Status::Ok);
                         resp.set_header("Content-Type", *mime);
                         resp.set_content(*disk);
                         return resp;
                     } else {
                         Logger::error(mime.error());
-                        return ResponseType::InternalServerError;
+                        return Status::InternalServerError;
                     }
 
                 } else {
                     Logger::error(fme_to_string(disk.error()));
-                    return ResponseType::InternalServerError;
+                    return Status::InternalServerError;
                 }
             }
         }
@@ -45,11 +45,11 @@ namespace Http {
     // key should be of the form username:password
     struct RequireAuth {
         explicit RequireAuth(const std::string &key, Handler handler) : key(base64::encode(key)), handler(handler) {}
-        auto operator()(Server &ctx, const Request &req) -> Response {
+        auto operator()(Server &ctx, const Request &req) -> Result<Response, Status> {
             if (req.get_header("Authorization") == "Basic " + key) {
                 return handler(ctx, req);
             } else {
-                return ResponseType::Unauthorized;
+                return Err(Status::Unauthorized);
             }
         }
 
