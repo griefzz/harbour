@@ -44,7 +44,7 @@ namespace Http {
         };
 
         // If our path exists and isnt a route serve the requested file
-        if (auto content = ctx.cache[req.path]; !ctx.get_route(req).has_value() && !req.path.ends_with("/")) {
+        if (auto content = ctx.cache[req.path]; content.has_value() && !ctx.get_route(req).has_value() && !req.path.ends_with("/")) {
             auto ext = fs::path(req.path).extension().string();
             if (auto mime = get_mime_type(ext)) {
                 resp.set_status(Status::Ok);
