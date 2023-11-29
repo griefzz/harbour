@@ -2,6 +2,7 @@
 
 NAME="harbour"
 
+cd ..
 git pull
 
 if [ $? -ne 0 ]; then

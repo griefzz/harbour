@@ -6,9 +6,8 @@
 auto Request::get_header(const std::string &key) const noexcept -> std::optional<std::string> {
     if (auto value = headers.find(key); value != headers.end()) {
         return value->second;
-    } else {
-        return {};
     }
+    return {};
 }
 
 auto Request::operator[](const std::string &key) const noexcept -> std::optional<std::string> {
@@ -56,7 +55,7 @@ auto Request::encode(std::string_view req) noexcept -> Result<Request, RequestEr
     request.path = path;
 
     while (std::getline(iss, line) && !line.empty()) {
-        size_t pos = line.find(':');
+        const size_t pos = line.find(':');
         if (pos != std::string::npos) {
             std::string key   = line.substr(0, pos);
             std::string value = line.substr(pos + 2);

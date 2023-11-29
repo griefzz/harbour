@@ -15,6 +15,10 @@ project(${PROJECT_NAME}
 set(CMAKE_CXX_STANDARD          20) # force c++20
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS        OFF) # disable compiler extensions
+set(CMAKE_CXX_CLANG_TIDY
+  clang-tidy-16;
+  -format-style='file';
+)
 
 # Use Brotli compression
 set(ENABLE_COMPRESSION true)

@@ -17,24 +17,24 @@ class bad_expected_access : public std::exception {
 public:
     /// @brief Construct a new bad_expected_access object.
     /// @param e The error object.
-    explicit bad_expected_access(E e) : e(e) {}
+    explicit bad_expected_access(E e) : e(std::move(e)) {}
 
     /// @brief Get the error object
     /// @return The error object.
-    const E &error() const & noexcept { return e; }
+    [[nodiscard]] auto error() const & noexcept -> const E & { return e; }
 
     /// @overload
-    E &error() & noexcept { return e; }
+    [[nodiscard]] auto error() & noexcept -> E & { return e; }
 
     /// @overload
-    const E &&error() const && noexcept { return std::move(e); }
+    [[nodiscard]] auto error() const && noexcept -> const E && { return std::move(e); }
 
     /// @overload
-    E &&error() && noexcept { return std::move(e); }
+    [[nodiscard]] auto error() && noexcept -> E && { return std::move(e); }
 
     /// @brief Override the what() function to provide the exception message.
     /// @return const char* The exception message.
-    const char *what() const noexcept override {
+    [[nodiscard]] auto what() const noexcept -> const char * override {
         return "Tried to access the wrong type of a Result";
     }
 
@@ -57,16 +57,16 @@ public:
 
     /// @brief Get the error object
     /// @return The error object.
-    constexpr const E &error() const & noexcept { return e; }
+    [[nodiscard]] constexpr auto error() const & noexcept -> const E & { return e; }
 
     /// @overload
-    constexpr E &error() & noexcept { return e; }
+    [[nodiscard]] constexpr auto error() & noexcept -> E & { return e; }
 
     /// @overload
-    constexpr const E &&error() const && noexcept { return std::move(e); }
+    [[nodiscard]] constexpr auto error() const && noexcept -> const E && { return std::move(e); }
 
     /// @overload
-    constexpr E &&error() && noexcept { return std::move(e); }
+    [[nodiscard]] constexpr auto error() && noexcept -> E && { return std::move(e); }
 
 private:
     E &&e;///< The error object.
@@ -97,7 +97,7 @@ public:
     /// @param v The value object.
     template<class U = T>
     constexpr explicit(!std::is_convertible_v<U, T>) Result(U &&v)
-        : t(v), err(false) {}
+        : t(std::forward<U>(v)), err(false) {}
 
     /// @brief Construct a new Result object from an Err object.
     /// @tparam G The error type.
@@ -119,7 +119,7 @@ public:
     /// @brief Check if the result has a value.
     /// @return true If the result has a value.
     /// @return false If the result is an error.
-    constexpr bool has_value() const noexcept { return !err; }
+    [[nodiscard]] constexpr auto has_value() const noexcept -> bool { return !err; }
 
     /// @brief Convert to bool to check if the result has a value.
     /// @return true If the result has a value.
@@ -128,28 +128,28 @@ public:
 
     /// @brief Get the value object.
     /// @return The value object.
-    constexpr T &value() & {
+    constexpr auto value() & -> T & {
         if (!has_value())
             throw bad_expected_access<std::decay_t<E>>(error());
         return t;
     }
 
     /// @overload
-    constexpr const T &value() const & {
+    [[nodiscard]] constexpr auto value() const & -> const T & {
         if (!has_value())
             throw bad_expected_access<std::decay_t<E>>(error());
         return t;
     }
 
     /// @overload
-    constexpr T &&value() && {
+    constexpr auto value() && -> T && {
         if (!has_value())
             throw bad_expected_access<std::decay_t<E>>(error());
         return std::move(t);
     }
 
     /// @overload
-    constexpr const T &&value() const && {
+    [[nodiscard]] constexpr auto value() const && -> const T && {
         if (!has_value())
             throw bad_expected_access<std::decay_t<E>>(error());
         return std::move(t);
@@ -157,28 +157,28 @@ public:
 
     /// @brief Get the error object.
     /// @return The error object.
-    constexpr E &error() & {
+    constexpr auto error() & -> E & {
         if (has_value())
             throw bad_expected_access<std::decay_t<T>>(value());
         return e;
     }
 
     /// @overload
-    constexpr const E &error() const & {
+    [[nodiscard]] constexpr auto error() const & -> const E & {
         if (has_value())
             throw bad_expected_access<std::decay_t<T>>(value());
         return e;
     }
 
     /// @overload
-    constexpr E &&error() && {
+    constexpr auto error() && -> E && {
         if (has_value())
             throw bad_expected_access<std::decay_t<T>>(value());
         return std::move(e);
     }
 
     /// @overload
-    constexpr const E &&error() const && {
+    [[nodiscard]] constexpr auto error() const && -> const E && {
         if (has_value())
             throw bad_expected_access<std::decay_t<T>>(value());
         return std::move(e);
@@ -186,36 +186,36 @@ public:
 
     /// @brief Access the value object through pointer semantics.
     /// @return Pointer to the value object.
-    constexpr const T *operator->() const noexcept { return &t; }
+    constexpr auto operator->() const noexcept -> const T * { return &t; }
 
     /// @overload
-    constexpr T *operator->() noexcept { return &t; }
+    constexpr auto operator->() noexcept -> T * { return &t; }
 
     /// @brief Access the value object through reference semantics.
     /// @return Reference to the value object.
-    constexpr const T &operator*() const & noexcept { return t; }
+    constexpr auto operator*() const & noexcept -> const T & { return t; }
 
     /// @overload
-    constexpr T &operator*() & noexcept { return t; }
+    constexpr auto operator*() & noexcept -> T & { return t; }
 
     /// @overload
-    constexpr const T &&operator*() const && noexcept { return std::move(t); }
+    constexpr auto operator*() const && noexcept -> const T && { return std::move(t); }
 
     /// @overload
-    constexpr T &&operator*() && noexcept { return std::move(t); }
+    constexpr auto operator*() && noexcept -> T && { return std::move(t); }
 
     /// @brief Get the value or a default if the result is an error.
     /// @tparam U The type of the default value.
     /// @param default_value The default value to return if the result is an error.
     /// @return T The value or the default.
     template<class U>
-    constexpr T value_or(U &&default_value) const & {
+    [[nodiscard]] constexpr auto value_or(U &&default_value) const & -> T {
         return has_value() ? value() : static_cast<T>(std::forward<U>(default_value));
     }
 
     /// @overload
     template<class U>
-    constexpr T value_or(U &&default_value) && {
+    constexpr auto value_or(U &&default_value) && -> T {
         return has_value() ? std::move(value()) : static_cast<T>(std::forward<U>(default_value));
     };
 };

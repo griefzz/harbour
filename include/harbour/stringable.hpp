@@ -51,24 +51,24 @@ struct Stringable {
 template<>
 struct std::formatter<Stringable> {
     template<class ParseContext>
-    constexpr ParseContext::iterator parse(ParseContext &ctx) {
+    constexpr auto parse(ParseContext &ctx) -> ParseContext::iterator {
         return ctx.begin();
     }
 
     template<class FmtContext>
-    FmtContext::iterator format(Stringable s, FmtContext &ctx) const {
+    auto format(Stringable s, FmtContext &ctx) const -> FmtContext::iterator {
         return std::ranges::copy(s.string(), ctx.out()).out;
     }
 };
 
 // Allow a STRINGABLE struct to be printable with std::format
-#define HARBOUR_FORMATTABLE(Type)                                    \
-    template<>                                                       \
-    struct std::formatter<Type> : std::formatter<Stringable> {       \
-        template<class FmtContext>                                   \
-        FmtContext::iterator format(Type t, FmtContext &ctx) const { \
-            return std::ranges::copy(t.string(), ctx.out()).out;     \
-        }                                                            \
+#define HARBOUR_FORMATTABLE(Type)                                            \
+    template<>                                                               \
+    struct std::formatter<Type> : std::formatter<Stringable> {               \
+        template<class FmtContext>                                           \
+        auto format(Type t, FmtContext &ctx) const -> FmtContext::iterator { \
+            return std::ranges::copy(t.string(), ctx.out()).out;             \
+        }                                                                    \
     };
 
 // Inspired by https://github.com/nlohmann/json/blob/6eab7a2b187b10b2494e39c1961750bfd1bda500/include/nlohmann/detail/macro_scope.hpp#L261
@@ -208,7 +208,7 @@ struct std::formatter<Stringable> {
 
 // Create a string() method for the struct
 #define HARBOUR_STRINGABLE(Type, ...)                                                                     \
-    constexpr auto string() noexcept -> std::string {                                                     \
+    constexpr auto string() -> std::string {                                                              \
         auto HARBOUR_STRINGABLE_END_COMMA    = false;                                                     \
         auto HARBOUR_STRINGABLE_APPENDED_STR = std::format("{} {} ", #Type, "{");                         \
         HARBOUR_STRINGABLE_EXPAND(HARBOUR_STRINGABLE_PASTE(HARBOUR_STRINGABLE_APPEND_VALUE, __VA_ARGS__)) \

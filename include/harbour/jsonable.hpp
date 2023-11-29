@@ -27,13 +27,13 @@ struct quote_if_string {
 template<typename T>
 struct std::formatter<quote_if_string<T>> : std::formatter<T> {
     template<class ParseContext>
-    constexpr ParseContext::iterator parse(ParseContext &ctx) {
+    constexpr auto parse(ParseContext &ctx) -> ParseContext::iterator {
         return ctx.begin();
     }
 
     // Pass through format() call to the base class
     template<class FmtContext>
-    FmtContext::iterator format(quote_if_string<T> q, FmtContext &ctx) const {
+    auto format(quote_if_string<T> q, FmtContext &ctx) const -> FmtContext::iterator {
         if constexpr (std::is_same_v<T, std::string> ||
                       std::is_same_v<T, std::string_view>) {
             return std::formatter<T>::format('"' + q.value + '"', ctx);
@@ -46,7 +46,7 @@ struct std::formatter<quote_if_string<T>> : std::formatter<T> {
 };
 
 template<typename T>
-quote_if_string<T> quote(const T &value) {
+auto quote(const T &value) -> quote_if_string<T> {
     return {value};
 }
 
@@ -60,7 +60,7 @@ constexpr auto harbour_jsonify_type(const std::string &name, T &&v) noexcept -> 
     std::string s;
     if constexpr (hbjson::Iterable<T> && !std::convertible_to<T, std::string>) {
         s += std::format("{}: [ ", quote(name));
-        for (auto i{1}; auto vv: v) {
+        for (auto i{1}; const auto &vv: v) {
             s += std::format("{}{} ", quote(vv), (i != v.size()) ? "," : "");
             i++;
         }
@@ -217,14 +217,14 @@ constexpr auto harbour_jsonify_type(const std::string &name, T &&v) noexcept -> 
 
 // Create a json() method for the struct
 #define HARBOUR_JSONABLE(...)                                                                          \
-    constexpr auto json() const & noexcept -> std::string {                                            \
+    constexpr auto json() const & -> std::string {                                                     \
         auto HARBOUR_JSONABLE_END_COMMA    = false;                                                    \
         auto HARBOUR_JSONABLE_APPENDED_STR = std::format("{{ ");                                       \
         HARBOUR_JSONABLE_EXPAND(HARBOUR_JSONABLE_PASTE(HARBOUR_JSONABLE_APPEND_VALUE, __VA_ARGS__))    \
         HARBOUR_JSONABLE_APPENDED_STR += "}";                                                          \
         return HARBOUR_JSONABLE_APPENDED_STR;                                                          \
     }                                                                                                  \
-    constexpr auto json() const && noexcept -> std::string {                                           \
+    constexpr auto json() const && -> std::string {                                                    \
         auto HARBOUR_JSONABLE_END_COMMA    = false;                                                    \
         auto HARBOUR_JSONABLE_APPENDED_STR = std::format("{{ ");                                       \
         HARBOUR_JSONABLE_EXPAND(HARBOUR_JSONABLE_PASTE(HARBOUR_JSONABLE_APPEND_VALUE_RV, __VA_ARGS__)) \

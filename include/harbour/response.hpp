@@ -10,13 +10,13 @@
 
 /// @brief Constructible object to create an raw TCP Response
 struct Raw {
-    Raw(const std::string &content) : content(std::move(content)) {}
+    Raw(const std::string &content) : content(content) {}
     std::string content;
 };
 
 /// @brief Constructible object to create a plain/text Response
 struct Plain {
-    Plain(const std::string &content) : content(std::move(content)) {}
+    Plain(const std::string &content) : content(content) {}
     std::string content;
 };
 
@@ -64,13 +64,13 @@ auto Status_string(Status type) -> std::string_view;
 // use decode to create a raw buffer to send
 struct Response {
     /// @brief Create an empty Response
-    Response() noexcept {}
+    Response() noexcept = default;
 
     /// @brief Create a raw TCP Response
     /// @param raw The raw data to send to the client
     Response(const Raw &raw) noexcept {
         set_status(Status::Ok);
-        set_content(std::move(raw.content));
+        set_content(raw.content);
     }
 
     /// @brief Create a plain/text HTTP Response
@@ -78,7 +78,7 @@ struct Response {
     Response(const Plain &plain) noexcept {
         set_status(Status::Ok);
         set_header("Content-Type", "text/plain");
-        set_content(std::move(plain.content));
+        set_content(plain.content);
     }
 
     /// @brief Create an HTML HTTP Response
@@ -98,19 +98,6 @@ struct Response {
         set_status(Status::Ok);
         set_header("Content-Type", "application/json");
         set_content(std::move(json.content));
-    }
-
-    /// @brief Create a Response from a Result
-    /// @tparam T Ok type of our Result (preferably a Response)
-    /// @tparam E Error type of our Result (preferably a Status)
-    /// @param result The result to send to the client
-    template<typename E = Status>
-    Response(const Result<Response, E> result) noexcept {
-        if (auto r = result.value(); result.has_value()) {
-            *this = r;
-        } else {
-            *this = result.error();
-        }
     }
 
     /// @brief Create an HTTP Response from a Status

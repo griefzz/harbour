@@ -31,7 +31,6 @@ namespace Http {
                         Logger::error(mime.error());
                         return Status::InternalServerError;
                     }
-
                 } else {
                     Logger::error(FileMapError_string(disk.error()));
                     return Status::InternalServerError;
@@ -48,12 +47,11 @@ namespace Http {
         /// @param key Key to use for authorization
         /// @param handler Handler to apply requirement to
         explicit RequireAuth(const std::string &key, Handler handler) : key(base64::encode(key)), handler(handler) {}
-        auto operator()(Server &ctx, const Request &req) -> Result<Response, Status> {
+        auto operator()(Server &ctx, const Request &req) -> Response {
             if (req.get_header("Authorization") == "Basic " + key) {
                 return handler(ctx, req);
-            } else {
-                return Err(Status::Unauthorized);
             }
+            return Status::Unauthorized;
         }
 
         std::string key;
@@ -65,12 +63,11 @@ namespace Http {
         /// @param m Method to require
         /// @param handler Handler to apply requirement to
         explicit RequireMethod(Method m, Handler handler) : m(m), handler(handler) {}
-        auto operator()(Server &ctx, const Request &req) -> Result<Response, Status> {
+        auto operator()(Server &ctx, const Request &req) -> Response {
             if (req.method != m) {
                 return handler(ctx, req);
-            } else {
-                return Err(Status::NotImplemented);
             }
+            return Status::NotImplemented;
         }
 
         Method m;

@@ -31,13 +31,12 @@ auto PersonHandler(Server &ctx, const Request &req) -> Response {
         if (auto p = Person::from_form(req.form)) {
             Logger::info(std::format("Client sent: {}", *p));
             return Json(*p);
-        } else {
-            Logger::warning("Unable to deserialize a Person!");
-            return Status::InternalServerError;
         }
-    } else {
+        Logger::warning("Unable to deserialize a Person!");
         return Status::InternalServerError;
     }
+
+    return Status::InternalServerError;
 }
 
 // Deserialize a Person from an API and send to the client
@@ -48,10 +47,10 @@ auto ApiHandler(Server &ctx, const Request &req) -> Response {
                 std::stoi(req["age"].value_or("0"))};
         return Json(p);
         Logger::info(std::format("Client sent: {}", p));
-    } else {
-        Logger::warning("Unable to deserialize a Person!");
-        return Status::InternalServerError;
     }
+
+    Logger::warning("Unable to deserialize a Person!");
+    return Status::InternalServerError;
 }
 
 auto JsonHandler(Server &ctx, const Request &req) -> Response {

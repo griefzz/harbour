@@ -7,6 +7,7 @@
 #include <iostream>
 #include <source_location>
 #include <string>
+#include <array>
 
 /// @namespace Logger
 /// @brief Provides simple logging functions with timestamp and severity level.
@@ -15,9 +16,9 @@ namespace Logger {
     /// @return A string representing the current system time in the format YYYY-MM-DD HH:MM:SS.
     static auto current_time() noexcept -> std::string {
         auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-        char buffer[80];
-        std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
-        return buffer;
+        std::array<char, 80> buffer;
+        std::strftime(buffer.data(), buffer.size(), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
+        return buffer.data();
     }
 
     /// @brief Logs an informational message.

@@ -36,9 +36,9 @@ using FileMap = std::unordered_map<fs::path, std::string>;
 /// @brief Reads the full contents of a file into a string.
 /// @param p The file path to read from.
 /// @return A Result object containing the file contents as a string or a FileMapError.
-auto read_file(fs::path p) noexcept -> Result<std::string, FileMapError>;
+auto read_file(const fs::path &p) noexcept -> Result<std::string, FileMapError>;
 
 /// @brief Caches all files in the specified web_path and optionally in src_path.
 /// @param web_path Path to web directory
 /// @param src_path Path to source code of harbour
-auto cache_files(fs::path web_path, fs::path src_path = "") noexcept -> Result<FileMap, FileMapError>;
+auto cache_files(const fs::path &web_path, const fs::path &root_path = "") noexcept -> Result<FileMap, FileMapError>;

@@ -1,15 +1,14 @@
 #include <harbour/harbour.hpp>
 
 auto Server::get_route(const Request &req) noexcept -> std::optional<Route> {
-    auto has_shared_root = [&](const auto &r) { return req.path == r.path || req.path.starts_with(r.root); };
+    auto has_shared_root = [&](const auto &root) { return req.path == root.path || req.path.starts_with(root.root); };
     if (auto result = std::ranges::find_if(routes, has_shared_root); result != routes.end()) {
         return *result;
-    } else {
-        return {};
     }
+    return {};
 }
 
-auto Server::serve() noexcept -> void {
+auto Server::serve() -> void {
     auto request_handler = [&](std::string_view data) -> std::string {
         Response resp(Status::InternalServerError);
 
@@ -22,7 +21,7 @@ auto Server::serve() noexcept -> void {
                 }
                 resp = route->handler(*this, *req);
             }
-            for (auto handler: middlewares) { handler(*this, *req, resp); }
+            for (const auto &handler: middlewares) { handler(*this, *req, resp); }
         } else if (req.error() == RequestError::Unsupported) {
             Logger::info("User requested an unsupported method");
             resp = Response(Status::NotImplemented);

@@ -32,7 +32,7 @@ struct Server {
     auto get_route(const Request &req) noexcept -> std::optional<Route>;
 
     // Serve the http server
-    auto serve() noexcept -> void;
+    auto serve() -> void;
 
     // Port used for the server
     uint32_t port;
