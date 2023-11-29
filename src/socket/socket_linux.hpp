@@ -14,7 +14,7 @@
 #include <openssl/err.h>
 
 #include "../config.hpp"
-#include "../logger.hpp"
+#include <harbour/logger.hpp>
 
 // Max amount of epoll events to que up
 constexpr int MAX_EVENTS = 10000;

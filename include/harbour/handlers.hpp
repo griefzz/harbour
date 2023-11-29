@@ -32,7 +32,7 @@ namespace Http {
                     }
 
                 } else {
-                    Logger::error(fme_to_string(disk.error()));
+                    Logger::error(FileMapError_string(disk.error()));
                     return Status::InternalServerError;
                 }
             }

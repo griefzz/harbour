@@ -1,8 +1,8 @@
 #pragma once
-#include "logger.hpp"
-#include "io.hpp"
+#include <harbour/logger.hpp>
+#include <harbour/io.hpp>
+#include <harbour/result.hpp>
 #include "config.hpp"
-#include "result.hpp"
 
 enum class CacheError {
     NotFound
@@ -14,7 +14,7 @@ public:
         if (auto cache = cache_files(ServerWebPath, ServerSrcPath)) {
             files = *cache;
         } else {
-            Logger::error(std::format("Failed to initialize cache: {}\n", fme_to_string(cache.error())));
+            Logger::error(std::format("Failed to initialize cache: {}\n", FileMapError_string(cache.error())));
             abort();
         }
     }

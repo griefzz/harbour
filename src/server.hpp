@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <ranges>
 
-#include "logger.hpp"
+#include <harbour/logger.hpp>
 #include "cache.hpp"
 #include "request.hpp"
 #include "response.hpp"

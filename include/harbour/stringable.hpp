@@ -6,24 +6,27 @@
 #include <iterator>
 #include <type_traits>
 
-template<typename T>
-concept Iterable = requires(T x) {
-    std::begin(x);
-    std::end(x);
-};
 
-template<typename T>
-concept formattable = requires(T &v, std::format_context ctx) {
-    std::formatter<std::remove_cvref_t<T>>().format(v, ctx);
-};
+namespace hbstringable {
+    template<typename T>
+    concept Iterable = requires(T x) {
+        std::begin(x);
+        std::end(x);
+    };
+
+    template<typename T>
+    concept formattable = requires(T &v, std::format_context ctx) {
+        std::formatter<std::remove_cvref_t<T>>().format(v, ctx);
+    };
+};// namespace hbstringable
 
 template<typename T>
 constexpr auto harbour_stringify_type(const std::string &name, T v) noexcept -> std::string {
     std::string s;
-    if constexpr (Iterable<T> && !std::convertible_to<T, std::string>) {
+    if constexpr (hbstringable::Iterable<T> && !std::convertible_to<T, std::string>) {
         s += std::format("{}: [ ", name);
         for (auto vv: v) {
-            if constexpr (formattable<decltype(vv)>) {
+            if constexpr (hbstringable::formattable<decltype(vv)>) {
                 s += std::format("{} ", vv);
             } else {
                 s += "nil ";
@@ -31,7 +34,7 @@ constexpr auto harbour_stringify_type(const std::string &name, T v) noexcept -> 
         }
         s += "]";
     } else {
-        if constexpr (formattable<T>) {
+        if constexpr (hbstringable::formattable<T>) {
             s += std::format("{}: {}", name, v);
         } else {
             s += std::format("{}: nil", name);
@@ -69,7 +72,7 @@ struct std::formatter<Stringable> {
     };
 
 // Inspired by https://github.com/nlohmann/json/blob/6eab7a2b187b10b2494e39c1961750bfd1bda500/include/nlohmann/detail/macro_scope.hpp#L261
-#define HARBOUR_STRINGABLE_END_COMMA_STATEMENT                                                                                                                                                                                                                                                                                                                                   HARBOUR_STRINGABLE_END_COMMA = true;
+#define HARBOUR_STRINGABLE_END_COMMA_STATEMENT                                                                                                                                                                                                                                                                                                                         HARBOUR_STRINGABLE_END_COMMA = true;
 #define HARBOUR_STRINGABLE_EXPAND(x)                                                                                                                                                                                                                                                                                                                                   x
 #define HARBOUR_STRINGABLE_GET_MACRO(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, _61, _62, _63, _64, NAME, ...) NAME
 #define HARBOUR_STRINGABLE_PASTE(...)                                                                                                                                                                                                                                                                                                                                  HARBOUR_STRINGABLE_EXPAND(HARBOUR_STRINGABLE_GET_MACRO(__VA_ARGS__, \

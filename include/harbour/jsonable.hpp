@@ -6,6 +6,19 @@
 #include <iterator>
 #include <type_traits>
 
+namespace hbjson {
+    template<typename T>
+    concept Iterable = requires(T x) {
+        std::begin(x);
+        std::end(x);
+    };
+
+    template<typename T>
+    concept formattable = requires(T &v, std::format_context ctx) {
+        std::formatter<std::remove_cvref_t<T>>().format(v, ctx);
+    };
+};// namespace hbjson
+
 template<typename T>
 struct quote_if_string {
     const T &value;
@@ -43,9 +56,9 @@ concept jsonable = requires(T x) {
 };
 
 template<typename T>
-constexpr auto harbour_jsonify_type(const std::string &name, T v) noexcept -> std::string {
+constexpr auto harbour_jsonify_type(const std::string &name, T &&v) noexcept -> std::string {
     std::string s;
-    if constexpr (Iterable<T> && !std::convertible_to<T, std::string>) {
+    if constexpr (hbjson::Iterable<T> && !std::convertible_to<T, std::string>) {
         s += std::format("{}: [ ", quote(name));
         for (auto i{1}; auto vv: v) {
             s += std::format("{}{} ", quote(vv), (i != v.size()) ? "," : "");
@@ -55,7 +68,7 @@ constexpr auto harbour_jsonify_type(const std::string &name, T v) noexcept -> st
     } else {
         if constexpr (jsonable<T>) {
             s += std::format("{}: {}", quote(name), v.json());
-        } else if constexpr (formattable<T>) {
+        } else if constexpr (hbjson::formattable<T>) {
             s += std::format("{}: {}", quote(name), quote(v));
         } else {
             s += std::format("{}: \"nil\"", quote(name));
@@ -199,13 +212,22 @@ constexpr auto harbour_jsonify_type(const std::string &name, T v) noexcept -> st
 
 #define HARBOUR_JSONABLE_APPEND_VALUE(v) \
     HARBOUR_JSONABLE_APPENDED_STR += std::format("{}{} ", harbour_jsonify_type(#v, v), (HARBOUR_JSONABLE_END_COMMA ? "" : ","));
+#define HARBOUR_JSONABLE_APPEND_VALUE_RV(v) \
+    HARBOUR_JSONABLE_APPENDED_STR += std::format("{}{} ", harbour_jsonify_type(std::move(#v), std::move(v)), (HARBOUR_JSONABLE_END_COMMA ? "" : ","));
 
-// Create a string() method for the struct
-#define HARBOUR_JSONABLE(...)                                                                       \
-    constexpr auto json() noexcept -> std::string {                                                 \
-        auto HARBOUR_JSONABLE_END_COMMA    = false;                                                 \
-        auto HARBOUR_JSONABLE_APPENDED_STR = std::format("{{ ");                                    \
-        HARBOUR_JSONABLE_EXPAND(HARBOUR_JSONABLE_PASTE(HARBOUR_JSONABLE_APPEND_VALUE, __VA_ARGS__)) \
-        HARBOUR_JSONABLE_APPENDED_STR += "}";                                                       \
-        return HARBOUR_JSONABLE_APPENDED_STR;                                                       \
+// Create a json() method for the struct
+#define HARBOUR_JSONABLE(...)                                                                          \
+    constexpr auto json() const & noexcept -> std::string {                                            \
+        auto HARBOUR_JSONABLE_END_COMMA    = false;                                                    \
+        auto HARBOUR_JSONABLE_APPENDED_STR = std::format("{{ ");                                       \
+        HARBOUR_JSONABLE_EXPAND(HARBOUR_JSONABLE_PASTE(HARBOUR_JSONABLE_APPEND_VALUE, __VA_ARGS__))    \
+        HARBOUR_JSONABLE_APPENDED_STR += "}";                                                          \
+        return HARBOUR_JSONABLE_APPENDED_STR;                                                          \
+    }                                                                                                  \
+    constexpr auto json() const && noexcept -> std::string {                                           \
+        auto HARBOUR_JSONABLE_END_COMMA    = false;                                                    \
+        auto HARBOUR_JSONABLE_APPENDED_STR = std::format("{{ ");                                       \
+        HARBOUR_JSONABLE_EXPAND(HARBOUR_JSONABLE_PASTE(HARBOUR_JSONABLE_APPEND_VALUE_RV, __VA_ARGS__)) \
+        HARBOUR_JSONABLE_APPENDED_STR += "}";                                                          \
+        return HARBOUR_JSONABLE_APPENDED_STR;                                                          \
     }

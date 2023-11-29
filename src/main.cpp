@@ -1,8 +1,8 @@
 #include "server.hpp"
-#include "middleware.hpp"
-#include "handlers.hpp"
-#include "stringable.h"
-#include "jsonable.hpp"
+#include <harbour/middleware.hpp>
+#include <harbour/handlers.hpp>
+#include <harbour/stringable.hpp>
+#include <harbour/jsonable.hpp>
 
 // Test out a raw response
 auto TestHandler(Server &ctx, const Request &req) -> Response {
