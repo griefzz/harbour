@@ -4,6 +4,7 @@
 #include <string>
 #include <string_view>
 #include <cstring>
+#include <signal.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/epoll.h>
@@ -47,19 +48,18 @@ struct harbour_client {
 
 // Redirect clients to HTTPS
 static void handle_redirect(harbour_client *client, char *buffer, int BUFFER_SIZE) {
-    int bytes_received = recv(client->socket, buffer, BUFFER_SIZE, 0);
-    if (bytes_received <= 0) {
-        Logger::error("Error in doing a 301 recovery!");
-    } else {
-        std::string msg = "HTTP/1.1 301 Moved Permanently\nLocation: https://127.0.0.1:8080/\nConnection: close\n\n";
-        if (send(client->socket, msg.data(), msg.size(), 0) == -1) {
-            Logger::error("Error sending 301 recovery data to client");
-        }
+    std::string msg = "HTTP/1.1 301 Moved Permanently\nLocation: https://127.0.0.1:8080/\nConnection: close\n\n";
+    if (send(client->socket, msg.data(), msg.size(), 0) == -1) {
+        Logger::error("Error sending 301 recovery data to client");
     }
 }
 
 // Initialize a TLS capable server on port, passing all data to handler and returning its result to the client
 static auto start_server(uint32_t port, const std::function<std::string(std::string_view)> &handler) noexcept -> void {
+    // Prevent SIGPIPE from crashing the server
+    struct sigaction sig_in = {SIG_IGN};
+    sigaction(SIGPIPE, &sig_in, NULL);
+
     SSL_load_error_strings();
     OpenSSL_add_ssl_algorithms();
     deleted_unique_ptr<SSL_CTX> ctx(SSL_CTX_new(TLS_server_method()), ssl_ctx_deleter);
