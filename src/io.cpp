@@ -44,7 +44,7 @@ auto last_modified(const std::string &path) -> std::string {
     return "";
 #else
     struct stat result;
-    auto rp = ".." + path;
+    auto rp = "../../" + path;
     if (stat(rp.c_str(), &result) == 0) {
         std::time_t modTime = result.st_mtime;
         char buffer[11];// "YYYY-MM-DD\0"
@@ -55,6 +55,16 @@ auto last_modified(const std::string &path) -> std::string {
         return "";
     }
 #endif
+}
+
+std::string rsstr(const std::string &original, const std::string &toRemove) {
+    std::string result = original;
+    size_t pos         = result.find(toRemove);
+    if (pos != std::string::npos) {
+        // If the substring is found, erase it
+        result.erase(pos, toRemove.length());
+    }
+    return result;
 }
 
 auto create_source_file(fs::path path, std::string_view data) noexcept -> std::string {
@@ -76,7 +86,7 @@ auto create_source_file(fs::path path, std::string_view data) noexcept -> std::s
                          ":#161b22;font-size:.7em;color:gray}.hljs{background:#0d1117}.hljs-ln-numbers{-webkit-touch-callout:n"
                          "one;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user"
                          "-select:none;text-align:center;color:#ccc;border-right:1px solid #ccc;vertical-align:top;padding-rig"
-                         "ht:5px}.hljs-ln-code{padding-left:10px}</style><div class=breadcrumb><a href=/src/ >Back</a> - " +
+                         "ht:5px}.hljs-ln-code{padding-left:10px}</style><div class=breadcrumb><a href=/harbour/ >Back</a> - " +
                          path.string() + "<hr></div><pre><code class=language-cpp>";
 
     std::string footer = "</code></pre></body></html>";
@@ -104,7 +114,7 @@ auto create_source_index(std::vector<fs::path> src_list) noexcept -> std::string
         std::size_t pos;
         while ((pos = p.find("\\")) != std::string::npos)
             p.replace(pos, 1, "/");
-        index += std::format(source_file_format, p, p, last_modified(p));
+        index += std::format(source_file_format, p, rsstr(p, "/harbour"), last_modified(p));
     }
 
     auto footer = "</div></div></body></html>";
@@ -113,11 +123,11 @@ auto create_source_index(std::vector<fs::path> src_list) noexcept -> std::string
 }
 
 // Cache all files in path
-auto cache_files(fs::path web_path, fs::path src_path) noexcept -> Result<FileMap, FileMapError> {
+auto cache_files(fs::path web_path, fs::path root_path) noexcept -> Result<FileMap, FileMapError> {
     if (!fs::exists(web_path)) return Err(FileMapError::FolderNotFound);
     if (!fs::is_directory(web_path)) return Err(FileMapError::NotAFolder);
-    if (!fs::exists(src_path)) return Err(FileMapError::FolderNotFound);
-    if (!fs::is_directory(src_path)) return Err(FileMapError::NotAFolder);
+    if (!fs::exists(root_path)) return Err(FileMapError::FolderNotFound);
+    if (!fs::is_directory(root_path)) return Err(FileMapError::NotAFolder);
 
     FileMap files;
 
@@ -135,13 +145,14 @@ auto cache_files(fs::path web_path, fs::path src_path) noexcept -> Result<FileMa
         }
     }
 
-    // Cache and create our source code files
+    // Cache src/
     std::vector<fs::path> src_list;
+    auto src_path = root_path.string() + "src";
     for (const auto &entry: fs::recursive_directory_iterator(src_path)) {
         if (!entry.is_directory()) {
             if (const auto content = read_file(entry); content.has_value()) {
                 auto rel = fs::path("/");
-                rel += "src/" + fs::relative(entry.path(), fs::path(src_path)).string();
+                rel += "harbour/src/" + fs::relative(entry.path(), fs::path(src_path)).string();
                 src_list.emplace_back(rel);
                 files[rel] = create_source_file(rel, *content);
             } else {
@@ -150,7 +161,23 @@ auto cache_files(fs::path web_path, fs::path src_path) noexcept -> Result<FileMa
         }
     }
 
-    files["/src/index.html"] = create_source_index(src_list);
+    // Cache include/
+    auto inc_path = root_path.string() + "include";
+    for (const auto &entry: fs::recursive_directory_iterator(inc_path)) {
+        if (!entry.is_directory()) {
+            if (const auto content = read_file(entry); content.has_value()) {
+                auto rel = fs::path("/");
+                rel += "harbour/include/" + fs::relative(entry.path(), fs::path(inc_path)).string();
+                src_list.emplace_back(rel);
+                files[rel] = create_source_file(rel, *content);
+            } else {
+                return Err(content.error());
+            }
+        }
+    }
+
+    std::ranges::sort(src_list);
+    files["/harbour/index.html"] = create_source_index(src_list);
 
     return files;
 }

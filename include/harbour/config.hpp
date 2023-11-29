@@ -28,9 +28,6 @@ static std::string ServerRelPath = "../";
 // Path to our files to serve
 static std::string ServerWebPath = ServerRelPath + "web";
 
-// Path to our source code
-static std::string ServerSrcPath = ServerRelPath + "src";
-
 // Name of our server
 static std::string ServerName = "TestServer";
 
