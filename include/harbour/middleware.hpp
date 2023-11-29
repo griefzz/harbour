@@ -8,12 +8,12 @@
 #endif
 
 namespace Http {
-    // Log all connections to the server
+    /// @brief Log all connections to the server
     auto Logger(Server &ctx, const Request &req, Response &resp) noexcept -> void {
         Logger::info(req.path);
     }
 
-    // Serve an index.html if it exists for any path ending in /
+    /// @brief Serve an index.html if it exists for any path ending in /
     auto DefaultIndex(Server &ctx, const Request &req, Response &resp) noexcept -> void {
         // if our path ends in / and it isnt a route, serve that dirs index.html
         if (req.path.ends_with("/") && !ctx.get_route(req).has_value()) {
@@ -28,9 +28,9 @@ namespace Http {
         }
     }
 
-    // Serve any arbitrary file stored in our cache
-    // If the file doesnt exist or its not a supported mime type
-    // Return an InternalServerError
+    /// @brief Serve any arbitrary file stored in our cache.
+    //         If the file does not exist or its not a supported mime type
+    //         Return an InternalServerError
     auto FileServer(Server &ctx, const Request &req, Response &resp) noexcept -> void {
         // Get the mime type to use, return empty if its not in our accepted list
         auto get_mime_type = [](const std::string_view ext) -> Result<std::string_view> {
@@ -58,11 +58,11 @@ namespace Http {
         }
     }
 
-    // Handle file not found
+    /// @brief Serve a 404 page based on servers configuration
     auto NotFound(Server &ctx, const Request &req, Response &resp) noexcept -> void {
         // If the path doesnt exist and isnt a route, serve our 404 page
         if (!ctx.cache[req.path] && !ctx.cache[req.path + "index.html"] && !ctx.get_route(req).has_value()) {
-            if (auto file = ctx.cache["/404.html"]) {
+            if (auto file = ctx.cache[Server404Path]) {
                 resp.set_status(Status::NotFound);
                 resp.set_header("Content-Type", "text/html");
                 resp.set_content(*file);
@@ -75,7 +75,7 @@ namespace Http {
     }
 
 #if HARBOUR_ENABLE_COMPRESSION
-    // Enable brotli compression
+    /// @brief Apply Brotli compression to all requests
     auto Compression(Server &ctx, const Request &req, Response &resp) -> void {
         if (auto encoding = req.get_header("Accept-Encoding")) {
             if (encoding->find("br") != std::string::npos) {

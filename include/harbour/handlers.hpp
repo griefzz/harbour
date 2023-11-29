@@ -2,8 +2,9 @@
 #include "base64.hpp"
 
 namespace Http {
-    // Serve a file either from cache or from disk if not stored
     struct ServeFile {
+        /// @brief Serve a file either from cache or from disk if not stored
+        /// @param path Path to serve
         explicit ServeFile(std::filesystem::path path) : path(path) {}
         auto operator()(Server &ctx, const Request &req) -> Response {
             // Get the mime type to use, return empty if its not in our accepted list
@@ -41,9 +42,11 @@ namespace Http {
         std::filesystem::path path;
     };
 
-    // Require authentication to access the route of this handler
-    // key should be of the form username:password
     struct RequireAuth {
+        /// @brief Require authentication to access the route of this handler.
+        ///        Key should be of the form username:password
+        /// @param key Key to use for authorization
+        /// @param handler Handler to apply requirement to
         explicit RequireAuth(const std::string &key, Handler handler) : key(base64::encode(key)), handler(handler) {}
         auto operator()(Server &ctx, const Request &req) -> Result<Response, Status> {
             if (req.get_header("Authorization") == "Basic " + key) {
@@ -54,6 +57,23 @@ namespace Http {
         }
 
         std::string key;
+        Handler handler;
+    };
+
+    struct RequireMethod {
+        /// @brief Require a specific Method to use the Handler
+        /// @param m Method to require
+        /// @param handler Handler to apply requirement to
+        explicit RequireMethod(Method m, Handler handler) : m(m), handler(handler) {}
+        auto operator()(Server &ctx, const Request &req) -> Result<Response, Status> {
+            if (req.method != m) {
+                return handler(ctx, req);
+            } else {
+                return Err(Status::NotImplemented);
+            }
+        }
+
+        Method m;
         Handler handler;
     };
 }// namespace Http

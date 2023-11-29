@@ -8,13 +8,19 @@ set(PROJECT_NAME "harbour")
 
 project(${PROJECT_NAME} 
         VERSION ${CURRENT_VERSION}
-        DESCRIPTION  "C++ Webserver and personal Website"
+        DESCRIPTION  "C++ webserver and personal website"
         HOMEPAGE_URL "github.com/griefzz/harbour"
         LANGUAGES    CXX)
 
 set(CMAKE_CXX_STANDARD          20) # force c++20
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS        OFF) # disable compiler extensions
+
+# Use Brotli compression
+set(ENABLE_COMPRESSION true)
+
+# Use TLS
+set(ENABLE_TLS true)
 
 # Add our server executable
 add_executable("${PROJECT_NAME}")
@@ -44,27 +50,32 @@ target_sources("${PROJECT_NAME}"
 if(WIN32)
     # Disable dumb warnings
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-DHARBOUR_ENABLE_COMPRESSION=false)
 
     # Link winsock for sockets
     target_link_libraries("${PROJECT_NAME}" wsock32 ws2_32)
 endif()
 
-# Include brotli compression when not on windows
+# Optionally include brotli compression and TLS when not on windows
 if (NOT WIN32)
-    include(FetchContent)
-    FetchContent_Declare(
-        Brotli
-        GIT_REPOSITORY https://github.com/google/brotli
-        GIT_TAG master
-    )
-    FetchContent_MakeAvailable(Brotli)
-
-    find_package(OpenSSL REQUIRED)
-
-    if(OPENSSL_FOUND)
-        include_directories(${OPENSSL_INCLUDE_DIR})
-        target_link_libraries("${PROJECT_NAME}" ${OPENSSL_LIBRARIES})
+    # Optionally enable compression
+    if (ENABLE_COMPRESSION)
+        include(FetchContent)
+        FetchContent_Declare(
+            Brotli
+            GIT_REPOSITORY https://github.com/google/brotli
+            GIT_TAG master
+        )
+        FetchContent_MakeAvailable(Brotli)
+        target_link_libraries("${PROJECT_NAME}" ${BROTLI_LIBRARIES})
+        add_definitions(-DHARBOUR_ENABLE_COMPRESSION=true)
     endif()
 
-    target_link_libraries("${PROJECT_NAME}" ${BROTLI_LIBRARIES})
+    if (ENABLE_TLS)
+        find_package(OpenSSL REQUIRED)
+
+        include_directories(${OPENSSL_INCLUDE_DIR})
+        target_link_libraries("${PROJECT_NAME}" ${OPENSSL_LIBRARIES})
+        add_definitions(-DHARBOUR_ENABLE_TLS=true)
+    endif()
 endif()

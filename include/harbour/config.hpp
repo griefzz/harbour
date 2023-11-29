@@ -3,41 +3,38 @@
 #include <string_view>
 #include <harbour/io.hpp>
 
-// Enable compression when on linux
-#if _WIN32
-    #define HARBOUR_ENABLE_COMPRESSION false
-#else
-    #define HARBOUR_ENABLE_COMPRESSION true
-#endif
-
 #if !_WIN32
-// Path to x509 certificate
+/// @brief Path to x509 certificate
 static std::string ServerCertificatePath = "/home/stone/harbour/cert.pem";
 
-// Path to private key
+/// @brief Path to TLS private key
 static std::string ServerPrivateKeyPath = "/home/stone/harbour/key.pem";
 #endif
 
-// Fixup for relative pathing
 #if _WIN32
+/// @brief Path to our files to serve
 static std::string ServerRelPath = "../../";
 #else
+/// @brief Path to our files to serve
 static std::string ServerRelPath = "../";
 #endif
 
-// Path to our files to serve
+/// @brief Path to our files to serve
 static std::string ServerWebPath = ServerRelPath + "web";
 
-// Name of our server
-static std::string ServerName = "TestServer";
+/// @brief Name of our server
+static std::string ServerName = "Harbour";
 
-// Port our server runs on
+/// @brief Port our server runs on
 static constexpr uint32_t ServerPort = 8080;
 
-// Server version
+/// @brief Server version
 static std::string ServerVersion = read_file(ServerRelPath + "VERSION").value_or("null");
 
-// Accepted MIME Types
+/// @brief 404 File path
+static std::string Server404Path = "/404.html";
+
+/// @brief Accepted MIME Types
 static std::vector<std::pair<std::vector<std::string>, std::string>> ServerAcceptedMimeTypes = {
         {{".txt", ".text", ".conf", ".log", ".ini"}, "text/plain"},
         {{".html", ".htm"}, "text/html"},
