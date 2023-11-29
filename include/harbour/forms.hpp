@@ -4,6 +4,7 @@
 #include <string>
 #include <type_traits>
 #include <unordered_map>
+#include <algorithm>
 
 // Inspired by https://github.com/nlohmann/json/blob/6eab7a2b187b10b2494e39c1961750bfd1bda500/include/nlohmann/detail/macro_scope.hpp#L261
 #define HARBOUR_FORMS_EXPAND(x)                                                                                                                                                                                                                                                                                                                                   x
@@ -178,7 +179,7 @@ using Form = std::unordered_map<std::string, std::string>;
 
 namespace Forms {
     // Get form data from a Request bodies last line
-    auto parse(const std::string &data) -> Form {
+    static auto parse(const std::string &data) -> Form {
         Form form;
         std::istringstream stream(data);
         std::string token;

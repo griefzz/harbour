@@ -27,7 +27,7 @@ HARBOUR_FORMATTABLE(Person);
 
 // Deserialize a Person and send to the client
 auto PersonHandler(Server &ctx, const Request &req) -> Response {
-    if (req.method == RequestMethod::POST) {
+    if (req.method == Method::POST) {
         if (auto p = Person::from_form(req.form)) {
             Logger::info(std::format("Client sent: {}", *p));
             return Json(*p);

@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 #include <string_view>
 #include <harbour/io.hpp>
 
@@ -11,36 +12,36 @@
 
 #if !_WIN32
 // Path to x509 certificate
-std::string ServerCertificatePath = "/home/stone/harbour/cert.pem";
+static std::string ServerCertificatePath = "/home/stone/harbour/cert.pem";
 
 // Path to private key
-std::string ServerPrivateKeyPath = "/home/stone/harbour/key.pem";
+static std::string ServerPrivateKeyPath = "/home/stone/harbour/key.pem";
 #endif
 
 // Fixup for relative pathing
 #if _WIN32
-std::string ServerRelPath = "../../";
+static std::string ServerRelPath = "../../";
 #else
-std::string ServerRelPath = "../";
+static std::string ServerRelPath = "../";
 #endif
 
 // Path to our files to serve
-std::string ServerWebPath = ServerRelPath + "web";
+static std::string ServerWebPath = ServerRelPath + "web";
 
 // Path to our source code
-std::string ServerSrcPath = ServerRelPath + "src";
+static std::string ServerSrcPath = ServerRelPath + "src";
 
 // Name of our server
-std::string ServerName = "TestServer";
+static std::string ServerName = "TestServer";
 
 // Port our server runs on
-constexpr uint32_t ServerPort = 8080;
+static constexpr uint32_t ServerPort = 8080;
 
 // Server version
-std::string ServerVersion = read_file(ServerRelPath + "VERSION").value_or("null");
+static std::string ServerVersion = read_file(ServerRelPath + "VERSION").value_or("null");
 
 // Accepted MIME Types
-std::vector<std::pair<std::vector<std::string>, std::string>> ServerAcceptedMimeTypes = {
+static std::vector<std::pair<std::vector<std::string>, std::string>> ServerAcceptedMimeTypes = {
         {{".txt", ".text", ".conf", ".log", ".ini"}, "text/plain"},
         {{".html", ".htm"}, "text/html"},
         {{".pdf"}, "application/pdf"},

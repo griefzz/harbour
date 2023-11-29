@@ -51,7 +51,7 @@ quote_if_string<T> quote(const T &value) {
 }
 
 template<typename T>
-concept jsonable = requires(T x) {
+concept Jsonable = requires(T x) {
     x.json();
 };
 
@@ -66,7 +66,7 @@ constexpr auto harbour_jsonify_type(const std::string &name, T &&v) noexcept -> 
         }
         s += "],";
     } else {
-        if constexpr (jsonable<T>) {
+        if constexpr (Jsonable<T>) {
             s += std::format("{}: {}", quote(name), v.json());
         } else if constexpr (hbjson::formattable<T>) {
             s += std::format("{}: {}", quote(name), quote(v));

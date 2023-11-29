@@ -26,13 +26,18 @@ target_include_directories("${PROJECT_NAME}"
 target_sources("${PROJECT_NAME}"
                PRIVATE src/main.cpp
                PRIVATE src/io.cpp
+               PRIVATE src/request.cpp
+               PRIVATE src/response.cpp
                PUBLIC include/harbour/forms.hpp
                PUBLIC include/harbour/jsonable.hpp
                PUBLIC include/harbour/stringable.hpp
                PUBLIC include/harbour/logger.hpp
                PUBLIC include/harbour/result.hpp
                PUBLIC include/harbour/middleware.hpp
-               PUBLIC include/harbour/handlers.hpp)
+               PUBLIC include/harbour/handlers.hpp
+               PUBLIC include/harbour/request.hpp
+               PUBLIC include/harbour/response.hpp
+               PUBLIC include/harbour/config.hpp)
 
 if(WIN32)
     # Disable dumb warnings

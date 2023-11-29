@@ -2,7 +2,7 @@
 #include <harbour/logger.hpp>
 #include <harbour/io.hpp>
 #include <harbour/result.hpp>
-#include "config.hpp"
+#include <harbour/config.hpp>
 
 enum class CacheError {
     NotFound

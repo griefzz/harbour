@@ -13,7 +13,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-#include "../config.hpp"
+#include <harbour/config.hpp>
 #include <harbour/logger.hpp>
 
 // Max amount of epoll events to que up
