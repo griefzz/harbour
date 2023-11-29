@@ -109,7 +109,7 @@ auto IndexHandler(Server &ctx, const Request &req) -> Response {
 Now you can add a new Route to the webserver to handle this path
 
 ```cpp
-#include "server.hpp"
+#include <harbour/server.hpp>
 
 auto main() -> int {
     Server server(80);
@@ -125,8 +125,8 @@ auto main() -> int {
 This is a very common task so theres a Handler that can do this for you.
 
 ```cpp
-#include "server.hpp"
-#include "handlers.hpp"
+#include <harbour/server.hpp>
+#include <harbour/handlers.hpp>
 
 auto main() -> int {
     Server server(80);
@@ -142,8 +142,8 @@ auto main() -> int {
 Serving index files is *also* a very common task so there's middleware that will automatically serve up index files for all directories that arent declared routes.
 
 ```cpp
-#include "server.hpp"
-#include "middleware.hpp"
+#include <harbour/server.hpp>
+#include <harbour/middleware.hpp>
 
 auto main() -> {
     Server server(80);
