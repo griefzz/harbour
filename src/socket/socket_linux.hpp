@@ -23,14 +23,14 @@ constexpr int MAX_EVENTS = 10000;
 template<typename T>
 using deleted_unique_ptr = std::unique_ptr<T, std::function<void(T *)>>;
 
-void ssl_ctx_deleter(SSL_CTX *ctx) { SSL_CTX_free(ctx); }
+static void ssl_ctx_deleter(SSL_CTX *ctx) { SSL_CTX_free(ctx); }
 
-void ssl_deleter(SSL *ssl) {
+static void ssl_deleter(SSL *ssl) {
     SSL_shutdown(ssl);
     SSL_free(ssl);
 }
 
-void socket_deleter(int *socket) { close(*socket); }
+static void socket_deleter(int *socket) { close(*socket); }
 
 // RAII wrapper for a single client connection storing its socket and epoll event
 struct harbour_client {
@@ -46,7 +46,7 @@ struct harbour_client {
 };
 
 // Redirect clients to HTTPS
-void handle_redirect(harbour_client *client, char *buffer, int BUFFER_SIZE) {
+static void handle_redirect(harbour_client *client, char *buffer, int BUFFER_SIZE) {
     int bytes_received = recv(client->socket, buffer, BUFFER_SIZE, 0);
     if (bytes_received <= 0) {
         Logger::error("Error in doing a 301 recovery!");
@@ -59,7 +59,7 @@ void handle_redirect(harbour_client *client, char *buffer, int BUFFER_SIZE) {
 }
 
 // Initialize a TLS capable server on port, passing all data to handler and returning its result to the client
-auto start_server(uint32_t port, const std::function<std::string(std::string_view)> &handler) noexcept -> void {
+static auto start_server(uint32_t port, const std::function<std::string(std::string_view)> &handler) noexcept -> void {
     SSL_load_error_strings();
     OpenSSL_add_ssl_algorithms();
     deleted_unique_ptr<SSL_CTX> ctx(SSL_CTX_new(TLS_server_method()), ssl_ctx_deleter);

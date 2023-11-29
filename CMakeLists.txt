@@ -28,6 +28,7 @@ target_sources("${PROJECT_NAME}"
                PRIVATE src/io.cpp
                PRIVATE src/request.cpp
                PRIVATE src/response.cpp
+               PRIVATE src/harbour.cpp
                PUBLIC include/harbour/forms.hpp
                PUBLIC include/harbour/jsonable.hpp
                PUBLIC include/harbour/stringable.hpp
@@ -37,7 +38,8 @@ target_sources("${PROJECT_NAME}"
                PUBLIC include/harbour/handlers.hpp
                PUBLIC include/harbour/request.hpp
                PUBLIC include/harbour/response.hpp
-               PUBLIC include/harbour/config.hpp)
+               PUBLIC include/harbour/config.hpp
+               PUBLIC include/harbour/harbour.hpp)
 
 if(WIN32)
     # Disable dumb warnings

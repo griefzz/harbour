@@ -1,7 +1,7 @@
 #pragma once
 #include <string_view>
-#include "config.hpp"
-#include "server.hpp"
+#include <harbour/config.hpp>
+#include <harbour/harbour.hpp>
 
 #if HARBOUR_ENABLE_COMPRESSION
     #include <brotli/encode.h>
