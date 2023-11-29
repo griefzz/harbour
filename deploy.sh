@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NAME="server"
+NAME="harbour"
 
 git pull
 
