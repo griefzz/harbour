@@ -15,7 +15,7 @@ struct Base64 {
         size_t i = 0;
 
         for (const auto &ch: input) {
-            input3[i++] = static_cast<unsigned char>(ch);
+            input3.at(i++) = static_cast<unsigned char>(ch);
 
             if (i == 3) {
                 output4[0] = (input3[0] & 0xFC) >> 2;
@@ -24,7 +24,7 @@ struct Base64 {
                 output4[3] = input3[2] & 0x3F;
 
                 for (i = 0; i < 4; i++) {
-                    encoded += base64_chars[output4[i]];
+                    encoded += base64_chars[output4.at(i)];
                 }
 
                 i = 0;
@@ -33,7 +33,7 @@ struct Base64 {
 
         if (i > 0) {
             for (size_t j = i; j < 3; j++) {
-                input3[j] = 0;
+                input3.at(j) = 0;
             }
 
             output4[0] = (input3[0] & 0xFC) >> 2;
@@ -42,7 +42,7 @@ struct Base64 {
             output4[3] = input3[2] & 0x3F;
 
             for (size_t j = 0; j < i + 1; j++) {
-                encoded += base64_chars[output4[j]];
+                encoded += base64_chars[output4.at(j)];
             }
 
             while (i++ < 3) {

@@ -40,8 +40,7 @@ struct Html {
 /// @tparam T Jsonable object
 template<Jsonable T>
 struct Json {
-    explicit constexpr Json(T &&t) noexcept : content(std::move(t.json())) {}
-    explicit constexpr Json(const T &t) noexcept : content(std::move(t.json())) {}
+    explicit constexpr Json(const T &t) : content(t.json()) {}
     std::string content;
 };
 
@@ -87,7 +86,7 @@ struct Response {
     Response(Html<T> &&html) noexcept {
         set_status(Status::Ok);
         set_header("Content-Type", "text/html");
-        set_content(std::move(html.content));
+        set_content(std::move(html).content);
     }
 
     /// @brief Create a response from a Jsonable object
@@ -97,7 +96,7 @@ struct Response {
     Response(Json<T> &&json) noexcept {
         set_status(Status::Ok);
         set_header("Content-Type", "application/json");
-        set_content(std::move(json.content));
+        set_content(std::move(json).content);
     }
 
     /// @brief Create an HTTP Response from a Status
@@ -110,7 +109,7 @@ struct Response {
     Response(Status type, std::string_view content) noexcept : type(type), content(content) {}
 
     /// @brief Response type 200, 404 etc
-    Status type;
+    Status type = Status::InternalServerError;
 
     /// @brief Key value store for all HTTP response header values
     std::unordered_map<std::string_view, std::string> header;

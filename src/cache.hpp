@@ -30,14 +30,6 @@ public:
             return Err(CacheError::NotFound);
     }
 
-    // returns an error if there isnt a value in the cache
-    auto operator[](Key &&key) noexcept -> Result<T, CacheError> {
-        if (auto s = files.find(key); s != files.end())
-            return s->second;
-        else
-            return Err(CacheError::NotFound);
-    }
-
 private:
     FileMap files;
 };

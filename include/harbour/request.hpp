@@ -30,7 +30,7 @@ enum class Method {
 /// including the method, path, headers, body, form data, and route map data.
 struct Request {
     /// The HTTP request method.
-    Method method;
+    Method method = Method::GET;
 
     /// The path requested on the server.
     std::string path;

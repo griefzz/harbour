@@ -86,11 +86,11 @@ class Result {
 public:
     /// @brief Construct a new Result object from a value.
     /// @param v The value object.
-    constexpr explicit Result(const T &v) : t(v) {}
+    constexpr explicit Result(const T &v) : t(v), err(false) {}
 
     /// @brief Construct a new Result object from an error.
     /// @param v The error object.
-    constexpr explicit Result(const E &v) : e(v) {}
+    constexpr explicit Result(const E &v) : e(v), err(true) {}
 
     /// @overload
     template<class U = T>
@@ -104,7 +104,7 @@ public:
 
     /// @overload
     template<class G>
-    constexpr explicit(!std::is_convertible_v<G, E>) Result(Err<G> &&e)
+    constexpr explicit(!std::is_convertible_v<G, E>) Result(Err<G> &e)
         : e(e.error()), err(true) {}
 
     /// @brief Destroy the Result object.

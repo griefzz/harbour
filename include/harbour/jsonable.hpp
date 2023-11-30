@@ -33,7 +33,7 @@ namespace hbjson {
 
 template<typename T>
 struct QuoteIfString {
-    const T &value;
+    T value;
 };
 
 template<typename T>

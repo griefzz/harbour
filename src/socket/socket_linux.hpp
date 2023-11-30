@@ -54,14 +54,13 @@ static void handle_redirect(HarbourClient *client) {
 
 struct EPoller {
     /// @brief ssl -> socket -> opt -> bind -> listen -> epoll
-    EPoller(uint32_t port, ConnectionHandler handler) : port(port), handler(std::move(handler)) {
+    EPoller(uint32_t port, ConnectionHandler handler) : port(port), handler(std::move(handler)), ctx(SSL_CTX_new(TLS_server_method())) {
         // Prevent SIGPIPE from crashing the server
         struct sigaction sig_in = {SIG_IGN};
         sigaction(SIGPIPE, &sig_in, nullptr);
 
         SSL_load_error_strings();
         OpenSSL_add_ssl_algorithms();
-        ctx = SSL_CTX_new(TLS_server_method());
         if (!ctx) {
             Logger::error("Unable to create SSL context");
             ERR_print_errors_fp(stderr);
@@ -92,18 +91,18 @@ struct EPoller {
 
         // Allow for reusing addresses/port (lets us rapidly restart server) and enable quickack for speed (needs testing)
         int reuse = 1;
-        if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (const char *) &reuse, sizeof(reuse)) < 0) {
+        if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
             Logger::error("setsockopt(SO_REUSEADDR) failed");
             return;
         }
 
-        if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEPORT, (const char *) &reuse, sizeof(reuse)) < 0) {
+        if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse)) < 0) {
             Logger::error("setsockopt(SO_REUSEPORT) failed");
             return;
         }
 
         int quickack = 1;
-        if (setsockopt(server_socket, IPPROTO_TCP, TCP_QUICKACK, (const char *) &quickack, sizeof(quickack)) < 0) {
+        if (setsockopt(server_socket, IPPROTO_TCP, TCP_QUICKACK, &quickack, sizeof(quickack)) < 0) {
             Logger::error("setsockopt(TCP_QUICKACK) failed");
             return;
         }
@@ -134,7 +133,7 @@ struct EPoller {
         }
 
         // Add the server socket to the epoll event list
-        epoll_event event;
+        epoll_event event{};
         event.events  = EPOLLIN;
         event.data.fd = server_socket;
         if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_socket, &event) == -1) {
@@ -157,7 +156,7 @@ struct EPoller {
     auto run() noexcept -> void {
         for (;;) {
             // Wait for events using epoll
-            std::array<epoll_event, MAX_EVENTS> events;
+            std::array<epoll_event, MAX_EVENTS> events{};
             int num_events = epoll_wait(epoll_fd, events.data(), MAX_EVENTS, -1);
             if (num_events == -1) {
                 Logger::error("Error in epoll_wait");
@@ -166,10 +165,10 @@ struct EPoller {
 
             // Process events
             for (int i = 0; i < num_events; i++) {
-                if (events[i].data.fd == server_socket) {
+                if (events.at(i).data.fd == server_socket) {
                     on_accept();
                 } else {
-                    on_message(events[i].data.fd);
+                    on_message(events.at(i).data.fd);
                 }
             }
         }
@@ -186,7 +185,7 @@ struct EPoller {
         }
 
         // Add the new client socket to the epoll event list
-        epoll_event event;
+        epoll_event event{};
         event.events  = EPOLLIN;
         event.data.fd = client_socket;
         if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_socket, &event) == -1) {
@@ -214,8 +213,8 @@ struct EPoller {
 
         // Recieve data from the client and send the handlers response
         size_t bytes_received = 0;
-        if (SSL_read_ex(ssl.get(), buffer.data(), BUFFER_SIZE, &bytes_received) > 0) {
-            buffer[bytes_received] = '\0';
+        if (SSL_read_ex(ssl.get(), buffer.data(), buffer.size(), &bytes_received) > 0) {
+            buffer.at(bytes_received) = '\0';
 
             auto message  = std::string_view(buffer.data(), bytes_received);
             auto response = handler(message);
@@ -233,7 +232,7 @@ struct EPoller {
     SSL_CTX *ctx;
 
     // file descripter for socket
-    int server_socket;
+    int server_socket{};
 
     // file descriptor for epoll
     int epoll_fd;
@@ -242,8 +241,7 @@ struct EPoller {
     uint32_t port;
 
     // Buffer to store incoming data
-    const int BUFFER_SIZE = 1024;
-    std::array<char, 1024> buffer;
+    std::array<char, 1024> buffer{};
 };
 
 // Initialize a TLS capable server on port, passing all data to handler and returning its result to the client
