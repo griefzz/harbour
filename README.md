@@ -3,13 +3,20 @@
 A C++ webserver and personal website hosting its own source code.
 
 ## Table of Contents
-- [Overview](#overview)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-- [Usage](#usage)
-- [Features](#features)
-- [Contributing](#contributing)
+- [Harbour](#harbour)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+      - [Linux](#linux)
+      - [Windows](#windows)
+      - [Mac](#mac)
+    - [Installation](#installation)
+      - [Linux \& Mac](#linux--mac)
+      - [Windows](#windows-1)
+  - [Usage](#usage)
+  - [Features](#features)
+  - [Contributing](#contributing)
 
 ## Overview
 
@@ -246,7 +253,7 @@ auto main() -> int {
 We also offer some shorthand to make routers ergnomonical to use.
 
 ```cpp
-// Automatically serialze a struct into a JSON object and send to a client
+// Automatically serialize a struct into a JSON object and send to a client
 auto JsonHandler(Server &ctx, const Request &req) -> Response {
     struct JsonExample {
         std::string a              = "test123";
