@@ -5,13 +5,27 @@
 #include <concepts>
 #include <iterator>
 #include <type_traits>
+#include <span>
 
 namespace hbjson {
     template<typename T>
     concept Iterable = requires(T x) {
-        std::begin(x);
-        std::end(x);
+        { std::begin(x) } -> std::forward_iterator;
+        { std::end(x) } -> std::forward_iterator;
     };
+
+    template<typename T>
+    concept NonIterable = !Iterable<T>;
+
+    template<Iterable T>
+    constexpr std::span<const typename std::iterator_traits<
+            decltype(std::begin(std::declval<T>()))>::value_type>
+    maybe_span(const T &arg) {
+        return std::span(std::begin(arg), std::end(arg));
+    }
+
+    template<NonIterable T>
+    constexpr T maybe_span(T arg) { return arg; }
 
     template<typename T>
     concept formattable = requires(T &v, std::format_context ctx) {
@@ -50,6 +64,20 @@ auto quote(const T &value) -> quote_if_string<T> {
     return {value};
 }
 
+template<>
+struct std::formatter<std::span<const char>> {
+    template<class ParseContext>
+    constexpr auto parse(ParseContext &ctx) -> ParseContext::iterator {
+        return ctx.begin();
+    }
+
+    // Pass through format() call to the base class
+    template<class FmtContext>
+    auto format(std::span<const char> str, FmtContext &ctx) const -> FmtContext::iterator {
+        return std::ranges::copy("\"" + std::string(str.begin(), str.end()) + "\"", ctx.out()).out;
+    }
+};
+
 template<typename T>
 concept Jsonable = requires(T x) {
     x.json();
@@ -58,7 +86,8 @@ concept Jsonable = requires(T x) {
 template<typename T>
 constexpr auto harbour_jsonify_type(const std::string &name, T &&v) noexcept -> std::string {
     std::string s;
-    if constexpr (hbjson::Iterable<T> && !std::convertible_to<T, std::string>) {
+    auto awd = typeid(T).name();
+    if constexpr (hbjson::Iterable<T> && !std::convertible_to<T, std::span<char const>>) {
         s += std::format("{}: [ ", quote(name));
         for (auto i{1}; const auto &vv: v) {
             s += std::format("{}{} ", quote(vv), (i != v.size()) ? "," : "");
@@ -211,9 +240,9 @@ constexpr auto harbour_jsonify_type(const std::string &name, T &&v) noexcept -> 
 #define HARBOUR_JSONABLE_PASTE63(func, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v26, v27, v28, v29, v30, v31, v32, v33, v34, v35, v36, v37, v38, v39, v40, v41, v42, v43, v44, v45, v46, v47, v48, v49, v50, v51, v52, v53, v54, v55, v56, v57, v58, v59, v60, v61, v62) HARBOUR_JSONABLE_PASTE2(func, v1) HARBOUR_JSONABLE_PASTE62(func, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15, v16, v17, v18, v19, v20, v21, v22, v23, v24, v25, v26, v27, v28, v29, v30, v31, v32, v33, v34, v35, v36, v37, v38, v39, v40, v41, v42, v43, v44, v45, v46, v47, v48, v49, v50, v51, v52, v53, v54, v55, v56, v57, v58, v59, v60, v61, v62)
 
 #define HARBOUR_JSONABLE_APPEND_VALUE(v) \
-    HARBOUR_JSONABLE_APPENDED_STR += std::format("{}{} ", harbour_jsonify_type(#v, v), (HARBOUR_JSONABLE_END_COMMA ? "" : ","));
+    HARBOUR_JSONABLE_APPENDED_STR += std::format("{}{} ", harbour_jsonify_type(hbjson::maybe_span(#v), hbjson::maybe_span(v)), (HARBOUR_JSONABLE_END_COMMA ? "" : ","));
 #define HARBOUR_JSONABLE_APPEND_VALUE_RV(v) \
-    HARBOUR_JSONABLE_APPENDED_STR += std::format("{}{} ", harbour_jsonify_type(std::move(#v), std::move(v)), (HARBOUR_JSONABLE_END_COMMA ? "" : ","));
+    HARBOUR_JSONABLE_APPENDED_STR += std::format("{}{} ", harbour_jsonify_type(hbjson::maybe_span(#v), hbjson::maybe_span(v)), (HARBOUR_JSONABLE_END_COMMA ? "" : ","));
 
 // Create a json() method for the struct
 #define HARBOUR_JSONABLE(...)                                                                          \

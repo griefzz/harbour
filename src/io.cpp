@@ -41,16 +41,29 @@ auto read_file(const fs::path &p) noexcept -> Result<std::string, FileMapError> 
 }
 
 auto last_modified(const std::string &path) -> std::string {
-#if _WIN32
+    auto localtime_xp = [](const std::time_t timer) -> std::tm {
+        std::tm bt{};
+#if defined(__unix__)
+        localtime_r(&timer, &bt);
+#elif defined(_MSC_VER)
+        localtime_s(&bt, &timer);
+#else
+        static std::mutex mtx;
+        std::lock_guard<std::mutex> lock(mtx);
+        bt = *std::localtime(&timer);
+#endif
+        return bt;
+    };
+#if defined(_MSC_VER)
     return "";
 #else
-    struct stat result;
+    struct stat result {};
     auto rp = "../../" + path;
     if (stat(rp.c_str(), &result) == 0) {
         const std::time_t modTime = result.st_mtime;
-        std::array<char, 11> buffer;// "YYYY-MM-DD\0"
-        std::strftime(buffer.data(), buffer.size(), "%Y-%m-%d", std::localtime(&modTime));
-        return buffer.data();
+        auto bt                   = localtime_xp(modTime);
+        std::array<char, 11> buffer{};// "YYYY-MM-DD\0"
+        return {buffer.data(), std::strftime(buffer.data(), buffer.size(), "%Y-%m-%d", &bt)};
     }
 
     Logger::error("Error getting file stat.\n");
@@ -71,7 +84,7 @@ auto rsstr(const std::string &src, std::string_view target) -> std::string {
 auto create_source_file(const fs::path &path, std::string_view data) noexcept -> std::string {
     // replace characters '<' and '>' that interfere with the rendered html
     std::string escaped(data.begin(), data.end());
-    std::size_t pos;
+    std::size_t pos{};
     while ((pos = escaped.find('<')) != std::string::npos)
         escaped.replace(pos, 1, "&lt;");
     while ((pos = escaped.find('>')) != std::string::npos)
@@ -112,7 +125,7 @@ auto create_source_index(const std::vector<fs::path> &src_list) noexcept -> std:
     std::string index;
     for (const auto &path: src_list) {
         auto p = path.string();
-        std::size_t pos;
+        std::size_t pos{};
         while ((pos = p.find('\\')) != std::string::npos)
             p.replace(pos, 1, "/");
         index += std::format(source_file_format, p, rsstr(p, "/harbour"), last_modified(p));

@@ -5,19 +5,19 @@
 #include <harbour/jsonable.hpp>
 
 // Test out a raw response
-auto TestHandler(Server &ctx, const Request &req) -> Response {
+auto test_handler(Server &ctx, const Request &req) -> Response {
     return Raw("oh hey there");
 }
 
 // Echo the clients request back
-auto EchoHandler(Server &ctx, const Request &req) -> Response {
+auto echo_handler(Server &ctx, const Request &req) -> Response {
     return Plain(req.body);
 }
 
 // Serializable, from_formable and formattable Person
 struct Person {
-    std::string name;
-    int age;
+    std::string name{};
+    int age{};
 
     HARBOUR_STRINGABLE(Person, name, age);
     HARBOUR_FROM_FORM(Person, name, age);
@@ -26,7 +26,7 @@ struct Person {
 HARBOUR_FORMATTABLE(Person);
 
 // Deserialize a Person and send to the client
-auto PersonHandler(Server &ctx, const Request &req) -> Response {
+auto person_handler(Server &ctx, const Request &req) -> Response {
     if (req.method == Method::POST) {
         if (auto p = Person::from_form(req.form)) {
             Logger::info(std::format("Client sent: {}", *p));
@@ -40,7 +40,7 @@ auto PersonHandler(Server &ctx, const Request &req) -> Response {
 }
 
 // Deserialize a Person from an API and send to the client
-auto ApiHandler(Server &ctx, const Request &req) -> Response {
+auto api_handler(Server &ctx, const Request &req) -> Response {
     if (req.route.size() == 2) {
         auto p = Person{
                 req["name"].value_or("nil"),
@@ -53,7 +53,7 @@ auto ApiHandler(Server &ctx, const Request &req) -> Response {
     return Status::InternalServerError;
 }
 
-auto JsonHandler(Server &ctx, const Request &req) -> Response {
+auto json_handler(Server &ctx, const Request &req) -> Response {
     struct JsonExample {
         std::string a              = "test123";
         std::vector<int> b         = {1, 2, 3};
@@ -76,11 +76,11 @@ auto main() -> int {
                       Http::DefaultIndex,
                       Http::NotFound);
     server.route(
-            Route("/test", TestHandler),
-            Route("/echo", EchoHandler),
-            Route("/person", PersonHandler),
-            Route("/json", JsonHandler),
-            Route("/api/<name>/<age>/", ApiHandler),
+            Route("/test", test_handler),
+            Route("/echo", echo_handler),
+            Route("/person", person_handler),
+            Route("/json", json_handler),
+            Route("/api/<name>/<age>/", api_handler),
             Route("/auth", Http::RequireAuth("admin:admin", Http::ServeFile("/index.html"))));
     server.serve();
 
