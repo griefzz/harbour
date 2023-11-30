@@ -58,7 +58,7 @@ auto Server::get_route(const Request &req) noexcept -> std::optional<Route> {
 }
 
 auto Server::serve() noexcept -> void {
-    auto request_handler = [&](std::string_view data) -> std::string {
+    auto request_handler = [&](std::string_view data) noexcept -> std::string {
         Response resp(Status::InternalServerError);
 
         // We decode the request and pass it to our middleware

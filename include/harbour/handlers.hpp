@@ -5,11 +5,11 @@ namespace Http {
     struct ServeFile {
         /// @brief Serve a file either from cache or from disk if not stored
         /// @param path Path to serve
-        explicit ServeFile(std::filesystem::path path) : path(path) {}
-        auto operator()(Server &ctx, const Request &req) -> Response {
+        explicit ServeFile(std::filesystem::path path) : path(std::move(path)) {}
+        auto operator()(Server &ctx, const Request &req) const noexcept -> Response {
             // Get the mime type to use, return empty if its not in our accepted list
             auto get_mime_type = [](const std::string_view ext) -> Result<std::string_view> {
-                for (const auto &mimes: ServerAcceptedMimeTypes) {
+                for (const auto &mimes: ServerAcceptedMimeTypes()) {
                     const auto &extensions = mimes.first;
                     if (std::find(extensions.begin(), extensions.end(), ext) != extensions.end()) {
                         return mimes.second;
@@ -46,8 +46,8 @@ namespace Http {
         ///        Key should be of the form username:password
         /// @param key Key to use for authorization
         /// @param handler Handler to apply requirement to
-        explicit RequireAuth(const std::string &key, Handler handler) : key(base64::encode(key)), handler(handler) {}
-        auto operator()(Server &ctx, const Request &req) -> Response {
+        explicit RequireAuth(const std::string &key, Handler handler) : key(Base64::encode(key)), handler(std::move(handler)) {}
+        auto operator()(Server &ctx, const Request &req) const noexcept -> Response {
             if (req.get_header("Authorization") == "Basic " + key) {
                 return handler(ctx, req);
             }
@@ -62,8 +62,8 @@ namespace Http {
         /// @brief Require a specific Method to use the Handler
         /// @param m Method to require
         /// @param handler Handler to apply requirement to
-        explicit RequireMethod(Method m, Handler handler) : m(m), handler(handler) {}
-        auto operator()(Server &ctx, const Request &req) -> Response {
+        explicit RequireMethod(Method m, Handler handler) : m(m), handler(std::move(handler)) {}
+        auto operator()(Server &ctx, const Request &req) const noexcept -> Response {
             if (req.method != m) {
                 return handler(ctx, req);
             }

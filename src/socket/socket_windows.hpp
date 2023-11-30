@@ -18,6 +18,8 @@
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "Mswsock.lib")
 
+using ConnectionHandler = std::function<std::string(std::string_view)>;
+
 #define CON_BUFFSIZE 1024
 #define DATA_BUFSIZE 128000
 
@@ -234,6 +236,6 @@ struct sender_reciever {
     std::function<std::string(std::string_view)> handler;
 };
 
-auto start_server(uint32_t port, const std::function<std::string(std::string_view)> &handler) noexcept -> void {
+auto start_server(uint32_t port, ConnectionHandler handler) noexcept -> void {
     sender_reciever sender(port, handler);
 }

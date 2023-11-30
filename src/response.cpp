@@ -40,7 +40,7 @@ auto Response::decode() noexcept -> std::string {
         set_header("WWW-Authenticate", "Basic realm=\"Access to staging site\"");
     }
 
-    set_header("Server", ServerName + '/' + ServerVersion);
+    set_header("Server", ServerName() + '/' + ServerVersion());
 
     std::string resp;
     resp += std::format("HTTP/1.1 {}\n", Status_string(type));

@@ -34,7 +34,7 @@ namespace Http {
     auto FileServer(Server &ctx, const Request &req, Response &resp) noexcept -> void {
         // Get the mime type to use, return empty if its not in our accepted list
         auto get_mime_type = [](const std::string_view ext) -> Result<std::string_view> {
-            for (const auto &mimes: ServerAcceptedMimeTypes) {
+            for (const auto &mimes: ServerAcceptedMimeTypes()) {
                 const auto &extensions = mimes.first;
                 if (std::find(extensions.begin(), extensions.end(), ext) != extensions.end()) {
                     return mimes.second;
@@ -62,7 +62,7 @@ namespace Http {
     auto NotFound(Server &ctx, const Request &req, Response &resp) noexcept -> void {
         // If the path doesnt exist and isnt a route, serve our 404 page
         if (!ctx.cache[req.path] && !ctx.cache[req.path + "index.html"] && !ctx.get_route(req).has_value()) {
-            if (auto file = ctx.cache[Server404Path]) {
+            if (auto file = ctx.cache[Server404Path()]) {
                 resp.set_status(Status::NotFound);
                 resp.set_header("Content-Type", "text/html");
                 resp.set_content(*file);
@@ -76,7 +76,7 @@ namespace Http {
 
 #if HARBOUR_ENABLE_COMPRESSION
     /// @brief Apply Brotli compression to all requests
-    auto Compression(Server &ctx, const Request &req, Response &resp) -> void {
+    auto Compression(Server &ctx, const Request &req, Response &resp) noexcept -> void {
         if (auto encoding = req.get_header("Accept-Encoding")) {
             if (encoding->find("br") != std::string::npos) {
                 if (!resp.content.empty()) {
@@ -90,7 +90,7 @@ namespace Http {
                                 resp.content.size(),
                                 reinterpret_cast<const uint8_t *>(resp.content.c_str()),
                                 &max_compressed_size,
-                                reinterpret_cast<uint8_t *>(&compressed[0]))) {
+                                reinterpret_cast<uint8_t *>(compressed.data()))) {
                         resp.set_header("Content-Encoding", "br");
                         resp.set_content(compressed);
                     } else {

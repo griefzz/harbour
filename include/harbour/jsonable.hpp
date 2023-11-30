@@ -18,14 +18,12 @@ namespace hbjson {
     concept NonIterable = !Iterable<T>;
 
     template<Iterable T>
-    constexpr std::span<const typename std::iterator_traits<
-            decltype(std::begin(std::declval<T>()))>::value_type>
-    maybe_span(const T &arg) {
+    constexpr auto maybe_span(const T &arg) -> std::span<const typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type> {
         return std::span(std::begin(arg), std::end(arg));
     }
 
     template<NonIterable T>
-    constexpr T maybe_span(T arg) { return arg; }
+    constexpr auto maybe_span(T arg) -> T { return arg; }
 
     template<typename T>
     concept formattable = requires(T &v, std::format_context ctx) {
@@ -34,12 +32,12 @@ namespace hbjson {
 };// namespace hbjson
 
 template<typename T>
-struct quote_if_string {
+struct QuoteIfString {
     const T &value;
 };
 
 template<typename T>
-struct std::formatter<quote_if_string<T>> : std::formatter<T> {
+struct std::formatter<QuoteIfString<T>> : std::formatter<T> {
     template<class ParseContext>
     constexpr auto parse(ParseContext &ctx) -> ParseContext::iterator {
         return ctx.begin();
@@ -47,7 +45,7 @@ struct std::formatter<quote_if_string<T>> : std::formatter<T> {
 
     // Pass through format() call to the base class
     template<class FmtContext>
-    auto format(quote_if_string<T> q, FmtContext &ctx) const -> FmtContext::iterator {
+    auto format(QuoteIfString<T> q, FmtContext &ctx) const -> FmtContext::iterator {
         if constexpr (std::is_same_v<T, std::string> ||
                       std::is_same_v<T, std::string_view>) {
             return std::formatter<T>::format('"' + q.value + '"', ctx);
@@ -60,7 +58,7 @@ struct std::formatter<quote_if_string<T>> : std::formatter<T> {
 };
 
 template<typename T>
-auto quote(const T &value) -> quote_if_string<T> {
+auto quote(const T &value) -> QuoteIfString<T> {
     return {value};
 }
 
@@ -86,17 +84,16 @@ concept Jsonable = requires(T x) {
 template<typename T>
 constexpr auto harbour_jsonify_type(const std::string &name, T &&v) noexcept -> std::string {
     std::string s;
-    auto awd = typeid(T).name();
     if constexpr (hbjson::Iterable<T> && !std::convertible_to<T, std::span<char const>>) {
         s += std::format("{}: [ ", quote(name));
-        for (auto i{1}; const auto &vv: v) {
+        for (auto i{1}; const auto &vv: std::forward<T>(v)) {
             s += std::format("{}{} ", quote(vv), (i != v.size()) ? "," : "");
             i++;
         }
         s += "],";
     } else {
         if constexpr (Jsonable<T>) {
-            s += std::format("{}: {}", quote(name), v.json());
+            s += std::format("{}: {}", quote(name), std::forward<T>(v).json());
         } else if constexpr (hbjson::formattable<T>) {
             s += std::format("{}: {}", quote(name), quote(v));
         } else {

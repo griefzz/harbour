@@ -13,10 +13,10 @@ using Middleware = std::function<void(Server &ctx, const Request &, Response &)>
 using Handler    = std::function<Response(Server &ctx, const Request &)>;
 
 struct Route {
-    explicit Route(const std::string &path, Handler &&handler)
-        : path(path), handler(handler) { make_path_table(); }
+    explicit Route(std::string path, Handler handler)
+        : path(std::move(path)), handler(std::move(handler)) { make_path_table(); }
 
-    auto parse(const std::string &reqPath) -> std::optional<RouteMap> {
+    auto parse(const std::string &reqPath) noexcept -> std::optional<RouteMap> {
         if (table.empty())
             return {};
 
@@ -28,7 +28,7 @@ struct Route {
                 // the last token is always "" for some reason here...
                 // i *think* we want to even keep empty tokens in our api path... not sure
                 auto s = std::string(std::ranges::begin(part), std::ranges::end(part));
-                if (s != "") tokens.emplace_back(s);
+                if (!s.empty()) tokens.emplace_back(s);
             }
 
             if (tokens.size() != table.size())
@@ -43,17 +43,17 @@ struct Route {
     }
 
     constexpr auto make_path_table() -> void {
-        auto start = path.find("<");
+        auto start = path.find('<');
         if (start != std::string::npos) {
             root = path.substr(0, start);
         } else {
             root = path;
         }
         while (start != std::string::npos) {
-            auto end = path.find(">", start);
+            auto end = path.find('>', start);
             auto var = path.substr(start + 1, end - start - 1);
             table.push_back(std::move(var));
-            start = path.find("<", end);
+            start = path.find('<', end);
         }
     }
 

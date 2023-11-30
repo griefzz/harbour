@@ -11,7 +11,7 @@ enum class CacheError {
 class Cache {
 public:
     Cache() {
-        if (auto cache = cache_files(ServerWebPath, ServerRelPath)) {
+        if (auto cache = cache_files(ServerWebPath(), ServerRelPath())) {
             files = *cache;
         } else {
             Logger::error(std::format("Failed to initialize cache: {}\n", FileMapError_string(cache.error())));

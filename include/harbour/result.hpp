@@ -13,11 +13,11 @@ using namespace std::string_literals;
 /// @brief Exception class for handling bad access on expected results.
 /// @tparam E The error type.
 template<class E>
-class bad_expected_access : public std::exception {
+class BadExpectedAccess : public std::exception {
 public:
-    /// @brief Construct a new bad_expected_access object.
+    /// @brief Construct a new BadExpectedAccess object.
     /// @param e The error object.
-    explicit bad_expected_access(E e) : e(std::move(e)) {}
+    explicit BadExpectedAccess(E e) : e(std::move(e)) {}
 
     /// @brief Get the error object
     /// @return The error object.
@@ -92,23 +92,17 @@ public:
     /// @param v The error object.
     constexpr explicit Result(const E &v) : e(v) {}
 
-    /// @brief Construct a new Result object from a value.
-    /// @tparam U The value type.
-    /// @param v The value object.
+    /// @overload
     template<class U = T>
-    constexpr explicit(!std::is_convertible_v<U, T>) Result(U &&v)
-        : t(std::forward<U>(v)), err(false) {}
+    constexpr explicit(!std::is_convertible_v<U, T>) Result(const U &v)
+        : t(std::move(v)), err(false) {}
 
-    /// @brief Construct a new Result object from an Err object.
-    /// @tparam G The error type.
-    /// @param e The Err object.
+    /// @overload
     template<class G>
     constexpr explicit(!std::is_convertible_v<const G &, E>) Result(const Err<G> &e)
         : e(e.error()), err(true) {}
 
-    /// @brief Construct a new Result object from an Err object.
-    /// @tparam G The error type.
-    /// @param e The Err object.
+    /// @overload
     template<class G>
     constexpr explicit(!std::is_convertible_v<G, E>) Result(Err<G> &&e)
         : e(e.error()), err(true) {}
@@ -130,57 +124,49 @@ public:
     /// @return The value object.
     constexpr auto value() & -> T & {
         if (!has_value())
-            throw bad_expected_access<std::decay_t<E>>(error());
+            throw BadExpectedAccess<std::decay_t<E>>(error());
         return t;
     }
 
     /// @overload
     [[nodiscard]] constexpr auto value() const & -> const T & {
         if (!has_value())
-            throw bad_expected_access<std::decay_t<E>>(error());
+            throw BadExpectedAccess<std::decay_t<E>>(error());
         return t;
     }
 
     /// @overload
     constexpr auto value() && -> T && {
         if (!has_value())
-            throw bad_expected_access<std::decay_t<E>>(error());
+            throw BadExpectedAccess<std::decay_t<E>>(error());
         return std::move(t);
     }
 
     /// @overload
     [[nodiscard]] constexpr auto value() const && -> const T && {
         if (!has_value())
-            throw bad_expected_access<std::decay_t<E>>(error());
+            throw BadExpectedAccess<std::decay_t<E>>(error());
         return std::move(t);
     }
 
     /// @brief Get the error object.
     /// @return The error object.
-    constexpr auto error() & -> E & {
-        if (has_value())
-            throw bad_expected_access<std::decay_t<T>>(value());
+    constexpr auto error() & noexcept -> E & {
         return e;
     }
 
     /// @overload
-    [[nodiscard]] constexpr auto error() const & -> const E & {
-        if (has_value())
-            throw bad_expected_access<std::decay_t<T>>(value());
+    [[nodiscard]] constexpr auto error() const & noexcept -> const E & {
         return e;
     }
 
     /// @overload
-    constexpr auto error() && -> E && {
-        if (has_value())
-            throw bad_expected_access<std::decay_t<T>>(value());
+    constexpr auto error() && noexcept -> E && {
         return std::move(e);
     }
 
     /// @overload
-    [[nodiscard]] constexpr auto error() const && -> const E && {
-        if (has_value())
-            throw bad_expected_access<std::decay_t<T>>(value());
+    [[nodiscard]] constexpr auto error() const && noexcept -> const E && {
         return std::move(e);
     }
 

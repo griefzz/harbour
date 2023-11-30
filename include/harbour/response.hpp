@@ -10,13 +10,13 @@
 
 /// @brief Constructible object to create an raw TCP Response
 struct Raw {
-    Raw(const std::string &content) : content(content) {}
+    Raw(std::string content) : content(std::move(content)) {}
     std::string content;
 };
 
 /// @brief Constructible object to create a plain/text Response
 struct Plain {
-    Plain(const std::string &content) : content(content) {}
+    Plain(std::string content) : content(std::move(content)) {}
     std::string content;
 };
 

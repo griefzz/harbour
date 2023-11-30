@@ -17,7 +17,7 @@
 #include <harbour/config.hpp>
 #include <harbour/logger.hpp>
 
-using ConnectionHandler = const std::function<std::string(std::string_view)>;
+using ConnectionHandler = std::function<std::string(std::string_view)>;
 
 // Max amount of epoll events to que up
 constexpr int MAX_EVENTS = 10000;
@@ -32,20 +32,20 @@ static void ssl_deleter(SSL *ssl) {
 }
 
 // RAII wrapper for a single client connection storing its socket and epoll event
-struct harbour_client {
+struct HarbourClient {
     int socket;
     int epoll_fd;
 
-    explicit harbour_client(int socket, int epoll_fd) : socket(socket), epoll_fd(epoll_fd) {}
+    explicit HarbourClient(int socket, int epoll_fd) : socket(socket), epoll_fd(epoll_fd) {}
 
-    ~harbour_client() {
+    ~HarbourClient() {
         close(socket);
         epoll_ctl(epoll_fd, EPOLL_CTL_DEL, socket, nullptr);
     }
 };
 
 // Redirect clients to HTTPS
-static void handle_redirect(harbour_client *client) {
+static void handle_redirect(HarbourClient *client) {
     std::string msg = "HTTP/1.1 301 Moved Permanently\nLocation: https://127.0.0.1:8080/\nConnection: close\n\n";
     if (send(client->socket, msg.data(), msg.size(), 0) == -1) {
         Logger::error("Error sending 301 recovery data to client");
@@ -54,10 +54,10 @@ static void handle_redirect(harbour_client *client) {
 
 struct EPoller {
     /// @brief ssl -> socket -> opt -> bind -> listen -> epoll
-    EPoller(uint32_t port, ConnectionHandler &handler) : port(port), handler(handler) {
+    EPoller(uint32_t port, ConnectionHandler handler) : port(port), handler(std::move(handler)) {
         // Prevent SIGPIPE from crashing the server
         struct sigaction sig_in = {SIG_IGN};
-        sigaction(SIGPIPE, &sig_in, NULL);
+        sigaction(SIGPIPE, &sig_in, nullptr);
 
         SSL_load_error_strings();
         OpenSSL_add_ssl_algorithms();
@@ -71,13 +71,13 @@ struct EPoller {
         SSL_CTX_set_ecdh_auto(ctx, 1);
 
         // Set the key and cert
-        if (SSL_CTX_use_certificate_file(ctx, ServerCertificatePath.c_str(), SSL_FILETYPE_PEM) <= 0) {
+        if (SSL_CTX_use_certificate_file(ctx, ServerCertificatePath().c_str(), SSL_FILETYPE_PEM) <= 0) {
             Logger::error("Unable to load SSL certificate");
             ERR_print_errors_fp(stderr);
             return;
         }
 
-        if (SSL_CTX_use_PrivateKey_file(ctx, ServerPrivateKeyPath.c_str(), SSL_FILETYPE_PEM) <= 0) {
+        if (SSL_CTX_use_PrivateKey_file(ctx, ServerPrivateKeyPath().c_str(), SSL_FILETYPE_PEM) <= 0) {
             Logger::error("Unable to load SSL private key");
             ERR_print_errors_fp(stderr);
             return;
@@ -157,8 +157,8 @@ struct EPoller {
     auto run() noexcept -> void {
         for (;;) {
             // Wait for events using epoll
-            epoll_event events[MAX_EVENTS];
-            int num_events = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
+            std::array<epoll_event, MAX_EVENTS> events;
+            int num_events = epoll_wait(epoll_fd, events.data(), MAX_EVENTS, -1);
             if (num_events == -1) {
                 Logger::error("Error in epoll_wait");
                 return;
@@ -175,7 +175,7 @@ struct EPoller {
         }
     }
 
-    auto on_accept() noexcept -> void {
+    auto on_accept() const noexcept -> void {
         // Accept a new connection
         sockaddr_in client_address{};
         socklen_t client_address_len = sizeof(client_address);
@@ -197,7 +197,7 @@ struct EPoller {
 
     auto on_message(int event_fd) noexcept -> void {
         // Handle data from a client
-        auto client = std::make_unique<harbour_client>(event_fd, epoll_fd);
+        auto client = std::make_unique<HarbourClient>(event_fd, epoll_fd);
         deleted_unique_ptr<SSL> ssl(SSL_new(ctx), ssl_deleter);
         SSL_set_fd(ssl.get(), client->socket);
 
@@ -214,13 +214,13 @@ struct EPoller {
 
         // Recieve data from the client and send the handlers response
         size_t bytes_received = 0;
-        if (SSL_read_ex(ssl.get(), buffer, BUFFER_SIZE, &bytes_received) > 0) {
+        if (SSL_read_ex(ssl.get(), buffer.data(), BUFFER_SIZE, &bytes_received) > 0) {
             buffer[bytes_received] = '\0';
 
-            auto message  = std::string_view(buffer, bytes_received);
+            auto message  = std::string_view(buffer.data(), bytes_received);
             auto response = handler(message);
 
-            if (SSL_write(ssl.get(), response.c_str(), response.size()) <= 0) {
+            if (SSL_write(ssl.get(), response.c_str(), static_cast<int>(response.size())) <= 0) {
                 Logger::error("Error sending data to client");
             }
         }
@@ -242,12 +242,12 @@ struct EPoller {
     uint32_t port;
 
     // Buffer to store incoming data
-    static constexpr int BUFFER_SIZE = 1024;
-    char buffer[BUFFER_SIZE];
+    const int BUFFER_SIZE = 1024;
+    std::array<char, 1024> buffer;
 };
 
 // Initialize a TLS capable server on port, passing all data to handler and returning its result to the client
-static auto start_server(uint32_t port, ConnectionHandler &handler) noexcept -> void {
-    EPoller epoller(port, handler);
+static auto start_server(uint32_t port, ConnectionHandler handler) noexcept -> void {
+    EPoller epoller(port, std::move(handler));
     epoller.run();
 }
