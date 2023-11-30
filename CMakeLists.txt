@@ -11,13 +11,14 @@ project(${PROJECT_NAME}
         DESCRIPTION  "C++ webserver and personal website"
         HOMEPAGE_URL "github.com/griefzz/harbour"
         LANGUAGES    CXX)
-
+        
 set(CMAKE_CXX_STANDARD          20) # force c++20
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS        OFF) # disable compiler extensions
 set(CMAKE_CXX_CLANG_TIDY
-  clang-tidy-16;
+  clang-tidy-17;
   -format-style='file';
+  --config-file=${CMAKE_SOURCE_DIR}/.clang-tidy;
 )
 
 # Use Brotli compression
@@ -38,7 +39,6 @@ target_sources("${PROJECT_NAME}"
                PRIVATE src/io.cpp
                PRIVATE src/request.cpp
                PRIVATE src/response.cpp
-               PRIVATE src/harbour.cpp
                PUBLIC include/harbour/forms.hpp
                PUBLIC include/harbour/jsonable.hpp
                PUBLIC include/harbour/stringable.hpp

@@ -47,7 +47,7 @@ struct harbour_client {
 };
 
 // Redirect clients to HTTPS
-static void handle_redirect(harbour_client *client, char *buffer, int BUFFER_SIZE) {
+static void handle_redirect(harbour_client *client) {
     std::string msg = "HTTP/1.1 301 Moved Permanently\nLocation: https://127.0.0.1:8080/\nConnection: close\n\n";
     if (send(client->socket, msg.data(), msg.size(), 0) == -1) {
         Logger::error("Error sending 301 recovery data to client");
@@ -189,7 +189,7 @@ static auto start_server(uint32_t port, const std::function<std::string(std::str
                     // SSL_ERROR_SYSCALL looked to be the error i got when requesting HTTP...
                     // needs more testing to be really stable
                     if (SSL_get_error(ssl.get(), code) == SSL_ERROR_SYSCALL) {
-                        handle_redirect(client.get(), buffer, BUFFER_SIZE);
+                        handle_redirect(client.get());
                         continue;
                     }
                 }

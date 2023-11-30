@@ -1,10 +1,10 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
-#include <streambuf>
+#include <iterator>
 #include <algorithm>
 #include <array>
-#if !defined(_WIN32)
+#if !defined(MSC_VER)
     #include <sys/stat.h>
     #include <ctime>
 #endif

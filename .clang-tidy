@@ -13,6 +13,7 @@ Checks: >
   cppcoreguidelines-*,
   cert-*,
   concurrency-*,
+  -misc-include-cleaner,
   -misc-unused-parameters,
   -misc-non-private-member-variables-in-classes,
   -readability-isolate-declaration,
