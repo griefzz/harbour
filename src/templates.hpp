@@ -88,7 +88,7 @@ constexpr std::string_view harbour_source_index_body =
 
 <script>
     async function get_commits() {{
-        const response = await fetch("/gitlog");
+        const response = await fetch("/gitlog/6/");
         return await response.json();
     }}
 

@@ -4,7 +4,6 @@
 #include <harbour/stringable.hpp>
 #include <nlohmann/json.hpp>
 
-
 // Test out a raw response
 auto test_handler(Server &ctx, const Request &req) -> Response {
     return Raw("oh hey there");
@@ -84,9 +83,11 @@ struct Commits {
 };
 
 auto git_log_handler(Server &ctx, const Request &req) -> Response {
+    auto n         = req["n"].value_or("0");
+    const auto cmd = std::format("git log -n {}", n);
     std::array<char, 512> buffer;
     std::string log_str;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen("git log -n 6", "r"), pclose);
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.data(), "r"), pclose);
     if (!pipe) {
         Logger::error("popen() failed!");
         return Status::InternalServerError;
@@ -138,7 +139,7 @@ auto main() -> int {
             Route("/person", person_handler),
             Route("/json", json_handler),
             Route("/api/<name>/<age>/", api_handler),
-            Route("/gitlog", git_log_handler),
+            Route("/gitlog/<n>/", git_log_handler),
             Route("/auth", Http::RequireAuth("admin:admin", Http::ServeFile("/index.html"))));
     server.serve();
 
