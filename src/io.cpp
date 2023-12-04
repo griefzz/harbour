@@ -10,6 +10,7 @@
 #endif
 #include <harbour/logger.hpp>
 #include <harbour/io.hpp>
+#include "templates.hpp"
 
 auto FileMapError_string(FileMapError error) noexcept -> std::string {
     switch (error) {
@@ -90,6 +91,19 @@ auto create_source_file(const fs::path &path, std::string_view data) noexcept ->
     while ((pos = escaped.find('>')) != std::string::npos)
         escaped.replace(pos, 1, "&gt;");
 
+    return std::vformat(harbour_source_item, std::make_format_args(path.string(), escaped));
+}
+
+/*
+auto create_source_file(const fs::path &path, std::string_view data) noexcept -> std::string {
+    // replace characters '<' and '>' that interfere with the rendered html
+    std::string escaped(data.begin(), data.end());
+    std::size_t pos{};
+    while ((pos = escaped.find('<')) != std::string::npos)
+        escaped.replace(pos, 1, "&lt;");
+    while ((pos = escaped.find('>')) != std::string::npos)
+        escaped.replace(pos, 1, "&gt;");
+
     const std::string header = "<!DOCTYPE html><meta charset=UTF-8><title>" + path.string() +
                                "</title><meta content=\"width=device-width,initial-scale"
                                "=1\"name=viewport><link href=https://cdn.jsdelivr.net/npm/highlight.js@10.7.2/styles/nord.css rel=st"
@@ -107,7 +121,9 @@ auto create_source_file(const fs::path &path, std::string_view data) noexcept ->
 
     return header + escaped + footer;
 }
+*/
 
+/*
 auto create_source_index(const std::vector<fs::path> &src_list) noexcept -> std::string {
     const std::string header = "<!DOCTYPE html><html lang=en><meta charset=UTF-8><meta content=\"width=device-width,initial-scale=1\"name="
                                "viewport><link href=https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css rel=stylesheet><"
@@ -134,6 +150,20 @@ auto create_source_index(const std::vector<fs::path> &src_list) noexcept -> std:
     const std::string footer = "</div></div></body></html>";
 
     return header + index + footer;
+}
+*/
+
+constexpr auto create_source_index(const std::vector<fs::path> &src_list) noexcept -> std::string {
+    std::string files;
+    for (const auto &path: src_list) {
+        auto p = path.string();
+        std::size_t pos{};
+        while ((pos = p.find('\\')) != std::string::npos)
+            p.replace(pos, 1, "/");
+        files += std::vformat(harbour_source_index_item, std::make_format_args(p, rsstr(p, "/harbour"), last_modified(p)));
+    }
+
+    return std::vformat(harbour_source_index_body, std::make_format_args(files));
 }
 
 // Cache all files in path

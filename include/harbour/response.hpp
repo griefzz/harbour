@@ -7,6 +7,7 @@
 #include <harbour/result.hpp>
 #include <harbour/jsonable.hpp>
 #include <harbour/config.hpp>
+#include <nlohmann/json.hpp>
 
 /// @brief Constructible object to create an raw TCP Response
 struct Raw {
@@ -38,9 +39,9 @@ struct Html {
 
 /// @brief Constructible object to create a JSON Response
 /// @tparam T Jsonable object
-template<Jsonable T>
+template<typename T>
 struct Json {
-    explicit constexpr Json(const T &t) : content(t.json()) {}
+    explicit constexpr Json(const T &t) : content(nlohmann::json(t).dump()) {}
     std::string content;
 };
 
@@ -92,7 +93,7 @@ struct Response {
     /// @brief Create a response from a Jsonable object
     /// @tparam T Jsonable struct
     /// @param json Object to jsonify
-    template<Jsonable T>
+    template<typename T>
     Response(Json<T> &&json) noexcept {
         set_status(Status::Ok);
         set_header("Content-Type", "application/json");

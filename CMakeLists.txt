@@ -15,7 +15,8 @@ project(${PROJECT_NAME}
 set(CMAKE_CXX_STANDARD          20) # force c++20
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS        OFF) # disable compiler extensions
-set(CMAKE_CXX_CLANG_TIDY "clang-tidy-17")
+#set(CMAKE_CXX_CLANG_TIDY "clang-tidy-17")
+Set(FETCHCONTENT_QUIET FALSE)
 
 # Use Brotli compression
 set(ENABLE_COMPRESSION true)
@@ -65,6 +66,8 @@ if (NOT WIN32)
             Brotli
             GIT_REPOSITORY https://github.com/google/brotli
             GIT_TAG master
+            GIT_SHALLOW 1
+            GIT_PROGRESS TRUE
         )
         FetchContent_MakeAvailable(Brotli)
         target_link_libraries("${PROJECT_NAME}" ${BROTLI_LIBRARIES})
@@ -79,3 +82,13 @@ if (NOT WIN32)
         add_definitions(-DHARBOUR_ENABLE_TLS=true)
     endif()
 endif()
+
+FetchContent_Declare(
+  json
+  GIT_REPOSITORY https://github.com/nlohmann/json.git
+  GIT_TAG v3.11.3
+  GIT_SHALLOW 1
+  GIT_PROGRESS TRUE
+)
+FetchContent_MakeAvailable(json)
+target_link_libraries("${PROJECT_NAME}" nlohmann_json::nlohmann_json)
