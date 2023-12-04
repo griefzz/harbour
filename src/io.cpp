@@ -94,65 +94,6 @@ auto create_source_file(const fs::path &path, std::string_view data) noexcept ->
     return std::vformat(harbour_source_item, std::make_format_args(path.string(), escaped));
 }
 
-/*
-auto create_source_file(const fs::path &path, std::string_view data) noexcept -> std::string {
-    // replace characters '<' and '>' that interfere with the rendered html
-    std::string escaped(data.begin(), data.end());
-    std::size_t pos{};
-    while ((pos = escaped.find('<')) != std::string::npos)
-        escaped.replace(pos, 1, "&lt;");
-    while ((pos = escaped.find('>')) != std::string::npos)
-        escaped.replace(pos, 1, "&gt;");
-
-    const std::string header = "<!DOCTYPE html><meta charset=UTF-8><title>" + path.string() +
-                               "</title><meta content=\"width=device-width,initial-scale"
-                               "=1\"name=viewport><link href=https://cdn.jsdelivr.net/npm/highlight.js@10.7.2/styles/nord.css rel=st"
-                               "ylesheet><script src=https://unpkg.com/@highlightjs/cdn-assets@11.9.0/highlight.min.js></script><scr"
-                               "ipt src=//cdnjs.cloudflare.com/ajax/libs/highlightjs-line-numbers.js/2.8.0/highlightjs-line-numbers."
-                               "min.js></script><script>hljs.highlightAll(),hljs.initLineNumbersOnLoad()</script><style>body,html{pa"
-                               "dding:0;margin:auto;font-size:1.1em;height:100%;width:100%;background:#0d1117}.breadcrumb{background"
-                               ":#161b22;font-size:.7em;color:gray}.hljs{background:#0d1117}.hljs-ln-numbers{-webkit-touch-callout:n"
-                               "one;-webkit-user-select:none;-khtml-user-select:none;-moz-user-select:none;-ms-user-select:none;user"
-                               "-select:none;text-align:center;color:#ccc;border-right:1px solid #ccc;vertical-align:top;padding-rig"
-                               "ht:5px}.hljs-ln-code{padding-left:10px}</style><div class=breadcrumb><a href=/harbour/ >Back</a> - " +
-                               path.string() + "<hr></div><pre><code class=language-cpp>";
-
-    const std::string footer = "</code></pre></body></html>";
-
-    return header + escaped + footer;
-}
-*/
-
-/*
-auto create_source_index(const std::vector<fs::path> &src_list) noexcept -> std::string {
-    const std::string header = "<!DOCTYPE html><html lang=en><meta charset=UTF-8><meta content=\"width=device-width,initial-scale=1\"name="
-                               "viewport><link href=https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css rel=stylesheet><"
-                               "title>Harbour Source Code</title><style>.header-bg{background-color:#161b22}.body-bg{background-color:#0d1"
-                               "117}</style><body class=\"body-bg p-4 text-white\"><div class=\"max-w-lg mx-auto\"><div class=\"border bor"
-                               "der-gray-700 header-bg p-0 rounded-md shadow-md\"><div class=\"flex items-center justify-between mb-1 ml-1"
-                               " mr-1 p-1\"><a href=https://github.com/griefzz/harbour target=_blank><img alt=\"GitHub Logo\"class=\"h-6 w-6\"src="
-                               "/github-mark-white.svg></a><h2 class=\"font-semibold text-2xl\">Harbour</h2><a href=/ class=\"font-semibold"
-                               " text-1xl\"><button class=\"hover:underline text-blue-400\">Home</button></a></div>";
-
-    constexpr std::string_view source_file_format = "<div class=\"body-bg border border-gray-700 flex items-center justify-between mb-0 p-2\""
-                                                    "><a href={}><p class=\"text-sm hover:text-blue-400 hover:underline\">{}</p></a><p class="
-                                                    "\"text-sm text-gray-400\">{}</div>";
-
-    std::string index;
-    for (const auto &path: src_list) {
-        auto p = path.string();
-        std::size_t pos{};
-        while ((pos = p.find('\\')) != std::string::npos)
-            p.replace(pos, 1, "/");
-        index += std::format(source_file_format, p, rsstr(p, "/harbour"), last_modified(p));
-    }
-
-    const std::string footer = "</div></div></body></html>";
-
-    return header + index + footer;
-}
-*/
-
 constexpr auto create_source_index(const std::vector<fs::path> &src_list) noexcept -> std::string {
     std::string files;
     for (const auto &path: src_list) {
