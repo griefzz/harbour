@@ -84,9 +84,7 @@ constexpr std::string_view harbour_source_index_body =
             </div>
         </div>
     </div>
-</body>
-
-<script>
+    <script>
     async function get_commits() {{
         const response = await fetch("/gitlog/6/");
         return await response.json();
@@ -111,9 +109,8 @@ constexpr std::string_view harbour_source_index_body =
                     </div>`;
         }});
     }});
-
 </script>
-
+</body>
 </html>
 )"sv;
 
