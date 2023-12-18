@@ -24,7 +24,7 @@ using ConnectionHandler = std::function<std::string(std::string_view)>;
 constexpr int MAX_EVENTS = 10000;
 
 /// Decode the ssl error and return some status codes for handling it
-auto SSL_status(SSL *ssl, int status) -> int {
+auto SSL_status(SSL *ssl, int status) noexcept -> int {
     auto err = SSL_get_error(ssl, status);
     switch (err) {
         case SSL_ERROR_NONE:
@@ -51,7 +51,7 @@ auto SSL_status(SSL *ssl, int status) -> int {
 }
 
 /// Initialize our SSL context with our cert and private key
-auto init_ssl() -> SSL_CTX * {
+auto init_ssl() noexcept -> SSL_CTX * {
     SSL_load_error_strings();
     OpenSSL_add_ssl_algorithms();
     auto ctx = SSL_CTX_new(TLS_server_method());
@@ -78,16 +78,27 @@ auto init_ssl() -> SSL_CTX * {
 }
 
 /// Set a socket to be non-blocking, returns true on success
-auto setnonblocking(int fd) -> bool {
+auto setnonblocking(int fd) noexcept -> bool {
     if (fd < 0) return false;
     int flags = fcntl(fd, F_GETFL, 0);
-    if (flags == -1) return false;
-    flags = (flags | O_NONBLOCK);
-    return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
+    if (flags == -1) {
+        perror("fnctl");
+        Logger::error("fnctl failed");
+        return false;
+    }
+    flags       = (flags | O_NONBLOCK);
+    auto result = fcntl(fd, F_SETFL, flags);
+    if (result == -1) {
+        perror("fnctl");
+        Logger::error("fnctl failed");
+        return false;
+    }
+
+    return true;
 }
 
 /// Create and configure a socket on the specified port
-auto create_socket(uint32_t port) -> std::optional<int> {
+auto create_socket(uint32_t port) noexcept -> std::optional<int> {
     // Create a socket
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1) {
@@ -141,7 +152,7 @@ auto create_socket(uint32_t port) -> std::optional<int> {
 }
 
 // Function to call whenever we want to send/recieve data from a client
-auto handle_client(epoll_event *event, ConnectionHandler handler) -> void {
+auto handle_client(epoll_event *event, ConnectionHandler handler) noexcept -> void {
     SSL *ssl              = (SSL *) event->data.ptr;
     const int BUFFER_SIZE = 1024;
     char buffer[BUFFER_SIZE];
@@ -234,7 +245,7 @@ static auto start_server(uint32_t port, ConnectionHandler handler) noexcept -> v
 
                 auto ssl = SSL_new(ctx);
                 SSL_set_fd(ssl, conn);
-                int status;
+                int status{};
                 bool redirected = false;
                 do {
                     status = SSL_accept(ssl);
