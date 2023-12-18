@@ -42,11 +42,9 @@ auto person_handler(Server &ctx, const Request &req) -> Response {
 // Deserialize a Person from an API and send to the client
 auto api_handler(Server &ctx, const Request &req) -> Response {
     if (req.route.size() == 2) {
-        auto p = Person{
+        return Json(Person{
                 req["name"].value_or("nil"),
-                std::stoi(req["age"].value_or("0"))};
-        return Json(p);
-        Logger::info(std::format("Client sent: {}", p));
+                std::stoi(req["age"].value_or("0"))});
     }
 
     Logger::warning("Unable to deserialize a Person!");
