@@ -11,7 +11,6 @@
 #include <netinet/tcp.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <signal.h>
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -62,6 +61,7 @@ auto init_ssl() -> SSL_CTX * {
     }
 
     SSL_CTX_set_ecdh_auto(ctx, 1);
+    SSL_CTX_set_mode(ctx, SSL_MODE_AUTO_RETRY);
 
     // Set the key and cert
     if (SSL_CTX_use_certificate_file(ctx, ServerCertificatePath().c_str(), SSL_FILETYPE_PEM) <= 0) {
@@ -88,14 +88,6 @@ auto setnonblocking(int fd) -> bool {
 
 /// Create and configure a socket on the specified port
 auto create_socket(uint32_t port) -> std::optional<int> {
-    // Prevent SIGPIPE from crashing the server
-    struct sigaction sig_in = {SIG_IGN};
-    if (sigaction(SIGPIPE, &sig_in, nullptr) == -1) {
-        perror("sigaction");
-        Logger::error("Sigaction failed to set");
-        return {};
-    }
-
     // Create a socket
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1) {
@@ -195,6 +187,7 @@ static auto start_server(uint32_t port, ConnectionHandler handler) noexcept -> v
     if (auto result = create_socket(port); result.has_value()) {
         listen_sock = *result;
     } else {
+        Logger::error("Failed to create socket");
         exit(EXIT_FAILURE);
     }
 
@@ -248,8 +241,8 @@ static auto start_server(uint32_t port, ConnectionHandler handler) noexcept -> v
                     status = SSL_status(ssl, status);
                     if (status == -1) {
                         std::string msg = "HTTP/1.1 301 Moved Permanently\nLocation: https://127.0.0.1:8080/\nConnection: close\n\n";
-                        if (write(conn, msg.data(), msg.size()) == -1) {
-                            perror("write");
+                        if (send(conn, msg.data(), msg.size(), MSG_NOSIGNAL) == -1) {
+                            perror("send");
                             Logger::error("Failed to write to socket");
                         }
                         close(conn);
