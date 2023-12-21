@@ -19,7 +19,7 @@ static auto ServerPrivateKeyPath() -> const std::string & {
 
 /// @brief Path to our files to serve
 static auto ServerRelPath() -> const std::string & {
-#if defined(MSC_VER)
+#if WIN32
     static const std::string rel_path = "../../";
 #else
     static const std::string rel_path = "../";

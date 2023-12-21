@@ -208,7 +208,7 @@ struct std::formatter<Stringable> {
 
 // Create a string() method for the struct
 #define HARBOUR_STRINGABLE(Type, ...)                                                                     \
-    constexpr auto string() -> std::string {                                                              \
+    auto string() noexcept -> std::string {                                                               \
         auto HARBOUR_STRINGABLE_END_COMMA    = false;                                                     \
         auto HARBOUR_STRINGABLE_APPENDED_STR = std::format("{} {} ", #Type, "{");                         \
         HARBOUR_STRINGABLE_EXPAND(HARBOUR_STRINGABLE_PASTE(HARBOUR_STRINGABLE_APPEND_VALUE, __VA_ARGS__)) \

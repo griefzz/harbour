@@ -13,7 +13,7 @@
 #include <string_view>
 #include <format>
 #include <memory>
-#include "../logger.hpp"
+#include <harbour/logger.hpp>
 
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "Mswsock.lib")

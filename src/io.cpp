@@ -94,7 +94,7 @@ auto create_source_file(const fs::path &path, std::string_view data) noexcept ->
     return std::vformat(harbour_source_item, std::make_format_args(path.string(), escaped));
 }
 
-constexpr auto create_source_index(const std::vector<fs::path> &src_list) noexcept -> std::string {
+auto create_source_index(const std::vector<fs::path> &src_list) noexcept -> std::string {
     std::string files;
     for (const auto &path: src_list) {
         auto p = path.string();

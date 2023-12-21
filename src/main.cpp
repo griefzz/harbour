@@ -80,6 +80,11 @@ struct Commits {
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(Commits, commits);
 };
 
+#if WIN32
+    #define pclose _pclose
+    #define popen  _popen
+#endif
+
 auto git_log_handler(Server &ctx, const Request &req) -> Response {
     auto n         = req["n"].value_or("0");
     const auto cmd = std::format("git log -n {}", n);
