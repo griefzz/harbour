@@ -88,8 +88,8 @@ struct Commits {
 auto git_log_handler(Server &ctx, const Request &req) -> Response {
     auto n         = req["n"].value_or("0");
     const auto cmd = std::format("git log -n {}", n);
-    std::array<char, 512> buffer;
-    std::string log_str;
+    std::array<char, 512> buffer{};
+    std::string log_str{};
     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.data(), "r"), pclose);
     if (!pipe) {
         Logger::error("popen() failed!");

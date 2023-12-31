@@ -141,7 +141,7 @@ auto create_socket(uint32_t port) noexcept -> int {
 }
 
 // Function to call whenever we want to send/recieve data from a client
-auto handle_client(epoll_event *event, ConnectionHandler handler) noexcept -> void {
+auto handle_client(epoll_event *event, const ConnectionHandler &handler) noexcept -> void {
     constexpr auto BUFFER_SIZE = 1024;
     std::array<char, BUFFER_SIZE> buffer{};
 

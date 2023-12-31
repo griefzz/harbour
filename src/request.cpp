@@ -23,11 +23,6 @@ auto Request::operator[](const std::string &key) const noexcept -> std::optional
 }
 
 auto Request::encode(std::string_view req) noexcept -> Result<Request, RequestError> {
-    // dont accept requests larger than 1kB
-    if (req.size() > 1024) {
-        return Err(RequestError::Invalid);
-    }
-
     Request request;
     request.body = std::string(req);
 
@@ -44,11 +39,6 @@ auto Request::encode(std::string_view req) noexcept -> Result<Request, RequestEr
         return Err(RequestError::Unsupported);
     }
 
-    // 256 character long path is insane
-    if (path.size() > 256) {
-        return Err(RequestError::Invalid);
-    }
-
     if (method == "GET") request.method = Method::GET;
     if (method == "POST") request.method = Method::POST;
 
@@ -57,6 +47,7 @@ auto Request::encode(std::string_view req) noexcept -> Result<Request, RequestEr
     while (std::getline(iss, line) && !line.empty()) {
         const auto pos = line.find(':');
         if (pos != std::string::npos) {
+            if (pos + 2 > line.size()) { return Err(RequestError::Invalid); }
             std::string key   = line.substr(0, pos);
             std::string value = line.substr(pos + 2);
 
@@ -73,6 +64,7 @@ auto Request::encode(std::string_view req) noexcept -> Result<Request, RequestEr
             request.headers.emplace(std::move(key), std::move(value));
         }
     }
+
 
     if (request.method == Method::POST) {
         request.form = Forms::parse(line);

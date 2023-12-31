@@ -16,14 +16,14 @@ set(CMAKE_CXX_STANDARD 20) # force c++20
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) # disable compiler extensions
 
-# set(CMAKE_CXX_CLANG_TIDY "clang-tidy-17")
-Set(FETCHCONTENT_QUIET FALSE)
+# set(CMAKE_CXX_CLANG_TIDY "clang-tidy-17") # enable for clang-tidy checks
+# set(FETCHCONTENT_QUIET FALSE) # enable if you want progress on fetch content
 
 # Use Brotli compression
-set(ENABLE_COMPRESSION true)
+option(ENABLE_COMPRESSION "Enable brotili compression" ON)
 
-# Use TLS
-set(ENABLE_TLS true)
+# Enable fuzzing
+option(ENABLE_FUZZING "Enable fuzzing baisc harbour functions" OFF)
 
 # Add our server executable
 add_executable("${PROJECT_NAME}")
@@ -76,13 +76,11 @@ if(NOT WIN32)
         add_definitions(-DHARBOUR_ENABLE_COMPRESSION=true)
     endif()
 
-    if(ENABLE_TLS)
-        find_package(OpenSSL REQUIRED)
+    find_package(OpenSSL REQUIRED)
 
-        include_directories(${OPENSSL_INCLUDE_DIR})
-        target_link_libraries("${PROJECT_NAME}" ${OPENSSL_LIBRARIES})
-        add_definitions(-DHARBOUR_ENABLE_TLS=true)
-    endif()
+    include_directories(${OPENSSL_INCLUDE_DIR})
+    target_link_libraries("${PROJECT_NAME}" ${OPENSSL_LIBRARIES})
+    add_definitions(-DHARBOUR_ENABLE_TLS=true)
 endif()
 
 FetchContent_Declare(
@@ -94,3 +92,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(json)
 target_link_libraries("${PROJECT_NAME}" nlohmann_json::nlohmann_json)
+
+if (ENABLE_FUZZING)
+    add_subdirectory(fuzz)
+endif()
