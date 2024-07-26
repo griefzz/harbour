@@ -1,0 +1,141 @@
+# Project information
+site_name: Web Server Framework for Modern C++
+site_url: https://harbour.tbd/
+site_author: Spencer Stone
+
+# Repository
+repo_name: griefzz/harbour
+repo_url: https://github.com/griefzz/harbour
+edit_uri: edit/develop/docs/mkdocs/docs
+
+
+# Copyright
+copyright: Copyright &copy; 2013 - 2023 Spencer Stone
+
+# Configuration
+theme:
+  name: material
+  logo: assets/logo.svg
+  language: en
+  palette:
+    - media: '(prefers-color-scheme: light)'
+      scheme: default
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+    - media: '(prefers-color-scheme: dark)'
+      scheme: slate
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+  font:
+    text: Roboto
+    code: JetBrains Mono
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.top
+    - content.tabs.link
+    - content.code.copy
+    - content.code.annotate
+    - toc.follow
+    - search.highlight
+    - search.share
+    - search.suggest
+
+nav:
+  - Home:
+    - index.md
+    - home/license.md
+    - "Code of Conduct": home/code_of_conduct.md
+    - "FAQ": home/faq.md
+    - home/releases.md
+    - home/design_goals.md
+  - Getting Started:
+    - start/index.md
+  - Features:
+    - features/index.md
+    - Json:
+      - features/json/index.md
+    - Routes:
+      - features/routes/index.md
+    - Middleware:
+      - features/middleware/index.md
+    - Ships:
+      - features/ships/index.md
+    - Cookies:
+      - features/cookies/index.md
+      - features/cookies/securecookies.md
+    - Logging:
+      - features/logging/index.md
+    - Coroutines:
+      - features/coroutines/index.md
+    - Websockets:
+      - features/websockets/index.md
+    - Security:
+      - features/security/index.md
+  - Integration:
+    - integration/index.md
+    - integration/cmake.md
+    - integration/dependencies.md
+  #- API Documentation: 
+  #  - api/
+
+# Extras
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/griefzz
+    - icon: fontawesome/brands/paypal
+      link: https://www.paypal.me/sstone
+  generator: false
+
+# Extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - codehilite:
+      guess_lang: false
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.mark
+  #- pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tilde
+  - pymdownx.snippets:
+      base_path: docs
+      check_paths: true
+
+plugins:
+    - search:
+        separator: '[\s\-\.]'
+        lang: en
+    - minify:
+        minify_html: true
+
+extra_css:
+    - css/custom.css

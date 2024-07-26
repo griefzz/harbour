@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harbour | Delete Blog Post</title>
+    <script src="https://unpkg.com/htmx.org@1.5.0"></script>
+    <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
+</head>
+
+<body>
+    <a href="/">Home</a>
+    <a href="/create">Create</a>
+    <a href="/update">Update</a>
+    <a href="/delete">Delete</a>
+    <hr>
+    <h1>Delete</h1>
+    <form
+        hx-target="#response"  
+        hx-post="/api/v1/article/delete" 
+        hx-trigger="submit"
+        hx-ext="json-enc"
+    >
+    <input type="text" name="title" placeholder="Title" required><br>
+    <textarea name="body" placeholder="Type blog post here..." required></textarea><br>
+    <button type="submit">Send</button>
+    </form>
+
+    <div id="response"></div>
+</body>
+
+</html>

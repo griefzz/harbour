@@ -1,0 +1,5 @@
+.vscode
+build
+*.pem
+docs/doxygen/html
+docs/mkdocs/site

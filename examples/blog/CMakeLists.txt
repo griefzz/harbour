@@ -1,0 +1,1 @@
+hb_add_example(blog)

@@ -1,0 +1,24 @@
+# Doxyfile 1.11.0
+
+# Doxygen Awesome
+
+GENERATE_TREEVIEW      = YES # optional. Also works without treeview
+DISABLE_INDEX = NO
+FULL_SIDEBAR = NO
+HTML_EXTRA_STYLESHEET  = ./doxygen-awesome-css/doxygen-awesome.css
+HTML_COLORSTYLE        = DARK # required with Doxygen >= 1.9.5
+
+# Doxygen
+
+PROJECT_NAME           = Harbour2
+PROJECT_NUMBER         = 0.1.0
+PROJECT_BRIEF          = "A Web Server Framework For Modern C++"
+PROJECT_LOGO           = ./logo.svg
+OUTPUT_DIRECTORY       = .
+EXTRACT_ALL            = YES
+INPUT                  = ../include
+RECURSIVE              = YES
+SOURCE_BROWSER         = YES
+GENERATE_TREEVIEW      = YES
+GENERATE_LATEX         = NO
+
