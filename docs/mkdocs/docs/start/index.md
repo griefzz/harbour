@@ -12,11 +12,12 @@ and begin configuring the server.
 
     ```cpp title="main.cpp"
     #include <harbour/harbour.hpp>
-    using hb = harbour; // for convenience
+
+    using namespace harbour; // for convenience
 
     auto main() -> int {
         // Initialize harbour
-        hb::Harbour harbour;
+        Harbour harbour;
 
         // Start the server
         harbour.sail();
@@ -29,8 +30,8 @@ and begin configuring the server.
 
     ```cpp
     // Create a server settings object using port 80 and construct harbour with it
-    auto settings = hb::server::Settings().with_port(80);
-    hb::Harbour harbour(settings);
+    auto settings = server::Settings().with_port(80);
+    Harbour harbour(settings);
     ```
 
 ## Ships
@@ -134,11 +135,11 @@ A ```routed``` dock will execute Ships **only** on the specified route.
     // Print the address and port of a new connection
     auto Log(const Request &req) {
         // logln will pretty print our prompt to std::clog with a new line
-        hb::log::info("Connection: {}:{}", req.socket().address(), req.socket().port());
+        log::info("Connection: {}:{}", req.socket().address(), req.socket().port());
     }
 
     auto main() -> int {
-        hb::Harbour harbour;
+        Harbour harbour;
         harbour.dock(Log); // Globally dock the ship
         harbour.sail();
     }
@@ -158,7 +159,7 @@ A ```routed``` dock will execute Ships **only** on the specified route.
     }
 
     auto main() -> int {
-        hb::Harbour harbour;
+        Harbour harbour;
         harbour.dock("/counter", Counter); // dock the ship to "/counter"
         harbour.sail();
     }
