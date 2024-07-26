@@ -8,14 +8,21 @@ project(harbour
     HOMEPAGE_URL "github.com/griefzz/harbour"
     LANGUAGES CXX)
 
+# Check if Harbour is the main project
+set(HARBOUR_IS_MAIN_PROJECT OFF)
+
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(HARBOUR_IS_MAIN_PROJECT ON)
+endif()
+
 # #############################
 # CMake Options
 # #############################
-option(HARBOUR_BUILD_EXAMPLES "Build the examples in the project" PROJECT_IS_TOP_LEVEL)
-option(HARBOUR_BUILD_STANDALONE "Build the standalone harbour executable" PROJECT_IS_TOP_LEVEL)
-option(HARBOUR_BUILD_TESTS "Build the harbour test suite" PROJECT_IS_TOP_LEVEL)
-option(HARBOUR_BUILD_FUZZ "Build the harbour fuzz testing suite" PROJECT_IS_TOP_LEVEL)
-option(HARBOUR_BUILD_BENCHMARKS "Build the harbour benchmark suite" PROJECT_IS_TOP_LEVEL)
+option(HARBOUR_BUILD_EXAMPLES "Build the examples in the project" ${HARBOUR_IS_MAIN_PROJECT})
+option(HARBOUR_BUILD_STANDALONE "Build the standalone harbour executable" ${HARBOUR_IS_MAIN_PROJECT})
+option(HARBOUR_BUILD_TESTS "Build the harbour test suite" ${HARBOUR_IS_MAIN_PROJECT})
+option(HARBOUR_BUILD_FUZZ "Build the harbour fuzz testing suite" ${HARBOUR_IS_MAIN_PROJECT})
+option(HARBOUR_BUILD_BENCHMARKS "Build the harbour benchmark suite" ${HARBOUR_IS_MAIN_PROJECT})
 
 # #############################
 # Harbour Library

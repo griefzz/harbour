@@ -188,6 +188,7 @@ auto main() -> int {
 ```
 
 ```dock()``` also accepts any number of ships as parameters and returns a reference to Harbour. It's encouraged to use dock this way.
+
 ```cpp
 hb.dock(foo_a, foo_b)
   .dock(bar_a, bar_b)
