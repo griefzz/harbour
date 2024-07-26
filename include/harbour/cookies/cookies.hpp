@@ -116,6 +116,7 @@ namespace harbour {
         }
 
         /// @brief Enable the Secure flag for a cookie
+        /// @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#secure
         /// @return Reference to the modified Cookies object.
         [[nodiscard]] auto with_secure() -> Cookies & {
             flags.is_secure = true;
@@ -123,6 +124,7 @@ namespace harbour {
         }
 
         /// @brief Enable the HttpOnly flag for a cookie
+        /// @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#httponly
         /// @return Reference to the modified Cookies object.
         [[nodiscard]] auto with_http_only() -> Cookies & {
             flags.is_http_only = true;

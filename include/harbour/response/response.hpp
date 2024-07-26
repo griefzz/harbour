@@ -23,10 +23,10 @@ namespace harbour {
 
     /// @brief Structure representing an HTTP response.
     struct Response {
-        http::Status status;            ///< HTTP status code
-        response::Headers headers;      ///< HTTP headers.
-        Cookies cookies;                ///< Cookie data
-        std::optional<std::string> data;///< Optional response data.
+        http::Status status{http::Status::OK};///< HTTP status code
+        response::Headers headers;            ///< HTTP headers.
+        Cookies cookies;                      ///< Cookie data
+        std::optional<std::string> data;      ///< Optional response data.
 
         /// @brief Default constructor.
         [[nodiscard]] Response() = default;
