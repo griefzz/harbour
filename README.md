@@ -218,9 +218,9 @@ auto main() -> int {
 }
 ```
 
-If you want to modify a Response between Ships you should use theResponse& parameter in your Ships.
+If you want to modify a Response between Ships you should use the Response& parameter in your Ships.
 
-If no Ship returns a valid Response. The Response& parameter willultimately be returned instead.
+If no Ship returns a valid Response. The Response& parameter will ultimately be returned instead.
 
 ## Start Building
 
