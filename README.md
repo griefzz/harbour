@@ -57,8 +57,8 @@ By default harbour will open on port 8080. This can be changed with a server set
 
 ```cpp
 // Create a server settings object using port 80 and construct harbourwith it
-auto settings = hb::server::Settings().with_port(80);
-hb::Harbour harbour(settings);
+auto settings = server::Settings().with_port(80);
+Harbour harbour(settings);
 ```
 
 ## Ships
@@ -71,6 +71,7 @@ Ships are extremely flexible functions that can return a **Response** to the cli
 The most basic **Ship** can be done below.
 
 This ship will return a text response to the client when executed.
+
 ```cpp
 auto Hello() {
     return "Hello from Harbour!";
