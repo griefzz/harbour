@@ -155,7 +155,7 @@ This is an example of global Ship.
 ```cpp
 // Print the address and port of a new connection
 auto Log(const Request &req) {
-    // logln will pretty print our prompt to std::clog with a new line
+    // log::info will pretty print our prompt to std::clog with a new line
     log::info("Connection: {}:{}", req.socket.address(), req.socket.port());
 }
 
