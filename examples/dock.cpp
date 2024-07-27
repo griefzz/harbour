@@ -23,7 +23,7 @@ struct AddDock {
     }
 };
 
-int main() {
+auto main() -> int {
     Harbour hb;
     hb.dock("/", AddDock{hb});
     hb.sail();

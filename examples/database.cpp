@@ -63,7 +63,7 @@ struct NewUser {
     Database &db;
 };
 
-int main() {
+auto main() -> int {
     Database db;// Connect to your database
     Harbour hb;
     hb.dock("/", Index{db})                        // Pass in the database to your ship

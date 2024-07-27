@@ -10,6 +10,10 @@
 
 #include <array>
 #include <string>
+#include <functional>
+#include <memory>
+
+#include <asio/awaitable.hpp>
 
 #include <fmt/core.h>
 #include <fmt/format.h>

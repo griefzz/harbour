@@ -31,7 +31,7 @@ auto Ship() -> json::json_t {
     return boat;
 }
 
-int main() {
+auto main() -> int {
     Harbour hb;
     hb.dock(Ship);
     hb.sail();

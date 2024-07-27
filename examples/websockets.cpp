@@ -113,7 +113,7 @@ auto Echo(const Request &req) -> awaitable<Response> try {
     co_return http::Status::BadRequest;
 }
 
-int main() {
+auto main() -> int {
     Harbour hb;
     hb.dock("/", Index).dock("/echo", Echo);
     hb.sail();

@@ -38,7 +38,7 @@ auto WalkThePlank(const Request &req, Response &resp) {
         return "I'll spare yah the plank.";
 }
 
-int main() {
+auto main() -> int {
     Harbour hb;
     hb.dock(ShipsSailed, Yarrr, NoPirates, AddCrew, WalkThePlank);
     hb.sail();

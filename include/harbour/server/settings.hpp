@@ -12,6 +12,8 @@
 #include <vector>
 #include <optional>
 
+#include "../log/callbacks.hpp"
+
 namespace harbour {
     namespace server {
 
@@ -31,6 +33,10 @@ namespace harbour {
             std::optional<std::string> private_key_path;///< Optional private key path
             std::optional<std::string> certificate_path;///< Optional certificate path
 
+            log::callbacks::Connection on_connection{log::callbacks::on_connection};///< Callback for a new connection
+            log::callbacks::Warning on_warning{log::callbacks::on_warning};         ///< Callback for a server warning
+            log::callbacks::Critical on_critical{log::callbacks::on_critical};      ///< Callback for a server critical
+
             /// @brief Create a Settings with the default values
             /// @return Default Settings structure
             [[nodiscard]] static auto defaults() noexcept -> Settings {
@@ -38,6 +44,9 @@ namespace harbour {
                 s.port           = 8080;
                 s.max_size       = 8192;
                 s.buffering_size = 4096;
+                s.on_connection  = log::callbacks::on_connection;
+                s.on_warning     = log::callbacks::on_warning;
+                s.on_critical    = log::callbacks::on_critical;
                 return s;
             }
 
@@ -49,18 +58,20 @@ namespace harbour {
                 return *this;
             }
 
-            /// @brief Set the maximum size for an HTTP Request
+            /// @brief Set the maximum size for an HTTP Request (must be >= buffering_size)
             /// @param max_size Size in bytes to use
             /// @return Settings& Reference to Settings for chaining
             auto with_max_size(std::size_t max_size) noexcept -> Settings & {
+                assert(max_size >= buffering_size);
                 this->max_size = max_size;
                 return *this;
             }
 
-            /// @brief Set the size of the HTTP Request temporary buffer (must be >= max_size)
+            /// @brief Set the size of the HTTP Request temporary buffer (must be <= max_size)
             /// @param buffering_size Size in bytes to use
             /// @return Settings& Reference to Settings for chaining
             auto with_buffering_size(std::size_t buffering_size) noexcept -> Settings & {
+                assert(buffering_size <= max_size);
                 this->buffering_size = buffering_size;
                 return *this;
             }
@@ -70,6 +81,7 @@ namespace harbour {
             /// @param private_key Private key to use
             /// @return Settings& Reference to Settings for chaining
             auto with_ssl_data(std::string_view certificate, std::string_view private_key) noexcept -> Settings & {
+                assert(!private_key.empty() && !private_key.empty());
                 this->certificate = certificate;
                 this->private_key = private_key;
                 return *this;
@@ -80,8 +92,33 @@ namespace harbour {
             /// @param private_key_path Path to private key
             /// @return Settings& Reference to Settings for chaining
             auto with_ssl_paths(std::string_view certificate_path, std::string_view private_key_path) noexcept -> Settings & {
+                assert(!certificate_path.empty() && !private_key_path.empty());
                 this->certificate_path = certificate_path;
                 this->private_key_path = private_key_path;
+                return *this;
+            }
+
+            /// @brief Set the new connection event callback
+            /// @param on_connection Callback to set. If nullptr, will not be set.
+            /// @return Settings& Reference to Settings for chaining
+            auto with_on_connection(log::callbacks::Connection on_connection) -> Settings & {
+                this->on_connection = on_connection;
+                return *this;
+            }
+
+            /// @brief Set the server warning event callback
+            /// @param on_warning Callback to set. If nullptr, will not be set.
+            /// @return Settings& Reference to Settings for chaining
+            auto with_on_warning(log::callbacks::Warning on_warning) -> Settings & {
+                this->on_warning = on_warning;
+                return *this;
+            }
+
+            /// @brief Set the server critical event callback
+            /// @param on_critical Callback to set. If nullptr, will not be set
+            /// @return Settings& Reference to Settings for chaining
+            auto with_on_critical(log::callbacks::Critical on_critical) -> Settings & {
+                this->on_critical = on_critical;
                 return *this;
             }
         };

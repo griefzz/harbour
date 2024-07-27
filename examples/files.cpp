@@ -20,7 +20,7 @@ auto Ship(const Request &req) -> Response {
     return http::Status::NotFound;
 }
 
-int main() {
+auto main() -> int {
     Harbour hb;
     hb.dock(Ship);
     hb.sail();

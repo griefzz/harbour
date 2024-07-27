@@ -191,7 +191,7 @@ struct Home {
     }
 };
 
-int main() {
+auto main() -> int {
     // Construct a Harbour instance
     Harbour hb;
 

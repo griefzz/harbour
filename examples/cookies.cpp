@@ -50,7 +50,7 @@ auto GetSetCookies(const Request &req) -> Response {
             .with_data(tmpl::render(index_tmpl, "Reload to show cookies!"));
 }
 
-int main() {
+auto main() -> int {
     Harbour hb;
     hb.dock("/", GetSetCookies);// Create/show cookies to the user
     hb.sail();

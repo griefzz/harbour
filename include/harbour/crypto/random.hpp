@@ -14,7 +14,7 @@
 
 #include <openssl/rand.h>
 
-#include "../log.hpp"
+#include "../log/log.hpp"
 #include "containers.hpp"
 
 namespace harbour {

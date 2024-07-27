@@ -21,7 +21,7 @@
 #include "request/request.hpp"
 #include "response/response.hpp"
 #include "template.hpp"
-#include "log.hpp"
+#include "log/log.hpp"
 #include "ship.hpp"
 #include "json.hpp"
 #include "server/settings.hpp"
@@ -48,6 +48,9 @@ namespace harbour {
                        "│{1: ^{3}}│\n"
                        "└{0:∿^{3}}┘\n",
                        "", "Your ships are sailing", version, 24);
+
+            fmt::print(fmt::emphasis::bold | fg(fmt::color::blue_violet), fmt::runtime("• Listening on: 0.0.0.0:{}\n"), settings.port);
+            fmt::print(fmt::emphasis::bold | fg(fmt::color::bisque), "• Waiting for connections...\n");
         }
 
         /// @brief Apply ships to our Request and Response

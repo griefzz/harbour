@@ -19,7 +19,7 @@ auto Route(const Request &req) -> Response {
     return http::Status::InternalServerError;
 }
 
-int main() {
+auto main() -> int {
     Harbour hb;
     hb.dock("/a/b/c/d", Route);
     hb.dock("/aples/b/c/d", Route);

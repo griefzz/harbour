@@ -12,6 +12,7 @@ hb_add_example(templates)
 hb_add_example(files)
 hb_add_example(routes)
 hb_add_example(dock)
+hb_add_example(logging)
 
 # #############################
 # Intermediate examples

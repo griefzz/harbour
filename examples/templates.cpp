@@ -20,7 +20,7 @@ auto Ship() {
             .value_or("Couldn't compile template.");
 }
 
-int main() {
+auto main() -> int {
     Harbour hb;
     hb.dock(Hello, Ship);
     hb.sail();

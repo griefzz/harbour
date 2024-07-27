@@ -29,7 +29,7 @@
 #include "../response/response.hpp"
 #include "../request/request.hpp"
 #include "../ship.hpp"
-#include "../log.hpp"
+#include "../log/log.hpp"
 
 #if defined(ASIO_ENABLE_HANDLER_TRACKING)
     #define use_awaitable \
@@ -103,6 +103,8 @@ namespace harbour {
                 const std::size_t buffering_size = settings.buffering_size;// Size of temporary buffering buffer
 
                 try {
+                    if (settings.on_connection) settings.on_connection(ctx);
+
                     std::string data;// Recieved HTTP Request data
                     data.reserve(buffering_size);
 
@@ -141,26 +143,26 @@ namespace harbour {
                     // Execute all ship handlers
                     // Return a Response to the client
                     if (auto req = Request::create(ctx, data.data(), data.size())) {
-                        log::info("{}:{} → {}", addr, addr_port, req->path);
                         Response resp;
                         co_await handle_ships(*req, resp);
                         co_await ctx->async_write(resp.string(), use_awaitable);
                     } else {
                         // Parsing the request failed
                         // Send the client a 500 Internal Server Error as a Response
-                        log::warn("{}:{} → {}", addr, addr_port, "[null]");
-                        log::warn("Failed to parse request:\n{}", data);
+                        if (settings.on_warning) settings.on_warning(ctx, fmt::format("Failed to parse request:\n{}", data));
                         co_await ctx->async_write(Response(http::Status::InternalServerError).string(), use_awaitable);
                     }
                 } catch (const asio::system_error &se) {
                     if (se.code() == asio::error::eof) {
                         // This is the normal result of trying to access a closed connection
                         // A ton of these warnings could indicate a larger problem
-                        log::warn("Connection closed early: {}:{} → {}", addr, addr_port, "[null]");
+                        if (settings.on_warning) settings.on_warning(ctx, "Connection closed early");
                     } else {
-                        log::critical("asio exception: {}:{} → {}", addr, addr_port, "[null]");
+                        if (settings.on_critical) settings.on_critical(ctx, fmt::format("asio exception: {}", se.what()));
                     }
-                } catch (const std::exception &e) { log::critical("handle_ships exception: {}", e.what()); }
+                } catch (const std::exception &e) {
+                    if (settings.on_critical) settings.on_critical(ctx, fmt::format("handle_ships exception: {}", e.what()));
+                }
             }
 
             /// @brief Listens for incoming connections.
@@ -168,8 +170,6 @@ namespace harbour {
             auto listener() -> awaitable<void> {
                 auto executor = co_await this_coro::executor;
                 tcp::acceptor acceptor(executor, {tcp::v4(), settings.port});
-                fmt::print(fmt::emphasis::bold | fg(fmt::color::blue_violet), fmt::runtime("• Listening on: 0.0.0.0:{}\n"), settings.port);
-                fmt::print(fmt::emphasis::bold | fg(fmt::color::bisque), "• Waiting for connections...\n");
                 for (;;) {
                     try {
                         tcp::socket socket = co_await acceptor.async_accept(use_awaitable);
@@ -195,12 +195,14 @@ namespace harbour {
                     co_spawn(io_context, listener(), detached);
 
                     io_context.run();
-                } catch (const std::exception &e) { log::critical("Server exception: {}", e.what()); }
+                } catch (const std::exception &e) {
+                    log::critical("Server exception: {}", e.what());
+                }
             }
 
-            Settings settings;                        ///<
-            ShipsHandleFn handle_ships;               ///< Function to handle ship requests.
-            std::vector<detail::Ship> &ships;         ///< List of ships.
+            Settings settings;                        ///< Settings for the Server
+            ShipsHandleFn handle_ships;               ///< Function to handle Ships.
+            std::vector<detail::Ship> &ships;         ///< Vector of global Ships.
             std::unique_ptr<ssl::context> ssl_context;///< SSL context for secure connections.
         };
 

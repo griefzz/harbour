@@ -22,7 +22,7 @@
 #include "headers.hpp"
 #include "../http/method.hpp"
 #include "../server/socket.hpp"
-#include "../log.hpp"
+#include "../log/log.hpp"
 
 namespace harbour {
 

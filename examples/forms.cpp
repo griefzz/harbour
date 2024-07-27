@@ -43,7 +43,7 @@ auto Post(const Request &req) -> Response {
     return Response().with_redirect("/");
 }
 
-int main() {
+auto main() -> int {
     Harbour hb;
     hb.dock("/", Index).dock("/api/v1/post", Post);
     hb.sail();
