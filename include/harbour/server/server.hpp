@@ -96,14 +96,17 @@ namespace harbour {
             /// @brief Handles a new connection.
             /// @param ctx The socket context.
             /// @return An awaitable object.
-            auto on_connection(std::shared_ptr<Socket> ctx) -> awaitable<void> {
+            auto on_connection(SharedSocket ctx) -> awaitable<void> {
                 const auto addr                  = ctx->address();         // Client address
                 const auto addr_port             = ctx->port();            // Client port
                 const std::size_t max_size       = settings.max_size;      // Max size for an HTTP Request
                 const std::size_t buffering_size = settings.buffering_size;// Size of temporary buffering buffer
 
+                std::optional<std::string> warning_message; // Optional string holding the warning events message
+                std::optional<std::string> critical_message;// Optional string holding the critical events message
+
                 try {
-                    if (settings.on_connection) settings.on_connection(ctx);
+                    if (settings.on_connection) co_await settings.on_connection(ctx);
 
                     std::string data;// Recieved HTTP Request data
                     data.reserve(buffering_size);
@@ -149,20 +152,27 @@ namespace harbour {
                     } else {
                         // Parsing the request failed
                         // Send the client a 500 Internal Server Error as a Response
-                        if (settings.on_warning) settings.on_warning(ctx, fmt::format("Failed to parse request:\n{}", data));
+                        if (settings.on_warning) co_await settings.on_warning(ctx, fmt::format("Failed to parse request:\n{}", data));
                         co_await ctx->async_write(Response(http::Status::InternalServerError).string(), use_awaitable);
                     }
                 } catch (const asio::system_error &se) {
                     if (se.code() == asio::error::eof) {
                         // This is the normal result of trying to access a closed connection
                         // A ton of these warnings could indicate a larger problem
-                        if (settings.on_warning) settings.on_warning(ctx, "Connection closed early");
+                        warning_message = "Connection closed early";
                     } else {
-                        if (settings.on_critical) settings.on_critical(ctx, fmt::format("asio exception: {}", se.what()));
+                        critical_message = fmt::format("asio exception: {}", se.what());
                     }
                 } catch (const std::exception &e) {
-                    if (settings.on_critical) settings.on_critical(ctx, fmt::format("handle_ships exception: {}", e.what()));
+                    critical_message = fmt::format("handle_ships exception: {}", e.what());
                 }
+
+                // Handle unexpected server event callback coroutines
+                if (warning_message && settings.on_warning)
+                    co_await settings.on_warning(ctx, *warning_message);
+
+                if (critical_message && settings.on_critical)
+                    co_await settings.on_critical(ctx, *critical_message);
             }
 
             /// @brief Listens for incoming connections.

@@ -36,7 +36,7 @@ namespace harbour {
         /// @param data The string data to parse.
         /// @param n The length of our string data.
         /// @return std::optional<Request> The parsed Request object, or std::nullopt if parsing fails.
-        [[nodiscard]] static auto create(std::shared_ptr<server::Socket> socket, const char *data, std::size_t n) -> std::optional<Request>;
+        [[nodiscard]] static auto create(server::SharedSocket socket, const char *data, std::size_t n) -> std::optional<Request>;
 
         /// @brief Access a form value by key
         /// @param key The key of the form value to access
@@ -58,17 +58,17 @@ namespace harbour {
                 return {};
         }
 
-        Route route;                           ///< Trie routing data if it exists
-        http::Method method;                   ///< The HTTP method of the request
-        request::Headers headers{};            ///< The headers of the request
-        request::Headers forms{};              ///< The parsed form of the request
-        std::string_view data{};               ///< The full data of the request
-        std::string_view path{};               ///< The path of the request
-        std::string_view body{};               ///< The body of the request
-        std::shared_ptr<server::Socket> socket;///< The underlying socket connection
+        Route route;                ///< Trie routing data if it exists
+        http::Method method;        ///< The HTTP method of the request
+        request::Headers headers{}; ///< The headers of the request
+        request::Headers forms{};   ///< The parsed form of the request
+        std::string_view data{};    ///< The full data of the request
+        std::string_view path{};    ///< The path of the request
+        std::string_view body{};    ///< The body of the request
+        server::SharedSocket socket;///< The underlying socket connection
     };
 
-    auto Request::create(std::shared_ptr<server::Socket> socket, const char *data, std::size_t n) -> std::optional<Request> {
+    auto Request::create(server::SharedSocket socket, const char *data, std::size_t n) -> std::optional<Request> {
         using namespace request::detail;
 
         // Initialize llparse

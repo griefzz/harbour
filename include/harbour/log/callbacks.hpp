@@ -18,35 +18,43 @@ namespace harbour {
     namespace log {
         namespace callbacks {
 
-            /// @brief Callback type for a new connection. Contains a Shared Socket for the connection
-            using Connection = std::function<void(std::shared_ptr<server::Socket>)>;
+            using server::SharedSocket;
 
-            /// @brief Callback type for a server warning. Contains a Shared Socket
+            /// @brief Callback coroutine type for a new connection. Contains a Shared Socket for the connection
+            using Connection = std::function<asio::awaitable<void>(SharedSocket)>;
+
+            /// @brief Callback coroutine type for a server warning. Contains a Shared Socket
             ///        for the connection and a message describing the event
-            using Warning = std::function<void(std::shared_ptr<server::Socket>, const std::string_view)>;
+            using Warning = std::function<asio::awaitable<void>(SharedSocket, const std::string_view)>;
 
-            /// @brief Callback type for a server critical. Contains a Shared Socket
+            /// @brief Callback coroutine type for a server critical. Contains a Shared Socket
             ///        for the connection and a message describing the event
-            using Critical = std::function<void(std::shared_ptr<server::Socket>, const std::string_view)>;
+            using Critical = std::function<asio::awaitable<void>(SharedSocket, const std::string_view)>;
 
-            /// @brief Default callback for new connections. Will print ip:port -> Connected
+            /// @brief Default callback coroutine for new connections. Will print ip:port -> Connected
             /// @param req Shared Socket to use for callback.
-            static auto on_connection(std::shared_ptr<server::Socket> socket) -> void {
+            /// @return asio::awaitable<void> Convert function to a coroutine
+            static auto on_connection(SharedSocket socket) -> asio::awaitable<void> {
                 log::info("{}:{} → Connected", socket->address(), socket->port());
+                co_return;
             }
 
-            /// @brief Default callback for server warnings. Will print ip:port -> [message]
+            /// @brief Default callback coroutine for server warnings. Will print ip:port -> [message]
             /// @param socket Shared Socket to use for callback.
             /// @param message Message to describe the event
-            static auto on_warning(std::shared_ptr<server::Socket> socket, const std::string_view message) -> void {
+            /// @return asio::awaitable<void> Convert function to a coroutine
+            static auto on_warning(SharedSocket socket, const std::string_view message) -> asio::awaitable<void> {
                 log::warn("{}:{} → {}", socket->address(), socket->port(), message);
+                co_return;
             }
 
-            /// @brief Default callback for server criticals. Will print ip:port -> [message]
+            /// @brief Default callback coroutine for server criticals. Will print ip:port -> [message]
             /// @param socket Shared Socket to use for callback
             /// @param message Message to describe the event
-            static auto on_critical(std::shared_ptr<server::Socket> socket, const std::string_view message) {
+            /// @return asio::awaitable<void> Convert function to a coroutine
+            static auto on_critical(SharedSocket socket, const std::string_view message) -> asio::awaitable<void>{
                 log::critical("{}:{} → {}", socket->address(), socket->port(), message);
+                co_return;
             }
 
         }// namespace callbacks

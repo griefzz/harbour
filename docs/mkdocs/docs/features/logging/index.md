@@ -29,26 +29,48 @@ Harbour provides 3 different [log](https://github.com/griefzz/harbour/blob/main/
 
 ## Callbacks
 
-To enable your own logging solutions harbour provides 3 callbacks for important server events.
+To enable your own logging solutions harbour provides 3 callback coroutines for important server events.
 
 - ```on_connection``` - Callback for when a new connection happens.
 - ```on_warning``` - Callback for when a server warning event happens.
 - ```on_critical``` - Callback for when a server critical event happens.
-
 
 !!! example
 
     This example sets callbacks in a server::Settings object then passes them into a Harbour instance.
 
     ```cpp
-    // Assign callbacks to the server settings using the with_* methods
-    auto settings = server::Settings()
-                            .with_on_connection(OnConnection)
-                            .with_on_warning(OnWarning)
-                            .with_on_critical(OnCritical);
+    // For convenience
+    using harbour::server::SharedSocket;
 
-    // Add our callbacks to the Harbour using the settings
-    Harbour hb(settings);
+    // Callback for when a server warning event happens
+    auto OnConnection(SharedSocket socket, const std::string_view message) -> awaitable<void> {
+        log::info("{}:{} → {}", socket->address(), socket->port(), message);
+        co_return;
+    }
+
+    // Callback for when a server warning event happens
+    auto OnWarning(SharedSocket socket, const std::string_view message) -> awaitable<void> {
+        log::warn("{}:{} → {}", socket->address(), socket->port(), message);
+        co_return;
+    }
+
+    // Callback for when a server critical event happens
+    auto OnCritical(SharedSocket socket, const std::string_view message) -> awaitable<void> {
+        log::critical("{}:{} → {}", socket->address(), socket->port(), message);
+        co_return;
+    }
+
+    auto main() -> int {
+        // Assign callbacks to the server settings using the with_* methods
+        auto settings = server::Settings()
+                                .with_on_connection(OnConnection)
+                                .with_on_warning(OnWarning)
+                                .with_on_critical(OnCritical);
+
+        // Add our callbacks to the Harbour using the settings
+        Harbour hb(settings);
+    }
     ```
 
 A common instance of working with callbacks would be to use a global Ship to log all paths requested on a server.
@@ -72,13 +94,17 @@ A common instance of working with callbacks would be to use a global Ship to log
 
     Now whenever a client's Request is processed, we'll log the ip and port of the client and the requested path.
 
+The on_connection callback is performed before a Request is parsed. So this is a common pattern when you want more fine-grained logging
+of a clients connection.
+
 !!! warning
 
-    These callbacks are blocking operations. It's important to note that if you do things such as
-    file or network IO that harbour will halt a clients processing until they finish. 
+    While these callbacks are coroutines, their execution is awaited inside the server. 
+    It's important to note that if you do things such as
+    file or network IO inside a callback that harbour will halt a clients processing until they finish. 
     It's preferable for such tasks to be deffered asynchronously for best performance.
 
 !!! note
 
     By default Harbour sets these callbacks to good defaults. Using your own callbacks
-    should be reserved for logging libraries and building metrics.
+    should be reserved for specialty logging libraries or building metrics.

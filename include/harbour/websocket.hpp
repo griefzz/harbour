@@ -52,7 +52,7 @@ namespace harbour {
             std::string key;                       ///< Upgrade request key
             std::string version;                   ///< Websocket version
             std::string secret;                    ///< Shared server/client secret
-            std::shared_ptr<server::Socket> socket;///< Underlying socket connection
+            server::SharedSocket socket;///< Underlying socket connection
 
             /// @brief Read from a connection returning the result
             /// @param n Maximum number of bytes to read

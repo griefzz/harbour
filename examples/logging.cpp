@@ -6,9 +6,13 @@
 /// @file loggin.cpp
 /// @brief Contains the example implementation of harbours logging API
 
+#include <exception>
+#include <mutex>
+
 #include <harbour/harbour.hpp>
 
 using namespace harbour;
+using harbour::server::SharedSocket;
 
 // Ship to display a new client connection including the requested path
 auto ShowClientWithPath(const Request &req) {
@@ -16,13 +20,20 @@ auto ShowClientWithPath(const Request &req) {
 }
 
 // Callback for when a server warning event happens
-auto OnWarning(std::shared_ptr<server::Socket> socket, const std::string_view message) {
+auto OnWarning(SharedSocket socket, const std::string_view message) -> awaitable<void> {
     log::warn("{}:{} → {}", socket->address(), socket->port(), message);
+    co_return;
 }
 
 // Callback for when a server critical event happens
-auto OnCritical(std::shared_ptr<server::Socket> socket, const std::string_view message) {
+auto OnCritical(SharedSocket socket, const std::string_view message) -> awaitable<void> {
     log::critical("{}:{} → {}", socket->address(), socket->port(), message);
+    co_return;
+}
+
+// Ship to throw an exception so it can be caught by our critical callback
+auto CriticalEvent() {
+    throw std::exception("Critical event happening");
 }
 
 auto main() -> int {
@@ -38,6 +49,7 @@ auto main() -> int {
     // The on_connection callback happens before any processing takes effects
     // If we want to understand what the clients Request was, we need to use a Ship
     hb.dock(ShowClientWithPath);
+    hb.dock("/critical", CriticalEvent);// Display a critical event when going to /critical
     hb.sail();
     return 0;
 }

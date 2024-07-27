@@ -133,5 +133,8 @@ namespace harbour {
             }
         };
 
+        /// @brief Convenience type for a std::shared_ptr<Socket>
+        using SharedSocket = std::shared_ptr<Socket>;
+
     }// namespace server
 }// namespace harbour
