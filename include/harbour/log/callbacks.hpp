@@ -52,7 +52,7 @@ namespace harbour {
             /// @param socket Shared Socket to use for callback
             /// @param message Message to describe the event
             /// @return asio::awaitable<void> Convert function to a coroutine
-            static auto on_critical(SharedSocket socket, const std::string_view message) -> asio::awaitable<void>{
+            static auto on_critical(SharedSocket socket, const std::string_view message) -> asio::awaitable<void> {
                 log::critical("{}:{} → {}", socket->address(), socket->port(), message);
                 co_return;
             }

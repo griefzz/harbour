@@ -49,9 +49,9 @@ namespace harbour {
 
         /// @brief WebSocket Connection
         struct Connection {
-            std::string key;                       ///< Upgrade request key
-            std::string version;                   ///< Websocket version
-            std::string secret;                    ///< Shared server/client secret
+            std::string key;            ///< Upgrade request key
+            std::string version;        ///< Websocket version
+            std::string secret;         ///< Shared server/client secret
             server::SharedSocket socket;///< Underlying socket connection
 
             /// @brief Read from a connection returning the result
