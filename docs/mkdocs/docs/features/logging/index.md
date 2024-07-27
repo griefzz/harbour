@@ -1,6 +1,7 @@
 # Logging
 
-Harbour has a very minimal yet useful [logging API](https://github.com/griefzz/harbour/blob/main/include/harbour/log/log.hpp). Since logging itself can bring in a myriad
+Harbour's logging isn't extensive, but its [API](https://github.com/griefzz/harbour/blob/main/include/harbour/log/) is still useful.
+Since logging itself can bring in a myriad
 of design considerations and requirements per project, Harbour instead opts to simply provide a
 set of pretty-printed log functions wrapping fmtlib and callbacks to customize for your needs.
 
