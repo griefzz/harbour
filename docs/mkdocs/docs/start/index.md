@@ -56,7 +56,7 @@ The most basic Ship can be done below.
 
     ```cpp
     auto Echo(const Request &req) {
-        return req.data();
+        return req.data;
     }
     ```
 
@@ -64,7 +64,7 @@ The most basic Ship can be done below.
 
     ```cpp
     auto Auth(const Request &req) -> std::optional<Response> {
-        if (req.body() == "let me in!") 
+        if (req.body == "let me in!") 
             return "Welcome!";
         return {};
     }
@@ -131,11 +131,12 @@ A ```routed``` dock will execute Ships **only** on the specified route.
 !!! example
 
     This is an example of global Ship.
+
     ```cpp
     // Print the address and port of a new connection
     auto Log(const Request &req) {
         // logln will pretty print our prompt to std::clog with a new line
-        log::info("Connection: {}:{}", req.socket().address(), req.socket().port());
+        log::info("Connection: {}:{}", req.socket.address(), req.socket.port());
     }
 
     auto main() -> int {
@@ -146,6 +147,7 @@ A ```routed``` dock will execute Ships **only** on the specified route.
     ```
 
     This is an example of a routed Ship
+
     ```cpp
     // Return the number of visits to this Ship
     auto Counter() {
@@ -168,10 +170,11 @@ A ```routed``` dock will execute Ships **only** on the specified route.
 !!! note
 
     ```dock()``` also accepts any number of ships as parameters and returns a reference to Harbour. It's encouraged to use dock this way.
+
     ```cpp
-    hb.dock(foo_a, foo_b)
-      .dock(bar_a, bar_b)
-      .dock(baz_a, baz_b, baz_c);
+    harbour.dock(foo_a, foo_b)
+           .dock(bar_a, bar_b)
+           .dock(baz_a, baz_b, baz_c);
     ```
 
     Chaining is not required and multiple dock calls can be done at any time!
