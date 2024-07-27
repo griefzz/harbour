@@ -8,6 +8,8 @@ set of pretty-printed log functions wrapping fmtlib and callbacks to customize f
 Harbour always aims to provide you with as much flexibility as possible without making things complicated and logging
 is no different.
 
+A full logging API example can be found [here](https://github.com/griefzz/harbour/blob/main/examples/logging.cpp).
+
 ## Functions
 
 Harbour provides 3 different [log](https://github.com/griefzz/harbour/blob/main/include/harbour/log/log.hpp#L24) functions.
