@@ -62,7 +62,6 @@ namespace harbour {
             /// @param max_size Size in bytes to use
             /// @return Settings& Reference to Settings for chaining
             auto with_max_size(std::size_t max_size) noexcept -> Settings & {
-                assert(max_size >= buffering_size);
                 this->max_size = max_size;
                 return *this;
             }
@@ -71,7 +70,6 @@ namespace harbour {
             /// @param buffering_size Size in bytes to use
             /// @return Settings& Reference to Settings for chaining
             auto with_buffering_size(std::size_t buffering_size) noexcept -> Settings & {
-                assert(buffering_size <= max_size);
                 this->buffering_size = buffering_size;
                 return *this;
             }
@@ -81,7 +79,6 @@ namespace harbour {
             /// @param private_key Private key to use
             /// @return Settings& Reference to Settings for chaining
             auto with_ssl_data(std::string_view certificate, std::string_view private_key) noexcept -> Settings & {
-                assert(!private_key.empty() && !private_key.empty());
                 this->certificate = certificate;
                 this->private_key = private_key;
                 return *this;
@@ -92,7 +89,6 @@ namespace harbour {
             /// @param private_key_path Path to private key
             /// @return Settings& Reference to Settings for chaining
             auto with_ssl_paths(std::string_view certificate_path, std::string_view private_key_path) noexcept -> Settings & {
-                assert(!certificate_path.empty() && !private_key_path.empty());
                 this->certificate_path = certificate_path;
                 this->private_key_path = private_key_path;
                 return *this;
