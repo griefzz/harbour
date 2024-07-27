@@ -62,7 +62,7 @@ nav:
     - start/index.md
   - Features:
     - features/index.md
-    - Json:
+    - JSON:
       - features/json/index.md
     - Routes:
       - features/routes/index.md
@@ -77,7 +77,7 @@ nav:
       - features/logging/index.md
     - Coroutines:
       - features/coroutines/index.md
-    - Websockets:
+    - WebSockets:
       - features/websockets/index.md
     - Security:
       - features/security/index.md
