@@ -1,6 +1,6 @@
 # Logging
 
-Harbour has a very minimal yet useful [logging API](https://github.com/griefzz/harbour/blob/main/include/harbour/log.hpp). Since logging itself can bring in a myriad
+Harbour has a very minimal yet useful [logging API](https://github.com/griefzz/harbour/blob/main/include/harbour/log/log.hpp). Since logging itself can bring in a myriad
 of design considerations and requirements per project, Harbour instead opts to simply provide a
 set of pretty-printed log functions wrapping fmtlib and callbacks to customize for your needs.
 
@@ -9,11 +9,11 @@ is no different.
 
 ## Functions
 
-Harbour provides 3 different [log](https://github.com/griefzz/harbour/blob/main/include/harbour/log.hpp#L20) functions.
+Harbour provides 3 different [log](https://github.com/griefzz/harbour/blob/main/include/harbour/log/log.hpp#L24) functions.
 
-- [log::info](https://github.com/griefzz/harbour/blob/main/include/harbour/log.hpp#L36) - This function is for normal information.
-- [log::warn](https://github.com/griefzz/harbour/blob/main/include/harbour/log.hpp#L56) - This function is for unexpected but recoverable issues.
-- [log::critical](https://github.com/griefzz/harbour/blob/main/include/harbour/log.hpp#L76) - This function is for catastrohpic issues that may or may not be recoverable.
+- [log::info](https://github.com/griefzz/harbour/blob/main/include/harbour/log/log.hpp#L40) - This function is for normal information.
+- [log::warn](https://github.com/griefzz/harbour/blob/main/include/harbour/log/log.hpp#L60) - This function is for unexpected but recoverable issues.
+- [log::critical](https://github.com/griefzz/harbour/blob/main/include/harbour/log/log.hpp#L80) - This function is for catastrohpic issues that may or may not be recoverable.
 
 !!! example
 
@@ -31,9 +31,9 @@ Harbour provides 3 different [log](https://github.com/griefzz/harbour/blob/main/
 
 To enable your own logging solutions harbour provides 3 callback coroutines for important server events.
 
-- ```on_connection``` - Callback for when a new connection happens.
-- ```on_warning``` - Callback for when a server warning event happens.
-- ```on_critical``` - Callback for when a server critical event happens.
+- [Connection](https://github.com/griefzz/harbour/blob/main/include/harbour/log/callbacks.hpp#L24) - Callback for when a new connection happens.
+- [Warning](https://github.com/griefzz/harbour/blob/main/include/harbour/log/callbacks.hpp#L28) - Callback for when a server warning event happens.
+- [Critical](https://github.com/griefzz/harbour/blob/main/include/harbour/log/callbacks.hpp#L32) - Callback for when a server critical event happens.
 
 !!! example
 
@@ -94,7 +94,7 @@ A common instance of working with callbacks would be to use a global Ship to log
 
     Now whenever a client's Request is processed, we'll log the ip and port of the client and the requested path.
 
-The on_connection callback is performed before a Request is parsed. So this is a common pattern when you want more fine-grained logging
+The [Connection](https://github.com/griefzz/harbour/blob/main/include/harbour/log/callbacks.hpp#L24) callback is performed before a Request is parsed. So this is a common pattern when you want more fine-grained logging
 of a clients connection.
 
 !!! warning
