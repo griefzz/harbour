@@ -18,31 +18,6 @@
 #include "http/method.hpp"
 
 namespace harbour {
-    namespace detail {
-
-        /// @brief Check if a key starts with a specific HTTP method.
-        ///        If so return the Method and original key shifted past the Method string.
-        /// @param key Key to check for method
-        /// @return Method found and original key shifted past the method on success, empty on error
-        auto get_method_and_shift(const std::string_view key) -> std::optional<std::pair<http::Method, const std::string_view>> {
-            const auto get  = std::string_view("GET ");
-            const auto post = std::string_view("POST ");
-            const auto put  = std::string_view("PUT ");
-            const auto head = std::string_view("HEAD ");
-
-            if (key.starts_with(get))
-                return std::make_pair(http::Method::GET, key.substr(get.size()));
-            else if (key.starts_with(post))
-                return std::make_pair(http::Method::POST, key.substr(post.size()));
-            else if (key.starts_with(put))
-                return std::make_pair(http::Method::PUT, key.substr(put.size()));
-            else if (key.starts_with(head))
-                return std::make_pair(http::Method::HEAD, key.substr(head.size()));
-            else
-                return {};
-        }
-
-    }// namespace detail
 
     /// @class Trie
     /// @brief A template class for a Trie data structure.
@@ -91,19 +66,10 @@ namespace harbour {
         /// @brief Inserts a key-value pair into the Trie.
         /// @param key The key to insert.
         /// @param value The value to insert.
-        constexpr auto insert(const std::string_view key, T &&value) noexcept -> void {
+        constexpr auto insert(std::optional<http::Method> method, const std::string_view key, T &&value) noexcept -> void {
             // create a temporary key since we might shift its
             // index forward if it has a Method constraint
             std::string_view _key = key;
-
-            // Get the method constraint if it exists and shift
-            // our key past the Method constraint string.
-            std::optional<http::Method> method;
-            if (auto found = detail::get_method_and_shift(key)) {
-                auto [m, k] = *found;
-                method      = m;
-                _key        = k;
-            }
 
             const auto cleaned = clean(_key);
             auto *node         = &root;
@@ -144,14 +110,9 @@ namespace harbour {
                 if (node->path)// do -1 to skip the path seperator '/'
                     path_value = std::string(cleaned.begin() + i, cleaned.end() - 1);
 
-                // Check for method
-                std::optional<http::Method> method;
-                if (node->method)
-                    method = node->method;
-
                 // If we have a path key or method constraint here return the TrieResult
                 if (node->path || node->method)
-                    return TrieResult{node, path_value, method};
+                    return TrieResult{node, path_value, node->method};
 
                 // Check if we're at the end of our Trie and return empty if so
                 const auto next = node->children.find(cleaned[i]);

@@ -107,7 +107,19 @@ namespace harbour {
         constexpr auto dock(const std::string &route, detail::ShipConcept auto... ship) -> Harbour & {
             std::vector<detail::Ship> routers;
             (routers.emplace_back(detail::make_ship(ship)), ...);
-            routes.insert(route, std::move(routers));
+            routes.insert({}, route, std::move(routers));
+            return *this;
+        }
+
+        /// @brief Dock Ship(s) to a given route with a Method constraint
+        /// @param method Method constraint to use
+        /// @param route Route to dock our Ship(s)
+        /// @param ...ship Ship(s) to dock
+        /// @return Chainable reference to Harbour
+        constexpr auto dock(http::Method method, const std::string &route, detail::ShipConcept auto... ship) -> Harbour & {
+            std::vector<detail::Ship> routers;
+            (routers.emplace_back(detail::make_ship(ship)), ...);
+            routes.insert(method, route, std::move(routers));
             return *this;
         }
 
