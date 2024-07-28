@@ -29,14 +29,14 @@ namespace harbour {
             T data;                                                            ///< Data held on the node
             ankerl::unordered_dense::map<char, std::unique_ptr<Node>> children;///< Child nodes
             std::optional<std::string> path;                                   ///< Optional path key for route
-            std::optional<http::Method> method;                                ///< Optional required Method
+            std::optional<http::MethodConstraint> method;                      ///< Optional required Method
         };
 
         /// @brief Result of a Trie match, contains the found node and route key
         struct TrieResult {
-            std::optional<Node *> node;         ///< Node for the result containing our Ships and
-            std::optional<std::string> path_key;///< Optional path key if it exists
-            std::optional<http::Method> method; ///< Optional Method constraint
+            std::optional<Node *> node;                  ///< Node for the result containing our Ships and
+            std::optional<std::string> path_key;         ///< Optional path key if it exists
+            std::optional<http::MethodConstraint> method;///< Optional Method constraint
 
             /// @brief Get the route information of a TrieResult if it exists
             /// @return std::optional<std::pair<std::string, std::string>> Optional route key and value as a pair
@@ -66,7 +66,7 @@ namespace harbour {
         /// @brief Inserts a key-value pair into the Trie.
         /// @param key The key to insert.
         /// @param value The value to insert.
-        constexpr auto insert(std::optional<http::Method> method, const std::string_view key, T &&value) noexcept -> void {
+        constexpr auto insert(std::optional<http::MethodConstraint> method, const std::string_view key, T &&value) noexcept -> void {
             // create a temporary key since we might shift its
             // index forward if it has a Method constraint
             std::string_view _key = key;

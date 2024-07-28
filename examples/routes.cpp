@@ -45,11 +45,14 @@ int main() {
     // Named route with a Method constraint using :id as the variable.
     // A Method constraint will only execute Ships on the route if the
     // Request method matches the constraint.
-    // In this case /get/:id will only be served on a http::Method::GET.
-    hb.dock(http::Method::GET, "/get/:id", Routed);
+    // In this case /get/:value will only be served on a http::Method::GET.
+    hb.dock(http::Method::GET, "/get/:value", Routed);
 
     // Named route with a Method contraint to only accept an http::Method::POST.
     hb.dock(http::Method::POST, "/post", Routed);
+
+    // Methods can be chained together to allow multiple Methods as a constraint.
+    hb.dock(http::Method::GET | http::Method::POST, "/multi", Routed);
 
     // Routes are automatically converted to start and end with a '/'
     hb.dock("123/456", Routed);

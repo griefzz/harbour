@@ -59,13 +59,13 @@ namespace harbour {
         auto handle_ships(Request &req, Response &resp) -> awaitable<void> {
             // Handle routed ships
             if (auto found = routes.match(req.path)) {
-                auto &_ships      = found->node.value()->data;
-                auto route_method = found->node.value()->method;
-                req.route         = found->get_route();
+                auto &_ships    = found->node.value()->data;
+                auto constraint = found->node.value()->method;
+                req.route       = found->get_route();
 
                 // Process routed ships if we dont have a Method constraint
                 // If we do have a Method constraint, check if it matches the Requests Method
-                if (!route_method || *route_method == req.method) {
+                if (!constraint || http::detail::matches_constraint(*constraint, req.method)) {
                     for (auto &&ship: _ships) {
                         if (auto v = co_await detail::ShipHandler(req, resp, ship)) {
                             resp = *v;
@@ -116,10 +116,22 @@ namespace harbour {
         /// @param route Route to dock our Ship(s)
         /// @param ...ship Ship(s) to dock
         /// @return Chainable reference to Harbour
-        constexpr auto dock(http::Method method, const std::string &route, detail::ShipConcept auto... ship) -> Harbour & {
+        constexpr auto dock(http::MethodConstraint method, const std::string &route, detail::ShipConcept auto... ship) -> Harbour & {
             std::vector<detail::Ship> routers;
             (routers.emplace_back(detail::make_ship(ship)), ...);
             routes.insert(method, route, std::move(routers));
+            return *this;
+        }
+
+        /// @brief Dock Ship(s) to a given route with a Method constraint
+        /// @param method Method constraint to use
+        /// @param route Route to dock our Ship(s)
+        /// @param ...ship Ship(s) to dock
+        /// @return Chainable reference to Harbour
+        constexpr auto dock(http::Method method, const std::string &route, detail::ShipConcept auto... ship) -> Harbour & {
+            std::vector<detail::Ship> routers;
+            (routers.emplace_back(detail::make_ship(ship)), ...);
+            routes.insert(static_cast<http::MethodConstraint>(method), route, std::move(routers));
             return *this;
         }
 
