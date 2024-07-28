@@ -59,13 +59,18 @@ namespace harbour {
         auto handle_ships(Request &req, Response &resp) -> awaitable<void> {
             // Handle routed ships
             if (auto found = routes.match(req.path)) {
-                auto &_ships = found.node.value()->data;
-                req.route    = found.get_route();
+                auto &_ships      = found->node.value()->data;
+                auto route_method = found->node.value()->method;
+                req.route         = found->get_route();
 
-                for (auto &&ship: _ships) {
-                    if (auto v = co_await detail::ShipHandler(req, resp, ship)) {
-                        resp = *v;
-                        break;
+                // Process routed ships if we dont have a Method constraint
+                // If we do have a Method constraint, check if it matches the Requests Method
+                if (!route_method || *route_method == req.method) {
+                    for (auto &&ship: _ships) {
+                        if (auto v = co_await detail::ShipHandler(req, resp, ship)) {
+                            resp = *v;
+                            break;
+                        }
                     }
                 }
             }

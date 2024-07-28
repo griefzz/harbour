@@ -10,21 +10,48 @@
 
 using namespace harbour;
 
-auto Route(const Request &req) -> Response {
-    if (auto route = req.route) {
-        const auto &[key, path] = *route;
-        return tmpl::render("{}: {}", key, path);
-    }
-
-    return http::Status::InternalServerError;
+// This Ship will log the ip:port of our client and the Request path
+auto Global(const Request &req) {
+    log::info("{}:{} → {}", req.socket->address(), req.socket->port(), req.path);
 }
 
-auto main() -> int {
+// This Ship will print the route for a path if it exists.
+// Otherwise it will print the Request path.
+auto Routed(const Request &req) -> Response {
+    // Render a named route if it exists
+    if (auto route = req.route) {
+        // Routes contain a key value pair describing the route
+        // Key is the variable name stored on the Trie
+        // Value is the parsed Request path that matches Key
+        const auto &[key, value] = *route;
+        return tmpl::render("{}: {}", key, value);
+    }
+
+    // Render a normal route
+    return req.path;
+}
+
+int main() {
     Harbour hb;
-    hb.dock("/a/b/c/d", Route);
-    hb.dock("/aples/b/c/d", Route);
-    hb.dock("/api/b/c/d", Route);
-    hb.dock("/b/c/d", Route);
+
+    // Since no path is provided this Ship is docked globally
+    // and will execute on each Request after routed ships have finished
+    hb.dock(Global);
+
+    // Named route using :name as the variable. Will accept any Method.
+    hb.dock("/hello/:name", Routed);
+
+    // Named route with a Method constraint using :id as the variable.
+    // A Method constraint will only execute Ships on the route if the
+    // Request method matches the constraint.
+    // In this case /get/:id will only be served on a http::Method::GET.
+    hb.dock("GET /get/:id", Routed);
+
+    // Named route with a Method contraint to only accept an http::Method::POST.
+    hb.dock("POST /post", Routed);
+
+    // Routes are automatically converted to start and end with a '/'
+    hb.dock("123/456", Routed);
 
     hb.sail();
     return 0;
