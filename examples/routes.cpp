@@ -32,7 +32,8 @@ auto Routed(const Request &req) -> Response {
 }
 
 int main() {
-    Harbour hb;
+    // Disable the default Connection callback and let a Global ship do it instead
+    Harbour hb(server::Settings().with_on_connection(nullptr));
 
     // Since no path is provided this Ship is docked globally
     // and will execute on each Request after routed ships have finished
