@@ -38,7 +38,7 @@ auto make_vec(auto &&routes) -> Vec {
 auto make_trie(auto &&routes) -> harbour::Trie<Ships> {
     harbour::Trie<Ships> trie{};
     for (const auto &route: routes)
-        trie.insert(route, Ships{[] {}});
+        trie.insert({}, route, Ships{[] {}});
     return trie;
 }
 

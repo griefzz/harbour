@@ -48,10 +48,11 @@ int main() {
     // In this case /get/:value will only be served on a http::Method::GET.
     hb.dock(http::Method::GET, "/get/:value", Routed);
 
-    // Named route with a Method contraint to only accept an http::Method::POST.
+    // Named route with a Method constraint to only accept an http::Method::POST.
     hb.dock(http::Method::POST, "/post", Routed);
 
     // Methods can be chained together to allow multiple Methods as a constraint.
+    // In this case /multi will only be served on http::Method::GET or http::Method::POST
     hb.dock(http::Method::GET | http::Method::POST, "/multi", Routed);
 
     // Routes are automatically converted to start and end with a '/'
