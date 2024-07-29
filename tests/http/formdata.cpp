@@ -8,14 +8,18 @@
 
 #include <harbour/request/forms.hpp>
 
+#define EXPECT(ok) \
+    assert((ok));  \
+    if (!(ok)) return 1;
+
 static const std::string form_data = "name=bob&title=dude&age=32";
 
 auto main() -> int {
     auto data = harbour::request::detail::FormDataParser(form_data).parse();
-    assert(data.size() == 3);
-    assert(data["name"] == "bob");
-    assert(data["title"] == "dude");
-    assert(data["age"] == "32");
+    EXPECT(data.size() == 3);
+    EXPECT(data["name"] == "bob");
+    EXPECT(data["title"] == "dude");
+    EXPECT(data["age"] == "32");
 
     return 0;
 }

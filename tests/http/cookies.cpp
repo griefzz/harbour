@@ -10,6 +10,10 @@
 
 #include <harbour/harbour.hpp>
 
+#define EXPECT(ok) \
+    assert((ok));  \
+    if (!(ok)) return 1;
+
 static const std::string valid_cookie =
         "GET /api/v1/foo HTTP/1.1\r\n"
         "Host: github.com\r\n"
@@ -46,34 +50,27 @@ auto main() -> int {
     if (auto req = harbour::Request::create(sock, valid_cookie.data(), valid_cookie.size())) {
         if (auto cookie = harbour::Cookies::create(*req)) {
             if (auto id = cookie->get("id")) {
-                assert(id == "123");
+                EXPECT(id == "123");
             } else {
-                assert(false);
                 return 1;
             }
 
             if (auto name = cookie->get("name")) {
-                assert(name == "bob");
+                EXPECT(name == "bob");
             } else {
-                assert(false);
                 return 1;
             }
 
-            assert(cookie->flags.is_secure == true);
-            if (cookie->flags.is_secure != true)
-                return 1;
+            EXPECT(cookie->flags.is_secure == true);
 
-            assert(cookie->flags.is_http_only == true);
-            if (cookie->flags.is_http_only != true)
-                return 1;
+            EXPECT(cookie->flags.is_http_only == true);
         }
     }
 
     // Test an invalid cookie key=value
     if (auto req = harbour::Request::create(sock, invalid_cookie.data(), invalid_cookie.size())) {
         if (auto cookie = harbour::Cookies::create(*req)) {
-            assert(false);// cookie shouldnt be valid!
-            return 1;
+            return 1;// cookie shouldnt be valid!
         }
     }
 

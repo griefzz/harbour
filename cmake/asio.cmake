@@ -7,7 +7,7 @@ FetchContent_Declare(asio
 FetchContent_GetProperties(asio)
 
 if(NOT asio_POPULATED AND NOT TARGET asio)
-    FetchContent_Populate(asio)
+    FetchContent_MakeAvailable(asio)
 
     # Find Version ##
     file(STRINGS "${asio_SOURCE_DIR}/asio/include/asio/version.hpp" ASIO_VERSION

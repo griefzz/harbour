@@ -9,13 +9,17 @@
 
 #include <harbour/crypto/aes.hpp>
 
+#define EXPECT(ok) \
+    assert((ok));  \
+    if (!(ok)) return 1;
+
 auto main() -> int {
     std::string plain = "password";
     std::string key   = "12341234123412341234123412341234";
 
     if (auto enc = harbour::crypto::aes256::encrypt(plain, key)) {
         if (auto dec = harbour::crypto::aes256::decrypt(*enc, key)) {
-            assert(*dec == plain);
+            EXPECT(*dec == plain);
             return 0;
         }
     }

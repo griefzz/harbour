@@ -11,6 +11,10 @@
 
 #include <harbour/harbour.hpp>
 
+#define EXPECT(ok) \
+    assert((ok));  \
+    if (!(ok)) return 1;
+
 auto main() -> int {
     if (auto securecookie = harbour::SecureCookies::create()) {
         std::unordered_map<std::string, std::string> map = {{"1", "1"}, {"2", "2"}, {"3", "3"}};
@@ -18,9 +22,8 @@ auto main() -> int {
         auto enc = securecookie->encode("session-name", map);
         auto ok  = securecookie->decode("session-name", enc, rmap);
         if (ok) {
-            assert(map == rmap);
-            if (map == rmap)
-                return 0;
+            EXPECT(map == rmap);
+            return 0;
         }
     }
 
