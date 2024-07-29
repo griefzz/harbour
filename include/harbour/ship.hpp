@@ -46,6 +46,10 @@ namespace harbour {
             using Ts::operator()...;
         };
 
+        /// explicit deduction guide (not needed as of C++20) but AppleClang throws a fit
+        template<class... Ts>
+        overloaded(Ts...) -> overloaded<Ts...>;
+
         /// @brief Type aliases for various function signatures.
         using Ship_0  = std::function<awaitable<Response>(const Request &, Response &)>;
         using Ship_1  = std::function<awaitable<Response>(Response &, const Request &)>;

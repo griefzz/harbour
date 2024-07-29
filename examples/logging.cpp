@@ -6,7 +6,7 @@
 /// @file loggin.cpp
 /// @brief Contains the example implementation of harbours logging API
 
-#include <exception>
+#include <stdexcept>
 #include <mutex>
 
 #include <harbour/harbour.hpp>
@@ -33,7 +33,7 @@ auto OnCritical(SharedSocket socket, const std::string_view message) -> awaitabl
 
 // Ship to throw an exception so it can be caught by our critical callback
 auto CriticalEvent() {
-    throw std::exception("Critical event happening");
+    throw std::runtime_error("Critical event happening");
 }
 
 auto main() -> int {
