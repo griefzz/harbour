@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths-ignore:
       - 'docs/**'
+      - 'assets/**'
 permissions:
   contents: read
 jobs:
