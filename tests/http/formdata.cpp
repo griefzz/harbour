@@ -15,7 +15,7 @@
 static const std::string form_data = "name=bob&title=dude&age=32";
 
 auto main() -> int {
-    auto data = harbour::request::detail::FormDataParser(form_data).parse();
+    auto data = harbour::request::detail::FormData::parse(form_data);
     EXPECT(data.size() == 3);
     EXPECT(data["name"] == "bob");
     EXPECT(data["title"] == "dude");

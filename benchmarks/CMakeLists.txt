@@ -11,10 +11,10 @@ FetchContent_Declare(benchmark
 FetchContent_MakeAvailable(benchmark)
 
 macro(hb_add_benchmark target)
-    add_executable(${target} ${target}.cpp)
-    target_link_libraries(${target} harbour benchmark::benchmark)
-    target_compile_features(${target} PRIVATE cxx_std_20)
+    add_executable(bench_${target} ${target}.cpp)
+    target_link_libraries(bench_${target} harbour benchmark::benchmark)
+    target_compile_features(bench_${target} PRIVATE cxx_std_20)
 endmacro()
 
-hb_add_benchmark(bench_requests)
-hb_add_benchmark(bench_trie)
+hb_add_benchmark(requests)
+hb_add_benchmark(trie)

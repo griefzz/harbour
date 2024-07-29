@@ -125,7 +125,7 @@ namespace harbour {
 
         // Parse form data if the method is POST
         if (req.method == http::Method::POST) {
-            req.forms = FormDataParser(req.data).parse();
+            req.forms = FormData::parse(req.data);
         }
 
         // Assign underlying socket
