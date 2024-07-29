@@ -7,7 +7,6 @@
 #pragma once
 
 #include <any>
-#include <format>
 #include <optional>
 #include <sstream>
 #include <string>

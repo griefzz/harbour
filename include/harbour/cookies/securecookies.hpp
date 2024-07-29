@@ -10,7 +10,6 @@
 
 #include <array>
 #include <cstdint>
-#include <format>
 #include <chrono>
 #include <ranges>
 #include <string>

@@ -5,7 +5,6 @@
 ///
 
 #include <iostream>
-#include <format>
 #include <cassert>
 
 #include <harbour/harbour.hpp>
