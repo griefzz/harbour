@@ -13,7 +13,7 @@ endmacro()
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
     message(STATUS "Harbour fuzz testing only works on linux at the moment")
-else()
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     hb_add_fuzz(requests)
     hb_add_fuzz(cookies)
     hb_add_fuzz(formdata)

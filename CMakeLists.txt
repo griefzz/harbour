@@ -23,6 +23,7 @@ option(HARBOUR_BUILD_STANDALONE "Build the standalone harbour executable" ${HARB
 option(HARBOUR_BUILD_TESTS "Build the harbour test suite" ${HARBOUR_IS_MAIN_PROJECT})
 option(HARBOUR_BUILD_FUZZ "Build the harbour fuzz testing suite" ${HARBOUR_IS_MAIN_PROJECT})
 option(HARBOUR_BUILD_BENCHMARKS "Build the harbour benchmark suite" ${HARBOUR_IS_MAIN_PROJECT})
+option(HARBOUR_SKIP_AUTOMATE_VCPKG "Use local vcpkg installation instead of automate-vcpkg.cmake" OFF)
 
 # #############################
 # Harbour Library

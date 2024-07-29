@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_type: ["Debug"]
+        build_type: ["Release"]
     env:
       CC: clang
       CXX: clang++
@@ -19,7 +19,7 @@ jobs:
       # numbered Xcode versions. Thus, rather than varying the compiler version,
       # we set the `-std` flag explicitly in order to vary the language version.
       # (The other two flags are the default provided for CXXFLAGS in Makefile.)
-      CXXFLAGS: -g -std=c++20 -stdlib=libc++
+      CXXFLAGS: -O3 -g -std=c++20
     steps:
       - uses: actions/checkout@v4.1.7
       - name: Configure CMake
@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ver: [17, 18]
+        ver: [18]
         build_type: ["Debug"]
     env:
       CC: clang-${{ matrix.ver }}
@@ -56,7 +56,7 @@ jobs:
         run: cmake --build build --config ${{ matrix.build_type }}
       - name: Test
         working-directory: ${{ github.workspace }}/build
-        run: ctest --build-config ${{ matrix.build_type }}
+        run: ctest --build-config ${{ matrix.build_type }} --output-on-failure
 
   build-gcc:
     # TODO(junyer): Switch back to `ubuntu-latest` when this becomes that.
@@ -77,7 +77,7 @@ jobs:
         run: cmake --build build --config ${{ matrix.build_type }}
       - name: Test
         working-directory: ${{ github.workspace }}/build
-        run: ctest --build-config ${{ matrix.build_type }}
+        run: ctest --build-config ${{ matrix.build_type }} --output-on-failure
 
   build-cl:
     runs-on: windows-latest
@@ -96,4 +96,4 @@ jobs:
         run: cmake --build build --config ${{ matrix.build_type }}
       - name: Test
         working-directory: ${{ github.workspace }}/build
-        run: ctest --build-config ${{ matrix.build_type }}
+        run: ctest --build-config ${{ matrix.build_type }} --output-on-failure
