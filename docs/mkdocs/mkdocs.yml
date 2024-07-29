@@ -1,6 +1,6 @@
 # Project information
 site_name: Web Server Framework for Modern C++
-site_url: https://griefzz.github.io/
+site_url: https://griefzz.github.io/harbour
 site_author: Spencer Stone
 
 # Repository
@@ -10,7 +10,7 @@ edit_uri: edit/develop/docs/mkdocs/docs
 
 
 # Copyright
-copyright: Copyright &copy; 2013 - 2023 Spencer Stone
+copyright: Copyright &copy; 2013 - 2024 Spencer Stone
 
 # Configuration
 theme:
@@ -93,8 +93,8 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/griefzz
-    - icon: fontawesome/brands/paypal
-      link: https://www.paypal.me/sstone
+    #- icon: fontawesome/brands/paypal
+    #  link: 
   generator: false
 
 # Extensions
