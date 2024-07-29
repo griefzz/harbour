@@ -11,76 +11,28 @@
 #include <fstream>
 #include <string>
 #include <iterator>
-#include <future>
+#include <filesystem>
 
 #include <fmt/core.h>
 #include <fmt/format.h>
 
 namespace harbour {
     namespace tmpl {
-        namespace detail {
-
-            /// @brief Custom stream buffer to write to a string.
-            /// https://stackoverflow.com/a/8737787
-            class custombuf : public std::streambuf {
-            public:
-                /// @brief Constructor that initializes the buffer with a target string.
-                /// @param target Reference to the target string.
-                custombuf(std::string &target) : target_(target) {
-                    this->setp(this->buffer_, this->buffer_ + bufsize - 1);
-                }
-
-            private:
-                std::string &target_;   ///< Reference to the target string.
-                enum { bufsize = 8192 };///< Size of the buffer.
-                char buffer_[bufsize];  ///< Buffer array.
-
-                /// @brief Handles buffer overflow by appending to the target string.
-                /// @param c Character to be added.
-                /// @return The character added or EOF.
-                int overflow(int c) {
-                    if (!traits_type::eq_int_type(c, traits_type::eof())) {
-                        *this->pptr() = traits_type::to_char_type(c);
-                        this->pbump(1);
-                    }
-                    this->target_.append(this->pbase(), this->pptr() - this->pbase());
-                    this->setp(this->buffer_, this->buffer_ + bufsize - 1);
-                    return traits_type::not_eof(c);
-                }
-
-                /// @brief Synchronizes the buffer with the target string.
-                /// @return 0 on success.
-                int sync() {
-                    this->overflow(traits_type::eof());
-                    return 0;
-                }
-            };
-
-        };// namespace detail
 
         /// @brief Loads the content of a file into a string.
         /// @param path Path to the file.
         /// @return Optional string containing the file content.
         auto load_file(const std::string_view path) -> std::optional<std::string> {
-            auto path_str = std::string(path);
-            std::ifstream f(path_str);
-            if (!f.is_open()) return {};
-            std::string s;
-            detail::custombuf sbuf(s);
-            if (std::ostream(&sbuf)
-                << std::ifstream(path_str, std::ios::binary).rdbuf()
-                << std::flush) {
-                return s;
-            }
+            using It = std::istreambuf_iterator<char>;
+
+            if (!std::filesystem::exists(path))
+                return {};
+
+            std::ifstream file(std::string(path), std::ios::binary);
+            if (file.is_open())
+                std::string((It(file)), It());
 
             return {};
-        }
-
-        /// @brief Asynchronously loads the content of a file into a string.
-        /// @param path Path to the file.
-        /// @return Future containing an optional string with the file content.
-        auto load_file_async(const std::string_view path) -> std::future<std::optional<std::string>> {
-            return std::async(load_file, std::string(path));
         }
 
         /// @brief Renders a template string with the provided arguments.
@@ -96,9 +48,9 @@ namespace harbour {
         /// @param args Arguments to format the template.
         /// @return Optional string containing the formatted content.
         auto render_file(const std::string_view path, const auto &...args) -> std::optional<std::string> {
-            if (auto data = load_file(path)) {
+            if (auto data = load_file(path))
                 return fmt::vformat(*data, fmt::make_format_args(args...));
-            }
+
             return {};
         }
 
