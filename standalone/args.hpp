@@ -23,7 +23,7 @@ struct Arg {
     /// @brief Convert an Arg to a std::string
     /// @return converted Arg as std::string
     auto to_string() const -> std::string {
-        return std::format("{}\t{}\t{}", name_short, name_long, description);
+        return fmt::format("{}\t{}\t{}", name_short, name_long, description);
     }
 };
 
@@ -152,7 +152,7 @@ public:
 
     /// @brief Print program usage
     auto print() const -> void {
-        std::cout << std::format("Usage: {} [options]\n", argv[0]);
+        std::cout << fmt::format("Usage: {} [options]\n", argv[0]);
         for (const auto &arg: arg_list) {
             std::cout << arg.to_string() << "\n";
         }

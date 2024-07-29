@@ -106,7 +106,7 @@ namespace harbour {
                 return {};
 
             // 3. Create MAC for "name|date|value". Extra pipe to be used later.
-            b        = std::format("{}|{}|{}|", name, cookies::detail::timestamp(), b);
+            b        = fmt::format("{}|{}|{}|", name, cookies::detail::timestamp(), b);
             auto sig = std::string_view(b.begin(), b.end() - 1);
             auto mac = crypto::hmac::sign(sig, hash).value_or("");
             if (mac.empty())
