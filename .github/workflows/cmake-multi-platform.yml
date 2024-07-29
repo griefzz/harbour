@@ -5,30 +5,31 @@ on:
 permissions:
   contents: read
 jobs:
-  build-appleclang:
-    runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        build_type: ["Release"]
-    env:
-      CC: clang
-      CXX: clang++
-      # Unlike GCC and upstream Clang, AppleClang still defaults to `-std=c++98`
-      # for some reason. Also, the macOS image on GitHub Actions provides wildly
-      # numbered Xcode versions. Thus, rather than varying the compiler version,
-      # we set the `-std` flag explicitly in order to vary the language version.
-      # (The other two flags are the default provided for CXXFLAGS in Makefile.)
-      CXXFLAGS: -O3 -g -std=c++20
-    steps:
-      - uses: actions/checkout@v4.1.7
-      - name: Configure CMake
-        run: cmake -B build -S ${{ github.workspace }}
-      - name: Build
-        run: cmake --build build --config ${{ matrix.build_type }}
-      - name: Test
-        working-directory: ${{ github.workspace }}/build
-        run: ctest --build-config ${{ matrix.build_type }}
+#  Disable AppleClang testing until we have a setup for it
+#  build-appleclang:
+#    runs-on: macos-latest
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        build_type: ["Release"]
+#    env:
+#      CC: clang
+#      CXX: clang++
+#      # Unlike GCC and upstream Clang, AppleClang still defaults to `-std=c++98`
+#      # for some reason. Also, the macOS image on GitHub Actions provides wildly
+#      # numbered Xcode versions. Thus, rather than varying the compiler version,
+#      # we set the `-std` flag explicitly in order to vary the language version.
+#      # (The other two flags are the default provided for CXXFLAGS in Makefile.)
+#      CXXFLAGS: -O3 -g -std=c++20
+#    steps:
+#      - uses: actions/checkout@v4.1.7
+#      - name: Configure CMake
+#        run: cmake -B build -S ${{ github.workspace }}
+#      - name: Build
+#        run: cmake --build build --config ${{ matrix.build_type }}
+#      - name: Test
+#        working-directory: ${{ github.workspace }}/build
+#        run: ctest --build-config ${{ matrix.build_type }}
 
   build-clang:
     runs-on: ubuntu-latest
