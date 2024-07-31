@@ -24,19 +24,6 @@ auto Render() {
             .value_or("Couldn't compile template.");
 }
 
-// Load a file asynchronously and return it to the client
-auto AsyncLoad() -> awaitable<Response> {// Use an awaitable<Response> to get access to co_await/co_return
-    log::info("Async loading file...");
-
-    // Await the result of an async load_file
-    // First parameter is the file to load
-    // Second parameter is the completion token
-    auto file = co_await tmpl::load_file_async("index.html", use_awaitable);
-
-    // Return the result if file was found, otherwise return an error message
-    co_return file.value_or("Failed to load file");
-}
-
 // Render a file asynchronously and return it to the client
 auto AsyncRender() -> awaitable<Response> {
     log::info("Async rendering template...");
@@ -53,9 +40,8 @@ auto AsyncRender() -> awaitable<Response> {
 
 auto main() -> int {
     Harbour hb;
-    hb.dock("/hello", Hello)
-      .dock("/render", Render)
-      .dock("/async/load", AsyncLoad)
+    hb.dock(Hello);
+    hb.dock("/render", Render)
       .dock("/async/render", AsyncRender);
     hb.sail();
     return 0;

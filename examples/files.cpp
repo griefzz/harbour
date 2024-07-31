@@ -10,7 +10,8 @@
 
 using namespace harbour;
 
-auto Ship(const Request &req) -> Response {
+// Load a file and return it to the client
+auto Load(const Request &req) -> Response {
     log::info("Loading file...");
 
     if (auto file = tmpl::load_file(req.path))
@@ -20,9 +21,24 @@ auto Ship(const Request &req) -> Response {
     return http::Status::NotFound;
 }
 
+// Load a file asynchronously and return it to the client
+auto AsyncLoad(const Request &req) -> awaitable<Response> {
+    log::info("Async loading file...");
+
+    // Await the result of an async load_file
+    // First parameter is the file to load
+    // Second parameter is the completion token
+    if (auto file = co_await tmpl::load_file_async(req.path, use_awaitable))
+        co_return *file;
+
+    log::warn("Couldnt find file: {}", req.path);
+    co_return http::Status::NotFound;
+}
+
 auto main() -> int {
     Harbour hb;
-    hb.dock(Ship);
+    hb.dock(Load);
+    // hb.dock(AsyncLoad);
     hb.sail();
     return 0;
 }
