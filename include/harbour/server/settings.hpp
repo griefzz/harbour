@@ -24,8 +24,8 @@ namespace harbour {
         struct Settings {
             port_type port{8080};///< Port for server
 
-            std::size_t max_size{8192};      ///< Maximum HTTP Request size
-            std::size_t buffering_size{4096};///< Buffering size for HTTP Request (must be less than max_size)
+            std::size_t max_size{8192};      ///< Maximum HTTP Request size. (must be greater than or equal to buffering_size)
+            std::size_t buffering_size{4096};///< Default allocation size for HTTP Requests (must be less than or equal to max_size)
 
             std::optional<std::string_view> private_key;///< Optional private key data
             std::optional<std::string_view> certificate;///< Optional certificate data
@@ -66,7 +66,9 @@ namespace harbour {
                 return *this;
             }
 
-            /// @brief Set the size of the HTTP Request temporary buffer (must be <= max_size)
+            /// @brief Set the initial size of the HTTP Request buffer (must be <= max_size).
+            ///        Harbour will dynamically grow from this amount up to max_size.
+            ///        You should set this value to your average HTTP Request size for best performance.
             /// @param buffering_size Size in bytes to use
             /// @return Settings& Reference to Settings for chaining
             auto with_buffering_size(std::size_t buffering_size) noexcept -> Settings & {

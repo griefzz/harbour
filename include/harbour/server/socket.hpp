@@ -12,17 +12,7 @@
 #include <type_traits>
 #include <variant>
 
-#include <asio/awaitable.hpp>
-#include <asio/co_spawn.hpp>
-#include <asio/detached.hpp>
-#include <asio/compose.hpp>
-#include <asio/coroutine.hpp>
-#include <asio/deferred.hpp>
-#include <asio/use_future.hpp>
-#include <asio/io_context.hpp>
-#include <asio/write.hpp>
-#include <asio/signal_set.hpp>
-#include <asio/ip/tcp.hpp>
+#include <asio.hpp>
 #include <asio/ssl/impl/src.hpp>
 #include <asio/ssl.hpp>
 
@@ -96,6 +86,26 @@ namespace harbour {
                     return std::get<TcpSocket>(socket).read_some(buffers);
                 else
                     return std::get<SslSocket>(socket).read_some(buffers);
+            }
+
+            /// @brief Wrapper for asio::async_read(..., ..., asio::transfer_at_least(1), ...)
+            /// @tparam BuffersType Type of buffer to use (asio::buffer, asio::dynamic_string_buffer)
+            /// @tparam ReadToken Completion token to use (asio::use_awaitable, asio::use_future)
+            /// @param buffers Buffer to use
+            /// @param token Completion token to use
+            /// @return Number of bytes read
+            template<
+                    typename BuffersType,
+                    typename ReadToken = default_completion_token_t<typename AsyncReadStream::executor_type>>
+            auto async_read(BuffersType buffers,
+                            ReadToken &&token = default_completion_token_t<typename AsyncReadStream::executor_type>()) {
+                if (std::holds_alternative<TcpSocket>(socket)) {
+                    auto &s = std::get<TcpSocket>(socket);
+                    return asio::async_read(s, buffers, asio::transfer_at_least(1), token);
+                } else {
+                    auto &s = std::get<SslSocket>(socket);
+                    return asio::async_read(s, buffers, asio::transfer_at_least(1), token);
+                }
             }
 
             /// @brief Asynchronously writes a message to the socket.

@@ -15,12 +15,7 @@
 #include <functional>
 #include <array>
 
-#include <asio/co_spawn.hpp>
-#include <asio/detached.hpp>
-#include <asio/io_context.hpp>
-#include <asio/ip/tcp.hpp>
-#include <asio/signal_set.hpp>
-#include <asio/write.hpp>
+#include <asio.hpp>
 #include <asio/ssl/impl/src.hpp>
 #include <asio/ssl.hpp>
 
@@ -109,37 +104,9 @@ namespace harbour {
 
                     std::string data;// Recieved HTTP Request data
                     data.reserve(buffering_size);
+                    auto buffer = asio::dynamic_string_buffer(data, max_size);
 
-                    // Scope our buffering data to free immediately after its no longer needed
-                    {
-                        auto buffering = std::make_unique_for_overwrite<char[]>(buffering_size);// Temporary buffering data
-
-                        // Await the initial read into our buffering buffer since the socket
-                        // might not be available yet
-                        std::size_t total = co_await ctx->async_read_some(asio::buffer(buffering.get(), buffering_size), use_awaitable);
-
-                        // Insert as many bytes as possible into our request data
-                        data.append(buffering.get(), buffering.get() + total);
-
-                        // Dynamically expand our data up to MAX_SIZE using
-                        // an intermediary buffer of BUFFERING_SIZE while there
-                        // are bytes available to read
-                        while (total < max_size && ctx->available()) {
-                            auto n = co_await ctx->async_read_some(asio::buffer(buffering.get(), buffering_size), use_awaitable);
-                            total += n;
-
-                            // If our read total exceeds or is equal to MAX_SIZE
-                            // append the remaining data up to MAX_SIZE and break
-                            if (max_size > 0 && total + n >= max_size) {
-                                const auto remainder = (total + n) % max_size;
-                                data.append(buffering.get(), buffering.get() + remainder);
-                                break;
-                            }
-
-                            // Append the current buffering data
-                            data.append(buffering.get(), buffering.get() + n);
-                        }
-                    }
+                    auto n = co_await ctx->async_read(buffer, use_awaitable);
 
                     // Create a Request from recieved HTTP Request data
                     // Execute all ship handlers
