@@ -64,8 +64,8 @@ nav:
     - features/index.md
     - JSON:
       - features/json/index.md
-    - Routes:
-      - features/routes/index.md
+    - Dock:
+      - features/dock/index.md
     - Middleware:
       - features/middleware/index.md
     - Ships:
