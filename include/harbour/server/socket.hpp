@@ -12,17 +12,6 @@
 #include <type_traits>
 #include <variant>
 
-#include <asio/awaitable.hpp>
-#include <asio/co_spawn.hpp>
-#include <asio/detached.hpp>
-#include <asio/compose.hpp>
-#include <asio/coroutine.hpp>
-#include <asio/deferred.hpp>
-#include <asio/use_future.hpp>
-#include <asio/io_context.hpp>
-#include <asio/write.hpp>
-#include <asio/signal_set.hpp>
-#include <asio/ip/tcp.hpp>
 #include <asio.hpp>
 #include <asio/ssl/impl/src.hpp>
 #include <asio/ssl.hpp>
@@ -101,15 +90,12 @@ namespace harbour {
 
             /// @brief Wrapper for asio::async_read(..., ..., asio::transfer_at_least(1), ...)
             /// @tparam BuffersType Type of buffer to use (asio::buffer, asio::dynamic_string_buffer)
-            /// @tparam ReadToken Completion token to use (asio::use_awaitable, asio::use_future)
+            /// @tparam CompletionToken Completion token to use (asio::use_awaitable, asio::use_future)
             /// @param buffers Buffer to use
             /// @param token Completion token to use
             /// @return Number of bytes read
-            template<
-                    typename BuffersType,
-                    typename ReadToken = default_completion_token_t<typename AsyncReadStream::executor_type>>
-            auto async_read(BuffersType buffers,
-                            ReadToken &&token = default_completion_token_t<typename AsyncReadStream::executor_type>()) {
+            template<typename BuffersType, asio::completion_token_for<void(std::error_code, std::size_t)> CompletionToken>
+            auto async_read(BuffersType buffers, CompletionToken &&token) {
                 if (std::holds_alternative<TcpSocket>(socket)) {
                     auto &s = std::get<TcpSocket>(socket);
                     return asio::async_read(s, buffers, asio::transfer_at_least(1), token);
@@ -121,7 +107,7 @@ namespace harbour {
 
             /// @brief Asynchronously writes a message to the socket.
             /// @tparam T The type of the message to be written.
-            /// @tparam CompletionToken The type of the completion token.
+            /// @tparam CompletionToken Completion token to use (asio::use_awaitable, asio::use_future)
             /// @param message The message to be written.
             /// @param token The completion token to be called when the operation completes.
             /// @return The result of the asynchronous write operation.
