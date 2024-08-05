@@ -29,7 +29,7 @@
 #include "trie.hpp"
 #include "cookies/cookies.hpp"
 #include "cookies/securecookies.hpp"
-#include "middleware.hpp"
+#include "middleware/middleware.hpp"
 
 namespace harbour {
 
@@ -57,6 +57,9 @@ namespace harbour {
         /// @param req Request to handle
         /// @param resp Response to handle
         auto handle_ships(Request &req, Response &resp) -> awaitable<void> {
+            // should we continue on with global ships?
+            bool wants_early_response = false;
+
             // Handle routed ships
             if (auto found = routes.match(req.path)) {
                 auto &_ships    = found->node.value()->data;
@@ -68,18 +71,21 @@ namespace harbour {
                 if (!constraint || http::detail::matches_constraint(*constraint, req.method)) {
                     for (auto &&ship: _ships) {
                         if (auto v = co_await detail::ShipHandler(req, resp, ship)) {
-                            resp = *v;
+                            resp                 = *v;
+                            wants_early_response = true;
                             break;
                         }
                     }
                 }
             }
 
-            // Handle global ships
-            for (auto &&ship: ships) {
-                if (auto v = co_await detail::ShipHandler(req, resp, ship)) {
-                    resp = *v;
-                    break;
+            // Only handle global ships if routes did not return a Response
+            if (!wants_early_response) {
+                for (auto &&ship: ships) {
+                    if (auto v = co_await detail::ShipHandler(req, resp, ship)) {
+                        resp = *v;
+                        break;
+                    }
                 }
             }
         }

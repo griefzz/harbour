@@ -104,14 +104,15 @@ namespace harbour {
 
                     std::string data;// Recieved HTTP Request data
                     data.reserve(buffering_size);
-                    auto buffer = asio::dynamic_string_buffer(data, max_size);
 
-                    auto n = co_await ctx->async_read(buffer, use_awaitable);
+                    // Dynamically read up to max_size bytes from the socket stored into data
+                    auto buffer = asio::dynamic_string_buffer(data, max_size);
+                    co_await ctx->async_read(buffer, use_awaitable);
 
                     // Create a Request from recieved HTTP Request data
                     // Execute all ship handlers
                     // Return a Response to the client
-                    if (auto req = Request::create(ctx, data.data(), data.size())) {
+                    if (auto req = Request::create(ctx, data.c_str(), data.size())) {
                         Response resp;
                         co_await handle_ships(*req, resp);
                         co_await ctx->async_write(resp.string(), use_awaitable);
@@ -119,7 +120,7 @@ namespace harbour {
                         // Parsing the request failed
                         // Send the client a 500 Internal Server Error as a Response
                         if (settings.on_warning) co_await settings.on_warning(ctx, fmt::format("Failed to parse request:\n{}", data));
-                        co_await ctx->async_write(Response(http::Status::InternalServerError).string(), use_awaitable);
+                        co_await ctx->async_write(Response(http::Status::BadRequest).string(), use_awaitable);
                     }
                 } catch (const asio::system_error &se) {
                     if (se.code() == asio::error::eof) {

@@ -21,7 +21,7 @@ struct Article {
 
     /// @brief Convert an Article to an html string
     auto string() const -> std::string {
-        return tmpl::render(R"(<div><h2>{}</h2><p>{}</p></div>)", title, body);
+        return tmpl::render("<header><h1>{}</h1></header><p>{}</p>", title, body);
     }
 
     /// @brief Enable the article to be converted to and from json
@@ -36,11 +36,23 @@ struct Blog {
 
     /// @brief Convert a Blog into an html string
     auto string() const -> std::string {
-        std::string b;
-        for (const auto &a: articles)
-            b += tmpl::render("<hr>{}", a.second.string());
+        std::string str;
+        for (const auto &article: articles)
+            str += tmpl::render("<article>{}</article>", article.second.string());
 
-        return b;
+        return str;
+    }
+
+    HARBOUR_JSONABLE(Blog, articles);
+};
+
+/// @brief Display the home page
+struct Home {
+    Blog &blog;///< Blog for rendering posts
+
+    /// @brief Render our index.html template with the content of our blog database
+    auto operator()() {
+        return tmpl::render_file("./html/index.html", blog.string());
     }
 };
 
@@ -50,19 +62,30 @@ class Api {
     Blog &blog;      ///< Blog that can be accessed by each endpoint
     std::mutex mutex;///< Mutex to prevent race conditions
 
-public:
-    /// @brief Create a new article
-    auto v1_article_create(const Request &) -> Response;
+    /// @brief Versioned result type for an API Response
+    struct v1_Result {
+        enum class Code {
+            Ok,             // no error
+            Error           // some error
+        } code;             // result code
+        std::string message;// result message
 
-    /// @brief Read an existing article
-    auto v1_article_read(const Request &) -> Response;
+        HARBOUR_JSONABLE(v1_Result, code, message);
+    };
+
+    /// @brief Create a new article
+    auto v1_article_create(const Request &) -> json::json_t;
+
+    /// @brief Get all existing articles
+    auto v1_article_read(const Request &) -> json::json_t;
 
     /// @brief Update an existing article
-    auto v1_article_update(const Request &) -> Response;
+    auto v1_article_update(const Request &) -> json::json_t;
 
     /// @brief Delete an existing article
-    auto v1_article_delete(const Request &) -> Response;
+    auto v1_article_delete(const Request &) -> json::json_t;
 
+public:
     /// @brief Dock our API endpoints
     auto dock() -> void {
         // Since our api end points aren't static functions
@@ -78,7 +101,11 @@ public:
     explicit Api(Harbour &hb, Blog &blog) : hb(hb), blog(blog) {};
 };
 
-auto Api::v1_article_create(const Request &req) -> Response {
+auto Api::v1_article_create(const Request &req) -> json::json_t {
+    // Convenience types
+    using Result = v1_Result;
+    using Result::Code::Ok;
+
     // Serialize the requests data into json
     auto data = json::serialize(req.body);
 
@@ -99,31 +126,28 @@ auto Api::v1_article_create(const Request &req) -> Response {
     id++;
 
     // Return a response for the newly created post
-    return "Created new post!";
+    return Result{Ok, "Created new post"};
 }
 
-auto Api::v1_article_read(const Request &req) -> Response {
-    // Serialize the requests data body into a json::json_t and get its id value
-    auto data = json::serialize(req.body);
-    auto id   = data["id"].get<std::size_t>();
-
-    // If our requests id matches a blog post in the database
-    if (blog.articles.contains(id)) {
-        // Create a lock guard to prevent race conditions
-        std::lock_guard<std::mutex> lock(mutex);
-
-        // Return our article as a json response
-        return json::json_t(blog.articles[id]);
-    }
-
-    // If the id does not exist in the database return a Bad Request status
-    return http::Status::BadRequest;
+auto Api::v1_article_read(const Request &req) -> json::json_t {
+    // Convert our blog to a JSON Response.
+    // This works because all the standard library containers
+    // are convertible to json, and we defined Articles and
+    // Blog as HARBOUR_JSONABLE
+    return blog;
 }
 
-auto Api::v1_article_update(const Request &req) -> Response {
-    // Serialize the requests data body into a json::json_t and get its id value
+auto Api::v1_article_update(const Request &req) -> json::json_t {
+    // Convenience types
+    using Result = v1_Result;
+    using Result::Code::Error;
+    using Result::Code::Ok;
+
+    // Serialize the requests data body into a json::json_t
     auto data = json::serialize(req.body);
-    auto id   = data["id"].get<std::size_t>();
+
+    // Get the id value, the javascript will send it as a string
+    std::size_t id = std::stoull(data["id"].get<std::string>());
 
     // Check to see if our database contains the ID
     if (blog.articles.contains(id)) {
@@ -138,17 +162,24 @@ auto Api::v1_article_update(const Request &req) -> Response {
         blog.articles[id] = article;
 
         // Return a status for the newly updated blog post
-        return "Blog post updated!";
+        return Result{Ok, "Article updated"};
     }
 
     // If the id doesnt exist in our database return a Bad Request status
-    return http::Status::BadRequest;
+    return Result{Error, "Bad Request"};
 }
 
-auto Api::v1_article_delete(const Request &req) -> Response {
-    // Serialize the requests data body into a json::json_t and get its id value
+auto Api::v1_article_delete(const Request &req) -> json::json_t {
+    // Convenience types
+    using Result = v1_Result;
+    using Result::Code::Error;
+    using Result::Code::Ok;
+
+    // Serialize the requests data body into a json::json_t
     auto data = json::serialize(req.body);
-    auto id   = data["id"].get<std::size_t>();
+
+    // Get the id value, the javascript will send it as a string
+    std::size_t id = std::stoull(data["id"].get<std::string>());
 
     // Check to see if our database contains the ID
     if (blog.articles.contains(id)) {
@@ -159,41 +190,19 @@ auto Api::v1_article_delete(const Request &req) -> Response {
         blog.articles.erase(id);
 
         // Return a status for the deleted blog post
-        return "Blog post deleted!";
+        return Result{Ok, "Blog post deleted"};
     }
 
     // If the id doesnt exist in our database return a Bad Request status
-    return http::Status::BadRequest;
+    return Result{Error, "Bad Request"};
 }
-
-/// @brief Serve our create.html file to create new blog posts
-auto Create() {
-    return tmpl::load_file("create.html").value_or("Couldnt open create.html");
-}
-
-/// @brief Serve our update.html file to edit blog posts
-auto Update() {
-    return tmpl::load_file("update.html").value_or("Couldnt open update.html");
-}
-
-/// @brief Serve our delete.html file to delete blog posts
-auto Delete() {
-    return tmpl::load_file("delete.html").value_or("Couldnt open delete.html");
-}
-
-/// @brief Display the home page
-struct Home {
-    Blog &blog;///< Blog for rendering posts
-
-    /// @brief Render our index.html template with the content of our blog database
-    auto operator()() {
-        return tmpl::render_file("index.html", blog.string());
-    }
-};
 
 auto main() -> int {
+    // Disable the non-verbose connection callback
+    auto settings = server::Settings().with_on_connection(nullptr);
+
     // Construct a Harbour instance
-    Harbour hb;
+    Harbour hb(settings);
 
     // Construct a new Blog
     Blog blog;
@@ -202,10 +211,10 @@ auto main() -> int {
     Api api(hb, blog);
 
     // Dock our ships for showing html
-    hb.dock("/", Home{blog});// Pass along our blog to Home for rendering posts
-    hb.dock("/create", Create);
-    hb.dock("/update", Update);
-    hb.dock("/delete", Delete);
+    hb.dock("/", Home{blog});// Pass our blog to Home for rendering posts
+
+    // Enable Verbose logging and allow our html files to be found automatically
+    hb.dock(middleware::Verbose, middleware::FileServer("./html/"));
 
     // Dock our api for modifying the Blog
     api.dock();

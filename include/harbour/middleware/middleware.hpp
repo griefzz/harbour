@@ -16,6 +16,9 @@
 #include <harbour/request/request.hpp>
 #include <harbour/response/response.hpp>
 
+#include "files.hpp"
+#include "verbose.hpp"
+
 namespace harbour {
 
     /// @brief Middleware structure for handling Ships

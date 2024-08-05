@@ -30,7 +30,7 @@ namespace harbour {
             if (!std::filesystem::exists(path))
                 return {};
 
-            std::ifstream file(std::string(path), std::ios::binary);
+            std::ifstream file(path.data(), std::ios::binary);
             if (file.is_open())
                 return std::string((It(file)), It());
 
