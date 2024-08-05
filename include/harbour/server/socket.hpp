@@ -12,6 +12,17 @@
 #include <type_traits>
 #include <variant>
 
+#include <asio/awaitable.hpp>
+#include <asio/co_spawn.hpp>
+#include <asio/detached.hpp>
+#include <asio/compose.hpp>
+#include <asio/coroutine.hpp>
+#include <asio/deferred.hpp>
+#include <asio/use_future.hpp>
+#include <asio/io_context.hpp>
+#include <asio/write.hpp>
+#include <asio/signal_set.hpp>
+#include <asio/ip/tcp.hpp>
 #include <asio.hpp>
 #include <asio/ssl/impl/src.hpp>
 #include <asio/ssl.hpp>
