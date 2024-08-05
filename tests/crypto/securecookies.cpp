@@ -12,19 +12,28 @@
 
 #define EXPECT(ok) \
     assert((ok));  \
-    if (!(ok)) return 1;
+    if (!(ok)) { return 1; }
 
 auto main() -> int {
-    if (auto securecookie = harbour::SecureCookies::create()) {
-        std::unordered_map<std::string, std::string> map = {{"1", "1"}, {"2", "2"}, {"3", "3"}};
+    std::vector<char> hash(32, 1);
+    std::vector<char> block(32, 2);
+    std::unordered_map<std::string, std::string> map = {{"1", "1"}, {"2", "2"}, {"3", "3"}};
+
+    if (auto securecookie = harbour::SecureCookies::create(hash, block)) {
         decltype(map) rmap;
         auto enc = securecookie->encode("session-name", map);
         auto ok  = securecookie->decode("session-name", enc, rmap);
-        if (ok) {
-            EXPECT(map == rmap);
-            return 0;
-        }
+        EXPECT(ok);
+        EXPECT(map == rmap);
     }
 
-    return 1;
+    if (auto securecookie = harbour::SecureCookies::create()) {
+        decltype(map) rmap;
+        auto enc = securecookie->encode("session-name", map);
+        auto ok  = securecookie->decode("session-name", enc, rmap);
+        EXPECT(ok);
+        EXPECT(map == rmap);
+    }
+
+    return 0;
 }
