@@ -26,8 +26,8 @@ namespace harbour {
 
             /// @brief JSON Web Token (https://jwt.io/introduction)
             struct Token {
-                json::ordered_json_t header; ///< Header for JWT
-                json::ordered_json_t payload;///< Payload for JWT
+                json::ordered_json_t header;
+                json::ordered_json_t payload;
 
                 friend inline auto operator==(const Token &lhs, const Token &rhs) -> bool {
                     return lhs.header == rhs.header &&
@@ -45,9 +45,9 @@ namespace harbour {
             struct JWT {
                 std::array<char, 32> secret;///< 256-bit secret key for encode/decode
 
-                /// @brief
-                /// @param key
-                /// @return
+                /// @brief Create a new JSON Web Token Encoder/Decoder Object
+                /// @param key 256-bit secret key for encoding/decoding
+                /// @return std::optional<JWT> JWT on success, empty on error
                 [[nodiscard]] static auto create(RandomAccessScalarRange auto &&key) -> std::optional<JWT> {
                     if (key.size() != 32) return {};
                     JWT j;
@@ -55,8 +55,9 @@ namespace harbour {
                     return j;
                 }
 
-                /// @brief
-                /// @return
+                /// @brief Create a new JSON Web Token Encoder/Decoder Object
+                ///        using a randomly generated 256-bit secret key
+                /// @return std::optional<JWT> JWT on success, empty on error
                 [[nodiscard]] static auto create() -> std::optional<JWT> {
                     if (auto key = crypto::random::bytes(32))
                         return JWT::create(*key);
@@ -64,9 +65,9 @@ namespace harbour {
                     return {};
                 }
 
-                /// @brief
-                /// @param token
-                /// @return
+                /// @brief Encode a JSON Web Token to a string
+                /// @param token Token to encode
+                /// @return std::optional<std::string> Encoded string on success, empty on failure
                 [[nodiscard]] auto encode(const jwt::Token &token) -> std::optional<std::string> {
                     if (auto h = crypto::base64url::encode(token.header.dump())) {
                         if (auto p = crypto::base64url::encode(token.payload.dump())) {
@@ -80,9 +81,9 @@ namespace harbour {
                     return {};
                 }
 
-                /// @brief
-                /// @param src
-                /// @return
+                /// @brief Decode a JSON Web Token from an encoded Range
+                /// @param src Encoded JWT Range to decode
+                /// @return std::optional<jwt::Token> Decoded JSON Web Token on success, empty on failure
                 [[nodiscard]] auto decode(RandomAccessScalarRange auto &&src) -> std::optional<jwt::Token> {
                     const auto sep = std::string_view(".");
 
