@@ -25,5 +25,6 @@ hb_add_test(http cookies)
 # #############################
 hb_add_test(crypto aes)
 hb_add_test(crypto base64)
+hb_add_test(crypto base64url)
 hb_add_test(crypto random)
 hb_add_test(crypto securecookies)
