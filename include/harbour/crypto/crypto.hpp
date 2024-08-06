@@ -11,5 +11,7 @@
 #include "aes.hpp"
 #include "hmac.hpp"
 #include "base64.hpp"
+#include "base64url.hpp"
 #include "sha.hpp"
 #include "random.hpp"
+#include "jwt.hpp"

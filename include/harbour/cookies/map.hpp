@@ -37,5 +37,15 @@ namespace nlohmann {
             for (const auto &item: j.items())
                 opt[item.key()] = item.value();
         }
+
+        static void to_json(ordered_json &j, const harbour::cookies::Map &opt) {
+            for (const auto &[k, v]: opt)
+                j[k] = v;
+        }
+
+        static void from_json(const ordered_json &j, harbour::cookies::Map &opt) {
+            for (const auto &item: j.items())
+                opt[item.key()] = item.value();
+        }
     };
 }// namespace nlohmann
