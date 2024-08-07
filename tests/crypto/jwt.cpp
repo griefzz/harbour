@@ -20,13 +20,8 @@ auto main() -> int {
 
     const std::string secret = "12345678123456781234567812345678";
 
-    Token token;
-    token.header = ordered_serialize(R"({
-        "alg": "HS256",
-        "typ": "JWT"
-    })");
-
-    token.payload = ordered_serialize(R"({
+    auto token    = Token::create();
+    token.payload = serialize_ordered(R"({
         "sub": "1234567890",
         "name": "John Doe",
         "iat": 1516239022

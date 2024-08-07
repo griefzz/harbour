@@ -180,7 +180,7 @@ namespace harbour {
 
             // 6. Deserialize.
             try {
-                auto data = json::ordered_serialize(b);
+                auto data = json::serialize_ordered(b);
                 json::deserialize(data, value);
             } catch (...) {
                 log::warn("Failed to deserialze object in securecookies");

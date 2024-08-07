@@ -29,6 +29,17 @@ namespace harbour {
                 json::ordered_json_t header;
                 json::ordered_json_t payload;
 
+                /// @brief Create a new Json Web Token with the default header
+                ///        Harbour's JWT Encoder/Decoder assumes the algo
+                ///        to be HS256 and this provides a convenient way to
+                ///        check if a recieved Token matches our defaults
+                /// @return Token with default header parameters
+                static auto create() -> Token {
+                    Token t;
+                    t.header = json::serialize_ordered(R"({"alg": "HS256","typ": "JWT"})");
+                    return t;
+                }
+
                 friend inline auto operator==(const Token &lhs, const Token &rhs) -> bool {
                     return lhs.header == rhs.header &&
                            lhs.payload == rhs.payload;
@@ -108,8 +119,8 @@ namespace harbour {
                     if (!dec_payload)
                         return {};
 
-                    token.header  = json::ordered_serialize(*dec_header);
-                    token.payload = json::ordered_serialize(*dec_payload);
+                    token.header  = json::serialize_ordered(*dec_header);
+                    token.payload = json::serialize_ordered(*dec_payload);
 
                     return token;
                 }

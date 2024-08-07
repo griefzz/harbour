@@ -36,7 +36,7 @@ namespace harbour {
         /// @brief Convert a Jsonable object into an ordered_json_t preserving order
         /// @param obj Object to convert to json
         /// @return Converted json object
-        auto ordered_serialize(Jsonable auto &&obj) -> ordered_json_t { return nlohmann::ordered_json::parse(obj); }
+        auto serialize_ordered(Jsonable auto &&obj) -> ordered_json_t { return nlohmann::ordered_json::parse(obj); }
 
         /// @brief Deserialze a json object into a destination
         /// @param From Json object to deserialze
