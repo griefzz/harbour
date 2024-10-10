@@ -27,6 +27,7 @@ namespace harbour::crypto::jwt {
         struct Header {
             std::string alg;
             std::string typ;
+            
             auto operator<=>(const Header &) const = default;
         };
 
@@ -44,7 +45,9 @@ namespace harbour::crypto::jwt {
             return t;
         }
 
-        auto operator<=>(const Token &) const = default;
+        bool operator==(const Token &other) const {
+            return header == other.header && serialize(payload) == serialize(other.payload);
+        }
     };
 
     /// @brief Json Web Token Encoder/Decoder

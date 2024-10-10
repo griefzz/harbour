@@ -18,19 +18,29 @@ namespace harbour::middleware {
     /// @brief Middleware for doing HTTP Basic Authentication.
     ///        This is not to be used in cases where you need strong security.
     class BasicAuth {
-        std::string want;
+        std::string want;///< Base64 encoded credentials to require
 
     public:
         /// @brief Construct basic authentication from a username and password
         /// @param username Username for auth
         /// @param password Password for auth
-        explicit BasicAuth(const std::string &username, const std::string &password)
-            : want("Basic " + harbour::crypto::base64::encode(username + ":" + password).value_or("")) {}
+        explicit BasicAuth(const std::string &username, const std::string &password) {
+            if (auto hash = harbour::crypto::base64::encode(username + ":" + password)) {
+                want = "Basic " + *hash;
+            } else {
+                throw "Unable to base64 encode username and password in BasicAuth";
+            }
+        }
 
         /// @brief Construct basic authentication from formatted credentials
         /// @param credentials Credentials to use in username:password format
-        explicit BasicAuth(const std::string &credentials)
-            : want("Basic " + harbour::crypto::base64::encode(credentials).value_or("")) {}
+        explicit BasicAuth(const std::string &credentials) {
+            if (auto hash = harbour::crypto::base64::encode(credentials)) {
+                want = "Basic " + *hash;
+            } else {
+                throw "Unable to base64 encode credentials in BasicAuth";
+            }
+        }
 
         /// @brief Restrict access to a route using a specified username and password
         /// @param req Request to use for parsing the Authorization header

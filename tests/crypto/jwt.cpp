@@ -30,9 +30,7 @@ auto main() -> int {
 
     if (auto enc = j->encode(token)) {
         if (auto dec = j->decode(*enc)) {
-            //EXPECT(*dec == token);
-            EXPECT(dec->header == token.header);
-            EXPECT(harbour::serialize(dec->payload) == harbour::serialize(token.payload));
+            EXPECT(*dec == token);
         }
     }
 
