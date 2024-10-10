@@ -12,14 +12,14 @@
 
 <body>
     <a href="/">Home</a>
-    <a href="/create.html">Create</a>
-    <a href="/update.html">Update</a>
-    <a href="/delete.html">Delete</a>
+    <a href="/admin/create.html">Create</a>
+    <a href="/admin/update.html">Update</a>
+    <a href="/admin/delete.html">Delete</a>
     <hr>
     <h1>Create</h1>
     <form
         hx-target="#response"  
-        hx-post="/api/v1/article/create" 
+        hx-post="/api/article/create" 
         hx-trigger="submit"
         hx-ext="json-enc"
     >

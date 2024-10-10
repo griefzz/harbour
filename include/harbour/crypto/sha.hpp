@@ -15,21 +15,17 @@
 
 #include "../ranges.hpp"
 
-namespace harbour {
-    namespace crypto {
-        namespace sha {
+namespace harbour::crypto::sha {
 
-            using ranges::RandomAccessScalarRange;
+    using ranges::RandomAccessScalarRange;
 
-            /// @brief Create a SHA1 hash from plaintext
-            /// @param plaintext Data to hash
-            /// @return std::string SHA1 hashed data
-            auto sha1(RandomAccessScalarRange auto &&plaintext) -> std::string {
-                std::string hash(SHA_DIGEST_LENGTH, 0);
-                SHA1(reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(), reinterpret_cast<unsigned char *>(hash.data()));
-                return hash;
-            }
+    /// @brief Create a SHA1 hash from plaintext
+    /// @param plaintext Data to hash
+    /// @return std::string SHA1 hashed data
+    auto sha1(RandomAccessScalarRange auto &&plaintext) -> std::string {
+        std::string hash(SHA_DIGEST_LENGTH, 0);
+        SHA1(reinterpret_cast<const unsigned char *>(plaintext.data()), plaintext.size(), reinterpret_cast<unsigned char *>(hash.data()));
+        return hash;
+    }
 
-        }// namespace sha
-    }// namespace crypto
-}// namespace harbour
+}// namespace harbour::crypto::sha

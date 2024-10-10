@@ -8,40 +8,52 @@
 
 #pragma once
 
-#include <ranges>
+#include <string>
+#include <type_traits>
+#include <istream>
 
-#include <nlohmann/json.hpp>
-
-#define HARBOUR_JSONABLE NLOHMANN_DEFINE_TYPE_INTRUSIVE
+#include <rfl/json.hpp>
+#include <rfl.hpp>
 
 namespace harbour {
-    namespace json {
 
-        using json_t         = nlohmann::json;
-        using ordered_json_t = nlohmann::ordered_json;
+    /// @brief Concept to check if a type is Jsonable
+    /// @tparam T Type to check
+    template<typename T>
+    concept Jsonable = requires(T v) {
+        { rfl::json::write(v) } -> std::convertible_to<std::string>;
+    };
 
-        /// @brief Concept to check if a type is Jsonable
-        /// @tparam T Type to check
-        template<typename T>
-        concept Jsonable = requires(T v) {
-            { nlohmann::json::parse(v) } -> std::convertible_to<json_t>;
-            { nlohmann::ordered_json::parse(v) } -> std::convertible_to<ordered_json_t>;
-        };
+    /// @brief Convenience type to create a json string from an object used by Response
+    struct json {
+        constexpr json(Jsonable auto &&v) : data(rfl::json::write(v)) {}
+        std::string data;
+    };
 
-        /// @brief Convert a Jsonable object into a json_t
-        /// @param obj Object to convert to json
-        /// @return Converted json object
-        auto serialize(Jsonable auto &&obj) -> json_t { return nlohmann::json::parse(obj); }
+    /// @brief Convert a Jsonable object into a json string
+    /// @param obj Object to convert to a json string
+    /// @return Jsonable object as a json string
+    constexpr auto serialize(Jsonable auto &&obj) -> std::string { return rfl::json::write(obj); }
 
-        /// @brief Convert a Jsonable object into an ordered_json_t preserving order
-        /// @param obj Object to convert to json
-        /// @return Converted json object
-        auto serialize_ordered(Jsonable auto &&obj) -> ordered_json_t { return nlohmann::ordered_json::parse(obj); }
+    /// @brief Deserialize a json string into an object
+    /// @tparam T Type to create from json string
+    /// @param str Json string to deserialize
+    /// @return Deserialized object of type T
+    template<typename T>
+    constexpr auto deserialize(auto &&str) { return rfl::json::read<T>(str).value(); }
 
-        /// @brief Deserialze a json object into a destination
-        /// @param From Json object to deserialze
-        /// @param To HARBOUR_JSONABLE object
-        constexpr auto deserialize(Jsonable auto &&From, Jsonable auto &&To) { From.get_to(To); }
+    /// @brief Deserialize a json string_view into an object
+    /// @tparam T Type to create from json string
+    /// @param str Json string to deserialize
+    /// @return Deserialized object of type T
+    template<typename T>
+    constexpr auto deserialize(const std::string_view str) { return rfl::json::read<T>(std::string(str)).value(); }
 
-    }// namespace json
+    /// @brief Deserialize a json istream into an object
+    /// @tparam T Type to create from json string
+    /// @param stream Json istream to deserialize
+    /// @return Deserialized object of type T
+    template<typename T>
+    constexpr auto deserialize(std::istream &stream) { return rfl::json::read<T>(stream).value(); }
+
 }// namespace harbour

@@ -2,7 +2,7 @@ include(FetchContent)
 
 FetchContent_Declare(asio
     GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
-    GIT_TAG master
+    GIT_TAG asio-1-31-0
 )
 FetchContent_GetProperties(asio)
 

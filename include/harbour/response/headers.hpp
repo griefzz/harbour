@@ -15,14 +15,12 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 
-namespace harbour {
-    namespace response {
+namespace harbour::response {
 
-        /// @brief Header map containing key/values for Response
-        using Headers = ankerl::unordered_dense::map<std::string, std::string>;
+    /// @brief Header map containing key/values for Response
+    using Headers = ankerl::unordered_dense::map<std::string, std::string>;
 
-    }// namespace response
-}// namespace harbour
+}// namespace harbour::response
 
 /// @brief Allow Headers to be formatted using fmtlib
 template<>

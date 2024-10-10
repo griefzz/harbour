@@ -31,7 +31,7 @@ auto Routed(const Request &req) -> Response {
     return req.path;
 }
 
-int main() {
+auto main() -> int {
     // Disable the default Connection callback and let a Global Ship do it instead
     Harbour hb(server::Settings().with_on_connection(nullptr));
 

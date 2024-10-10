@@ -16,69 +16,57 @@
 
 #include "../ranges.hpp"
 
-namespace harbour {
-    namespace crypto {
-        namespace hmac {
+namespace harbour::crypto::hmac::detail {
 
-            using ranges::RandomAccessScalarRange;
+    auto constant_compare(ranges::RandomAccessScalarRange auto &&x,
+                          ranges::RandomAccessScalarRange auto &&y) -> bool {
+        if (x.size() != y.size())
+            return false;
 
-            namespace detail {
+        std::uint32_t v = 0;
+        for (std::size_t i = 0; i < x.size(); i++)
+            v |= x[i] ^ y[i];
 
-                using u8     = std::uint8_t;
-                using u32    = std::uint32_t;
-                using s32    = std::int32_t;
-                using size_t = std::size_t;
+        return std::int32_t((std::uint32_t(v ^ 0) - 1) >> 31);
+    }
 
-                auto constant_compare(RandomAccessScalarRange auto &&x,
-                                      RandomAccessScalarRange auto &&y) -> bool {
-                    if (x.size() != y.size())
-                        return false;
+}// namespace harbour::crypto::hmac::detail
 
-                    u32 v = 0;
-                    for (size_t i = 0; i < x.size(); i++)
-                        v |= x[i] ^ y[i];
+namespace harbour::crypto::hmac {
 
-                    return s32((u32(v ^ 0) - 1) >> 31);
-                }
+    using ranges::RandomAccessScalarRange;
 
-            }// namespace detail
+    /// @brief Sign data using HMAC with a private key
+    /// @param data Data to sign
+    /// @param key Private key for signing
+    /// @return std::optional<std::string> Signed string on success, empty on failure
+    auto sign(RandomAccessScalarRange auto &&data, RandomAccessScalarRange auto &&key) -> std::optional<std::string> {
+        std::uint32_t len;
+        std::string hash(EVP_MAX_MD_SIZE, 0);
 
-            /// @brief Sign data using HMAC with a private key
-            /// @param data Data to sign
-            /// @param key Private key for signing
-            /// @return std::optional<std::string> Signed string on success, empty on failure
-            auto sign(RandomAccessScalarRange auto &&data,
-                      RandomAccessScalarRange auto &&key) -> std::optional<std::string> {
-                using namespace detail;
-                u32 len;
-                std::string hash(EVP_MAX_MD_SIZE, 0);
+        if (!HMAC(EVP_sha256(),
+                  key.data(), key.size(),
+                  reinterpret_cast<const std::uint8_t *>(data.data()), data.size(),
+                  reinterpret_cast<std::uint8_t *>(hash.data()), &len))
+            return {};
 
-                if (!HMAC(EVP_sha256(),
-                          key.data(), key.size(),
-                          reinterpret_cast<const u8 *>(data.data()), data.size(),
-                          reinterpret_cast<u8 *>(hash.data()), &len))
-                    return {};
+        hash.resize(len);
 
-                hash.resize(len);
+        return hash;
+    }
 
-                return hash;
-            }
+    /// @brief Verify the signature using HMAC of some data using the recieved mac and private key
+    /// @param data Data to verify
+    /// @param received_mac Recieved mac of the data
+    /// @param key Private key for signing
+    /// @return bool True on success, false on failure
+    auto verify(RandomAccessScalarRange auto &&data,
+                RandomAccessScalarRange auto &&received_mac,
+                RandomAccessScalarRange auto &&key) -> bool {
+        if (auto computed_mac = sign(data, key))
+            return detail::constant_compare(*computed_mac, received_mac);
 
-            /// @brief Verify the signature using HMAC of some data using the recieved mac and private key
-            /// @param data Data to verify
-            /// @param received_mac Recieved mac of the data
-            /// @param key Private key for signing
-            /// @return bool True on success, false on failure
-            auto verify(RandomAccessScalarRange auto &&data,
-                        RandomAccessScalarRange auto &&received_mac,
-                        RandomAccessScalarRange auto &&key) -> bool {
-                using namespace detail;
-                if (auto computed_mac = sign(data, key))
-                    return constant_compare(*computed_mac, received_mac);
+        return false;
+    }
 
-                return false;
-            }
-
-        }// namespace hmac
-    }// namespace crypto
-}// namespace harbour
+}// namespace harbour::crypto::hmac

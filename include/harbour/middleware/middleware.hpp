@@ -18,6 +18,7 @@
 
 #include "files.hpp"
 #include "verbose.hpp"
+#include "basicauth.hpp"
 
 namespace harbour {
 

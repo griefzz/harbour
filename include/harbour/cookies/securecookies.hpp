@@ -89,9 +89,9 @@ namespace harbour {
         /// @param name Name of the cookie value
         /// @param value Value of the cookie
         /// @return Encoded secure cookie string on success, empty on failure
-        auto encode(const std::string &name, json::Jsonable auto &&value) -> std::string {
+        auto encode(const std::string &name, Jsonable auto &&value) -> std::string {
             // 1. Serialize
-            auto b = json::ordered_json_t(value).dump();
+            auto b = serialize(value);
 
             // 2. Encrypt
             auto block = std::string(block_key.begin(), block_key.end());
@@ -133,7 +133,7 @@ namespace harbour {
         /// @param data Secure cookie data
         /// @param value Value to decode the result into
         /// @return bool True on success, false on failure
-        auto decode(const std::string &name, const std::string &data, json::Jsonable auto &&value) -> bool {
+        auto decode(const std::string &name, const std::string &data, Jsonable auto &&value) -> bool {
             if (name.empty())
                 return false;
 
@@ -180,8 +180,7 @@ namespace harbour {
 
             // 6. Deserialize.
             try {
-                auto data = json::serialize_ordered(b);
-                json::deserialize(data, value);
+                value = deserialize<std::decay_t<decltype(value)>>(b);
             } catch (...) {
                 log::warn("Failed to deserialze object in securecookies");
                 return false;

@@ -11,7 +11,7 @@
 
 using namespace harbour;
 
-int main(int argc, char **argv) {
+auto main(int argc, char **argv) -> int {
     auto settings = server::Settings::defaults();
 
     auto args = Args::create(argc, argv)

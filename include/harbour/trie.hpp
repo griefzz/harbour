@@ -103,7 +103,6 @@ namespace harbour {
             const auto cleaned = clean(key);
             auto *node         = &root;
 
-
             for (std::size_t i = 0; i < cleaned.size(); i++) {
                 // Check for path key
                 std::optional<std::string> path_value;

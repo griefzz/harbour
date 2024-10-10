@@ -16,16 +16,13 @@
 auto main() -> int {
     using namespace harbour::crypto;
     using namespace harbour::crypto::jwt;
-    using namespace harbour::json;
 
     const std::string secret = "12345678123456781234567812345678";
 
     auto token    = Token::create();
-    token.payload = serialize_ordered(R"({
-        "sub": "1234567890",
-        "name": "John Doe",
-        "iat": 1516239022
-    })");
+    token.payload["sub"] = "1234567890";
+    token.payload["name"] = "John Doe";
+    token.payload["iat"] = 1516239022;
 
 
     auto j = JWT::create(secret);
@@ -33,7 +30,9 @@ auto main() -> int {
 
     if (auto enc = j->encode(token)) {
         if (auto dec = j->decode(*enc)) {
-            EXPECT(*dec == token);
+            //EXPECT(*dec == token);
+            EXPECT(dec->header == token.header);
+            EXPECT(harbour::serialize(dec->payload) == harbour::serialize(token.payload));
         }
     }
 

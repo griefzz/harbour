@@ -10,15 +10,13 @@
 #include "../request/request.hpp"
 #include "../log/log.hpp"
 
-namespace harbour {
-    namespace middleware {
+namespace harbour::middleware {
 
-        /// @brief Verbose logging middleware.
-        ///        Will print the ip:port -> req.path for a connection.
-        /// @param req Request to use
-        auto Verbose(const Request &req) -> void {
-            log::info("{}:{} → {}", req.socket->address(), req.socket->port(), req.path);
-        }
+    /// @brief Verbose logging middleware.
+    ///        Will print the ip:port -> req.path for a connection.
+    /// @param req Request to use
+    auto Verbose(const Request &req) -> void {
+        log::info("{}:{} → {}", req.socket->address(), req.socket->port(), req.path);
+    }
 
-    }// namespace middleware
-}// namespace harbour
+}// namespace harbour::middleware

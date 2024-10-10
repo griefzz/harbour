@@ -14,25 +14,22 @@ struct Boat {
     std::string ship;
     std::vector<std::string> crew;
     std::string captain;
-
-    HARBOUR_JSONABLE(Boat, ship, crew, captain);
 };
 
-auto Ship() -> json::json_t {
+auto Ship() -> json {
     log::info("Rendering json...");
 
-    auto pirate    = json::serialize(R"({ "ship": "Ol Skippy", "captain": "Pegleg Billy" })");
-    pirate["crew"] = {"Bobby", "Johhny", "Tommy"};
-    log::info(pirate.dump());
+    auto pirate = R"({ "ship": "Ol Skippy", "crew": [], "captain": "Pegleg Billy" })";
+    log::warn("{}", pirate);
 
-    Boat boat;
-    json::deserialize(pirate, boat);
+    auto boat = deserialize<Boat>(pirate);
+    boat.crew = {"Tommy", "Johhny", "Sally"};
 
     return boat;
 }
 
 auto main() -> int {
-    Harbour hb;
+    harbour::Harbour hb;
     hb.dock(Ship);
     hb.sail();
     return 0;

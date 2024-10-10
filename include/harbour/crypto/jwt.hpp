@@ -18,114 +18,107 @@
 #include "../ranges.hpp"
 #include "../json.hpp"
 
-namespace harbour {
-    namespace crypto {
-        namespace jwt {
+namespace harbour::crypto::jwt {
 
-            using ranges::RandomAccessScalarRange;
+    using ranges::RandomAccessScalarRange;
 
-            /// @brief JSON Web Token (https://jwt.io/introduction)
-            struct Token {
-                json::ordered_json_t header;
-                json::ordered_json_t payload;
+    /// @brief JSON Web Token (https://jwt.io/introduction)
+    struct Token {
+        struct Header {
+            std::string alg;
+            std::string typ;
+            auto operator<=>(const Header &) const = default;
+        };
 
-                /// @brief Create a new Json Web Token with the default header
-                ///        Harbour's JWT Encoder/Decoder assumes the algo
-                ///        to be HS256 and this provides a convenient way to
-                ///        check if a recieved Token matches our defaults
-                /// @return Token with default header parameters
-                static auto create() -> Token {
-                    Token t;
-                    t.header = json::serialize_ordered(R"({"alg": "HS256","typ": "JWT"})");
-                    return t;
-                }
+        Header header;
+        rfl::Generic::Object payload;
 
-                friend inline auto operator==(const Token &lhs, const Token &rhs) -> bool {
-                    return lhs.header == rhs.header &&
-                           lhs.payload == rhs.payload;
-                }
+        /// @brief Create a new Json Web Token with the default header
+        ///        Harbour's JWT Encoder/Decoder assumes the algo
+        ///        to be HS256 and this provides a convenient way to
+        ///        check if a recieved Token matches our defaults
+        /// @return Token with default header parameters
+        static auto create() -> Token {
+            Token t;
+            t.header = deserialize<Token::Header>(R"({"alg": "HS256","typ": "JWT"})");
+            return t;
+        }
 
-                friend inline auto operator!=(const Token &lhs, const Token &rhs) -> bool {
-                    return !(lhs == rhs);
-                }
+        auto operator<=>(const Token &) const = default;
+    };
 
-                HARBOUR_JSONABLE(Token, header, payload);
-            };
+    /// @brief Json Web Token Encoder/Decoder
+    struct JWT {
+        std::array<char, 32> secret;///< 256-bit secret key for encode/decode
 
-            /// @brief Json Web Token Encoder/Decoder
-            struct JWT {
-                std::array<char, 32> secret;///< 256-bit secret key for encode/decode
+        /// @brief Create a new JSON Web Token Encoder/Decoder Object
+        /// @param key 256-bit secret key for encoding/decoding
+        /// @return std::optional<JWT> JWT on success, empty on error
+        [[nodiscard]] static auto create(RandomAccessScalarRange auto &&key) -> std::optional<JWT> {
+            if (key.size() != 32) return {};
+            JWT j;
+            std::ranges::copy(key.begin(), key.end(), j.secret.begin());
+            return j;
+        }
 
-                /// @brief Create a new JSON Web Token Encoder/Decoder Object
-                /// @param key 256-bit secret key for encoding/decoding
-                /// @return std::optional<JWT> JWT on success, empty on error
-                [[nodiscard]] static auto create(RandomAccessScalarRange auto &&key) -> std::optional<JWT> {
-                    if (key.size() != 32) return {};
-                    JWT j;
-                    std::ranges::copy(key.begin(), key.end(), j.secret.begin());
-                    return j;
-                }
+        /// @brief Create a new JSON Web Token Encoder/Decoder Object
+        ///        using a randomly generated 256-bit secret key
+        /// @return std::optional<JWT> JWT on success, empty on error
+        [[nodiscard]] static auto create() -> std::optional<JWT> {
+            if (auto key = crypto::random::bytes(32))
+                return JWT::create(*key);
 
-                /// @brief Create a new JSON Web Token Encoder/Decoder Object
-                ///        using a randomly generated 256-bit secret key
-                /// @return std::optional<JWT> JWT on success, empty on error
-                [[nodiscard]] static auto create() -> std::optional<JWT> {
-                    if (auto key = crypto::random::bytes(32))
-                        return JWT::create(*key);
+            return {};
+        }
 
-                    return {};
-                }
-
-                /// @brief Encode a JSON Web Token to a string
-                /// @param token Token to encode
-                /// @return std::optional<std::string> Encoded string on success, empty on failure
-                [[nodiscard]] auto encode(const jwt::Token &token) -> std::optional<std::string> {
-                    if (auto h = crypto::base64url::encode(token.header.dump())) {
-                        if (auto p = crypto::base64url::encode(token.payload.dump())) {
-                            auto enc = *h + "." + *p;
-                            if (auto s = crypto::hmac::sign(enc, secret)) {
-                                return enc + "." + *s;
-                            }
-                        }
+        /// @brief Encode a JSON Web Token to a string
+        /// @param token Token to encode
+        /// @return std::optional<std::string> Encoded string on success, empty on failure
+        [[nodiscard]] auto encode(const jwt::Token &token) -> std::optional<std::string> {
+            if (auto h = crypto::base64url::encode(serialize(token.header))) {
+                if (auto p = crypto::base64url::encode(serialize(token.payload))) {
+                    auto enc = *h + "." + *p;
+                    if (auto s = crypto::hmac::sign(enc, secret)) {
+                        return enc + "." + *s;
                     }
-
-                    return {};
                 }
+            }
 
-                /// @brief Decode a JSON Web Token from an encoded Range
-                /// @param src Encoded JWT Range to decode
-                /// @return std::optional<jwt::Token> Decoded JSON Web Token on success, empty on failure
-                [[nodiscard]] auto decode(RandomAccessScalarRange auto &&src) -> std::optional<jwt::Token> {
-                    const auto sep = std::string_view(".");
+            return {};
+        }
 
-                    auto parts = src | std::views::split(sep) | ranges::to<std::vector>;
-                    if (parts.size() != 3)
-                        return {};
+        /// @brief Decode a JSON Web Token from an encoded Range
+        /// @param src Encoded JWT Range to decode
+        /// @return std::optional<jwt::Token> Decoded JSON Web Token on success, empty on failure
+        [[nodiscard]] auto decode(RandomAccessScalarRange auto &&src) -> std::optional<jwt::Token> {
+            const auto sep = std::string_view(".");
 
-                    auto header  = std::string(parts[0].begin(), parts[0].end());
-                    auto payload = std::string(parts[1].begin(), parts[1].end());
-                    auto mac     = std::string_view(parts[2].begin(), parts[2].end());
+            auto parts = src | std::views::split(sep) | ranges::to<std::vector>;
+            if (parts.size() != 3)
+                return {};
 
-                    if (auto ok = crypto::hmac::verify(src, mac, secret); !ok)
-                        return {};
+            auto header  = std::string(parts[0].begin(), parts[0].end());
+            auto payload = std::string(parts[1].begin(), parts[1].end());
+            auto mac     = std::string_view(parts[2].begin(), parts[2].end());
 
-                    Token token;
+            if (auto ok = crypto::hmac::verify(src, mac, secret); !ok)
+                return {};
 
-                    auto dec_header = crypto::base64url::decode(header);
-                    if (!dec_header)
-                        return {};
+            Token token;
 
-                    auto dec_payload = crypto::base64url::decode(payload);
-                    if (!dec_payload)
-                        return {};
+            auto dec_header = crypto::base64url::decode(header);
+            if (!dec_header)
+                return {};
 
-                    token.header  = json::serialize_ordered(*dec_header);
-                    token.payload = json::serialize_ordered(*dec_payload);
+            auto dec_payload = crypto::base64url::decode(payload);
+            if (!dec_payload)
+                return {};
 
-                    return token;
-                }
-            };
+            token.header  = deserialize<Token::Header>(*dec_header);
+            token.payload = deserialize<rfl::Generic::Object>(*dec_payload);
 
-        }// namespace jwt
-    }// namespace crypto
-}// namespace harbour
+            return token;
+        }
+    };
+
+}// namespace harbour::crypto::jwt

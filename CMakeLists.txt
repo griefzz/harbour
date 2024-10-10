@@ -43,7 +43,7 @@ target_include_directories(harbour INTERFACE
 # Harbour Dependencies
 # #############################
 include(cmake/fmtlib.cmake)
-include(cmake/json.cmake)
+include(cmake/reflect-cpp.cmake)
 include(cmake/unordered_dense.cmake)
 include(cmake/llhttp.cmake)
 include(cmake/openssl.cmake)

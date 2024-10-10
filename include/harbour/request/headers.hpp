@@ -15,14 +15,12 @@
 #include <fmt/base.h>
 #include <fmt/format.h>
 
-namespace harbour {
-    namespace request {
+namespace harbour::request {
 
-        /// @brief @brief Constant Header map containing key/values for Request
-        using Headers = ankerl::unordered_dense::map<std::string_view, std::string_view>;
+    /// @brief @brief Constant Header map containing key/values for Request
+    using Headers = ankerl::unordered_dense::map<std::string_view, std::string_view>;
 
-    }// namespace request
-}// namespace harbour
+}// namespace harbour::request
 
 /// @brief Allow RequestHeaders to be formatted using fmtlib
 template<>

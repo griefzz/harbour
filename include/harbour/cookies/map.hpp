@@ -10,42 +10,34 @@
 
 #include <string>
 
-#include <nlohmann/json.hpp>
-#include <nlohmann/adl_serializer.hpp>
-
 #include <ankerl/unordered_dense.h>
+#include <rfl.hpp>
 
-namespace harbour {
-    namespace cookies {
+namespace harbour::cookies {
 
-        /// The internal map for key=value of a cookie
-        using Map = ankerl::unordered_dense::map<std::string, std::string>;
+    /// The internal map for key=value of a cookie
+    using Map = ankerl::unordered_dense::map<std::string, std::string>;
 
-    }// namespace cookies
-}// namespace harbour
+}// namespace harbour::cookies
 
-/// @brief Allow our cookies::Map to be serialized/deserialized to json
-namespace nlohmann {
+/// Allow our cookies::Map to be serialized/deserialized to json
+namespace rfl {
     template<>
-    struct adl_serializer<harbour::cookies::Map> {
-        static void to_json(json &j, const harbour::cookies::Map &opt) {
-            for (const auto &[k, v]: opt)
-                j[k] = v;
+    struct Reflector<harbour::cookies::Map> {
+        using ReflType = rfl::Object<std::string>;
+
+        static harbour::cookies::Map to(const ReflType &obj) noexcept {
+            harbour::cookies::Map map;
+            for (const auto &[k, v]: obj)
+                map[k] = v;
+            return map;
         }
 
-        static void from_json(const json &j, harbour::cookies::Map &opt) {
-            for (const auto &item: j.items())
-                opt[item.key()] = item.value();
-        }
-
-        static void to_json(ordered_json &j, const harbour::cookies::Map &opt) {
-            for (const auto &[k, v]: opt)
-                j[k] = v;
-        }
-
-        static void from_json(const ordered_json &j, harbour::cookies::Map &opt) {
-            for (const auto &item: j.items())
-                opt[item.key()] = item.value();
+        static ReflType from(const harbour::cookies::Map &map) {
+            ReflType obj;
+            for (const auto &[k, v]: map)
+                obj[k] = v;
+            return obj;
         }
     };
-}// namespace nlohmann
+}// namespace rfl

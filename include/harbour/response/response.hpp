@@ -49,7 +49,7 @@ namespace harbour {
 
         /// @brief Constructor with JSON data.
         /// @param js Response data as JSON.
-        [[nodiscard]] Response(const json::json_t &js) : status(http::Status::OK), data(js.dump()) { headers["Content-Type"] = "application/json"; }
+        [[nodiscard]] Response(const json &js) : status(http::Status::OK), data(js.data) { headers["Content-Type"] = "application/json"; }
 
         /// @brief Set response data.
         /// @param data Response data as a string.

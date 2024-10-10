@@ -12,36 +12,30 @@
 
 #include "headers.hpp"
 
-namespace harbour {
-    namespace request {
-        namespace detail {
-            namespace FormData {
+namespace harbour::request::detail::FormData {
 
-                /// @brief Parse form data from a HTTP Request
-                /// @param data Form data string for example: 'name=bob&id=123'
-                /// @return request::Headers Parsed form data as a map
-                static auto parse(const std::string_view data) -> request::Headers {
-                    request::Headers form;
-                    size_t start = 0;
-                    size_t end   = 0;
+    /// @brief Parse form data from a HTTP Request
+    /// @param data Form data string for example: 'name=bob&id=123'
+    /// @return request::Headers Parsed form data as a map
+    static auto parse(const std::string_view data) -> request::Headers {
+        request::Headers form;
+        size_t start = 0;
+        size_t end   = 0;
 
-                    while (end != std::string::npos) {
-                        end          = data.find('&', start);
-                        size_t equal = data.find('=', start);
+        while (end != std::string::npos) {
+            end          = data.find('&', start);
+            size_t equal = data.find('=', start);
 
-                        if (equal != std::string::npos && (end == std::string::npos || equal < end)) {
-                            auto key   = data.substr(start, equal - start);
-                            auto value = data.substr(equal + 1, end - equal - 1);
-                            form[key]  = value;
-                        }
+            if (equal != std::string::npos && (end == std::string::npos || equal < end)) {
+                auto key   = data.substr(start, equal - start);
+                auto value = data.substr(equal + 1, end - equal - 1);
+                form[key]  = value;
+            }
 
-                        start = end + 1;
-                    }
+            start = end + 1;
+        }
 
-                    return form;
-                }
+        return form;
+    }
 
-            }// namespace FormData
-        }// namespace detail
-    }// namespace request
-}// namespace harbour
+}// namespace harbour::request::detail::FormData
