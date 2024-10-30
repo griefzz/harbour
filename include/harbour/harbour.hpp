@@ -99,7 +99,8 @@ namespace harbour {
 
         /// @brief Launch server and begin handling Ships
         void sail() {
-            display_motd();
+            fmt::print(fmt::emphasis::bold | fg(fmt::color::blue_violet),
+                       fmt::runtime("• Listening on: 0.0.0.0:{}\n"), settings_.port);
 
             auto ship_handler = [this](Request &req, Response &resp) -> awaitable<void> {
                 co_await handle_ships(req, resp);
@@ -110,24 +111,6 @@ namespace harbour {
         }
 
     private:
-        /// @brief Display message of the day
-        void display_motd() const {
-            static constexpr auto version = std::string_view{"Harbour: 0.0.1"};
-            static constexpr auto width   = 24;
-
-            fmt::print(fmt::emphasis::bold | fg(fmt::color::aquamarine),
-                       "┌{0:─^{3}}┐\n"
-                       "│{2: ^{3}}│\n"
-                       "│{1: ^{3}}│\n"
-                       "└{0:∿^{3}}┘\n",
-                       "", "Your ships are sailing", version, width);
-
-            fmt::print(fmt::emphasis::bold | fg(fmt::color::blue_violet),
-                       fmt::runtime("• Listening on: 0.0.0.0:{}\n"), settings_.port);
-            fmt::print(fmt::emphasis::bold | fg(fmt::color::bisque),
-                       "• Waiting for connections...\n");
-        }
-
         /// @brief Apply ships to our Request and Response
         /// @param req Request to handle
         /// @param resp Response to handle

@@ -9,7 +9,7 @@ endmacro()
 # #############################
 # Server Tests
 # #############################
-hb_add_test(server tcp)
+hb_add_test(server http)
 hb_add_test(server ssl)
 #hb_add_test(server routes)
 
