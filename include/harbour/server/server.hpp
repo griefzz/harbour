@@ -126,18 +126,8 @@ namespace harbour::server {
         /// @param ctx The socket context.
         /// @return An awaitable object.
         auto on_connection(SharedSocket ctx) -> awaitable<void> {
-            struct ConnectionContext {
-                std::string_view client_addr;
-                uint16_t client_port;
-                std::size_t max_size;
-                std::size_t buffering_size;
-            };
-
-            const auto conn_ctx = ConnectionContext{
-                    .client_addr    = ctx->address(),
-                    .client_port    = ctx->port(),
-                    .max_size       = settings_.max_size,
-                    .buffering_size = settings_.buffering_size};
+            std::optional<std::exception> handle_ships_exception;
+            std::optional<asio::system_error> asio_exception;
 
             try {
                 if (settings_.on_connection) {
@@ -145,9 +135,9 @@ namespace harbour::server {
                 }
 
                 std::string data;
-                data.reserve(conn_ctx.buffering_size);
+                data.reserve(settings_.buffering_size);
 
-                auto buffer = asio::dynamic_string_buffer(data, conn_ctx.max_size);
+                auto buffer = asio::dynamic_string_buffer(data, settings_.max_size);
                 co_await ctx->async_read(buffer, use_awaitable);
 
                 if (auto request = Request::create(ctx, data.c_str(), data.size())) {
@@ -155,12 +145,18 @@ namespace harbour::server {
                     co_await handle_ships_(*request, response);
                     co_await ctx->async_write(response.string(), use_awaitable);
                 } else {
-                    handle_failed_request(ctx, data);
+                    co_await handle_failed_request(ctx, data);
                 }
             } catch (const asio::system_error &se) {
-                handle_connection_error(ctx, se);
+                asio_exception = se;
             } catch (const std::exception &e) {
-                handle_critical_error(ctx, e);
+                handle_ships_exception = e;
+            }
+
+            if (asio_exception) {
+                co_await handle_connection_error(ctx, *asio_exception);
+            } else if (handle_ships_exception) {
+                co_await handle_critical_error(ctx, *handle_ships_exception);
             }
         }
 

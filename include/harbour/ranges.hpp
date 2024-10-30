@@ -11,6 +11,7 @@
 #include <ranges>
 #include <type_traits>
 #include <concepts>
+#include <algorithm>
 
 namespace harbour::ranges {
     namespace detail {
