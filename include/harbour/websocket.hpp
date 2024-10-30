@@ -190,7 +190,6 @@ namespace harbour::websocket {
             }
         }
 
-    private:
         std::string key_;
         std::string version_;
         std::string secret_;

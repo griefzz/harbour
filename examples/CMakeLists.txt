@@ -27,6 +27,7 @@ hb_add_example(middleware)
 # Advanced examples
 # #############################
 add_subdirectory(blog)
+add_subdirectory(chat)
 hb_add_example(securecookies)
 hb_add_example(websockets)
 hb_add_example(redirections)

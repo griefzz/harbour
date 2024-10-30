@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Harbour Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+    <style>
+        html {
+            max-width: 70ch;
+            padding: 3em 1em;
+            margin: auto;
+            line-height: 1.75;
+            font-size: 1.25em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <div class="control">
+            <textarea class="textarea" id="chat-window" readonly></textarea>
+        </div>
+        <input class="input" type="text" id="message-input" placeholder="Type your message...">
+        <button class="button" id="send-button">Send</button>
+    </div>
+
+    <script>
+        const chatWindow = document.getElementById('chat-window');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+
+        // Create WebSocket connection
+        const socket = new WebSocket('ws://' + window.location.host + '/ws');
+
+        socket.onopen = function () {
+            appendMessage('System', 'Connected to chat');
+        };
+
+        socket.onmessage = function (event) {
+            const message = JSON.parse(event.data);
+            appendMessage(message.sender, message.text);
+        };
+
+        socket.onclose = function () {
+            appendMessage('System', 'Disconnected from chat');
+        };
+
+        function appendMessage(sender, text) {
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            chatWindow.textContent += `${sender}: ${text}\n`;
+        }
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    text: message
+                }));
+                messageInput.value = '';
+            }
+        }
+
+        sendButton.onclick = sendMessage;
+        messageInput.onkeypress = function (e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        };
+    </script>
+</body>
+
+</html>
