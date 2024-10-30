@@ -82,34 +82,27 @@ auto Index() -> awaitable<Response> {
 </html>)";
 }
 
-auto Echo(const Request &req) -> awaitable<Response> try {
+auto Echo(const Request &req) -> awaitable<std::optional<Response>> try {
     // Upgrade to a websocket connection
     if (auto ws = co_await websocket::upgrade(req)) {
-        // Send clients a copy of their request
         log::info("WebSocket connection open");
+
         for (;;) {
-            auto msg = co_await ws->read(4096); // Read a maximum of 4096 bytes
-            auto n   = co_await ws->write(msg); // Send back the msg returning bytes sent
+            // Read message
+            auto msg = co_await ws->read();
+            if (!msg) break;// Connection closed normally
+
+            // Echo message back
+            co_await ws->send(*msg);
         }
-    } else {
-        // Correctly respond when an upgrade fails
-        co_return http::Status::BadRequest;
-    }
 
-    // Websocket connection automatically closes itself here
-    co_return http::Status::OK;
-} catch (const asio::system_error &e) {
-    // Handle any coroutine errors
-
-    // this is a normal exception for when the connection closes
-    // while trying to read (client disconnected)
-    if (e.code() == asio::error::eof) {
         log::info("WebSocket connection closed");
-        co_return http::Status::OK;
+        co_return std::nullopt;
     }
 
-    // Any other exception gets handled here
-    log::warn("Websocket Exception: {}", e.what());
+    co_return http::Status::BadRequest;
+} catch (const asio::system_error &e) {
+    log::warn("WebSocket error: {}", e.what());
     co_return http::Status::BadRequest;
 }
 

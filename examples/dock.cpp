@@ -18,8 +18,9 @@ struct AddDock {
     Harbour &hb;
 
     auto operator()() {
-        hb.dock("/test", Hello);
-        return "Added Dock";
+        auto route = crypto::random::string(4).value();
+        hb.dock(route, Hello);
+        return "Added new route at /" + route;
     }
 };
 

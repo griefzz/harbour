@@ -10,20 +10,36 @@
 
 #include <ranges>
 #include <type_traits>
+#include <concepts>
 
 namespace harbour::ranges {
     namespace detail {
+        // Concept to check if a type can be constructed from a range
+        template<typename Container, typename Range>
+        concept ConstructibleFromRange = requires(Range &&range) {
+            Container(std::ranges::begin(range), std::ranges::end(range));
+        };
 
         template<template<typename...> class Container>
         struct convert_to_fn {
-            template<typename Range>
-            auto operator()(Range &&range) const {
-                using T = std::ranges::range_value_t<Range>;
-                Container<T> container;
-                for (auto &&subrange: range) {
-                    container.emplace_back(subrange.begin(), subrange.end());
+            template<std::ranges::input_range Range>
+                requires std::movable<std::ranges::range_value_t<Range>>
+            [[nodiscard]] constexpr auto operator()(Range &&range) const {
+                using value_type     = std::ranges::range_value_t<Range>;
+                using container_type = Container<value_type>;
+
+                if constexpr (ConstructibleFromRange<container_type, Range>) {
+                    return container_type(std::ranges::begin(range), std::ranges::end(range));
+                } else {
+                    container_type container;
+                    if constexpr (requires { container.reserve(std::size_t{}); }) {
+                        if constexpr (std::ranges::sized_range<Range>) {
+                            container.reserve(std::ranges::size(range));
+                        }
+                    }
+                    std::ranges::copy(range, std::back_inserter(container));
+                    return container;
                 }
-                return container;
             }
         };
 
@@ -32,16 +48,16 @@ namespace harbour::ranges {
 
         template<typename Adaptor, typename Range>
         concept RangeAdaptorClosure = requires(Adaptor adaptor, Range &&range) {
-            { adaptor(std::forward<Range>(range)) };
+            { adaptor(std::forward<Range>(range)) } -> std::ranges::range;
         };
 
         template<typename Adaptor>
         struct range_adaptor_closure {
-            Adaptor adaptor;
+            [[no_unique_address]] Adaptor adaptor;
 
-            template<typename Range>
+            template<std::ranges::range Range>
                 requires RangeAdaptorClosure<Adaptor, Range>
-            friend auto operator|(Range &&range, const range_adaptor_closure &closure) {
+            [[nodiscard]] constexpr friend auto operator|(Range &&range, const range_adaptor_closure &closure) {
                 return closure.adaptor(std::forward<Range>(range));
             }
         };
@@ -54,6 +70,14 @@ namespace harbour::ranges {
 
     /// @brief Concept for any R that implements a random_access_range and holds a scalar type
     template<typename R>
-    concept RandomAccessScalarRange = std::ranges::random_access_range<R> && std::is_scalar_v<std::ranges::range_value_t<R>>;
+    concept RandomAccessScalarRange = std::ranges::random_access_range<R> &&
+                                      std::is_scalar_v<std::ranges::range_value_t<R>> &&
+                                      std::ranges::sized_range<R>;
+
+    /// @brief Concept to ensure range contains char or unsigned char
+    template<typename T>
+    concept RandomAccessCharRange = ranges::RandomAccessScalarRange<T> &&
+                                    (std::same_as<std::ranges::range_value_t<T>, char> ||
+                                     std::same_as<std::ranges::range_value_t<T>, unsigned char>);
 
 }// namespace harbour::ranges

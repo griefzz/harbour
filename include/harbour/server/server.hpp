@@ -50,39 +50,75 @@ namespace harbour::server {
         /// @param settings The server Settings to use.
         /// @param ships The list of ships.
         [[nodiscard]] explicit Server(ShipsHandleFn fn, const Settings &settings, auto &ships)
-            : settings(settings), handle_ships(std::move(fn)), ships(ships), ssl_context(nullptr) {
-            if (settings.max_size < settings.buffering_size) {
+            : settings_(std::move(settings)), handle_ships_(std::move(fn)), ships_(ships), ssl_context_(nullptr) {
+
+            validate_settings();
+            initialize_ssl_context();
+        }
+
+        void validate_settings() const {
+            if (settings_.max_size < settings_.buffering_size) {
                 log::critical("max_size size must be >= buffering_size");
                 exit(1);
             }
+        }
 
-            const auto has_ssl_paths = settings.private_key_path && settings.certificate_path;
-            const auto has_ssl_data  = settings.private_key && settings.certificate;
+        void initialize_ssl_context() {
+            const auto has_ssl_paths = settings_.private_key_path && settings_.certificate_path;
+            const auto has_ssl_data  = settings_.private_key && settings_.certificate;
+
+            if (!has_ssl_paths && !has_ssl_data) {
+                return;
+            }
 
             try {
-                if (has_ssl_paths || has_ssl_data) {
-                    ssl_context = std::make_unique<ssl::context>(ssl::context::sslv23);
-                    if (!ssl_context) {
-                        log::critical("Failed to initialize ssl::context");
-                        exit(1);
-                    }
-
-                    ssl_context->set_verify_mode(ssl::verify_peer);
-                    ssl_context->set_verify_mode(ssl::verify_client_once);
-
-                    if (has_ssl_paths) {
-                        ssl_context->use_certificate_chain_file(*settings.certificate_path);
-                        ssl_context->use_private_key_file(*settings.private_key_path, ssl::context::pem);
-                    } else if (has_ssl_data) {
-                        ssl_context->use_certificate_chain(asio::buffer(*settings.certificate));
-                        ssl_context->use_private_key(asio::buffer(*settings.private_key), ssl::context::pem);
-                    }
-
-                    ssl_context->set_options(ssl::context::default_workarounds | ssl::context::no_sslv2 | ssl::context::no_sslv3);
-                }
+                create_ssl_context();
+                configure_ssl_context();
+                load_certificates(has_ssl_paths);
             } catch (const std::exception &e) {
                 log::critical("Failed to initialize Server: {}", e.what());
                 exit(1);
+            }
+        }
+
+        void create_ssl_context() {
+            ssl_context_ = std::make_unique<ssl::context>(ssl::context::sslv23);
+            if (!ssl_context_) {
+                log::critical("Failed to initialize ssl::context");
+                exit(1);
+            }
+        }
+
+        void configure_ssl_context() {
+            ssl_context_->set_verify_mode(ssl::verify_peer);
+            ssl_context_->set_verify_mode(ssl::verify_client_once);
+
+            if (settings_.private_key_password) {
+                auto cb = [password = *settings_.private_key_password](std::size_t, ssl::context::password_purpose) -> std::string {
+                    return password;
+                };
+
+                asio::error_code ec;
+                ssl_context_->set_password_callback(cb, ec);
+                if (ec) {
+                    log::critical("Failed to set password callback: {}", ec.message());
+                    exit(1);
+                }
+            }
+
+            ssl_context_->set_options(
+                    ssl::context::default_workarounds |
+                    ssl::context::no_sslv2 |
+                    ssl::context::no_sslv3);
+        }
+
+        void load_certificates(bool using_paths) {
+            if (using_paths) {
+                ssl_context_->use_certificate_chain_file(*settings_.certificate_path);
+                ssl_context_->use_private_key_file(*settings_.private_key_path, ssl::context::pem);
+            } else {
+                ssl_context_->use_certificate_chain(asio::buffer(*settings_.certificate));
+                ssl_context_->use_private_key(asio::buffer(*settings_.private_key), ssl::context::pem);
             }
         }
 
@@ -90,75 +126,96 @@ namespace harbour::server {
         /// @param ctx The socket context.
         /// @return An awaitable object.
         auto on_connection(SharedSocket ctx) -> awaitable<void> {
-            const auto addr                  = ctx->address();         // Client address
-            const auto addr_port             = ctx->port();            // Client port
-            const std::size_t max_size       = settings.max_size;      // Max size for an HTTP Request
-            const std::size_t buffering_size = settings.buffering_size;// Size of temporary buffering buffer
+            struct ConnectionContext {
+                std::string_view client_addr;
+                uint16_t client_port;
+                std::size_t max_size;
+                std::size_t buffering_size;
+            };
 
-            std::optional<std::string> warning_message; // Optional string holding the warning events message
-            std::optional<std::string> critical_message;// Optional string holding the critical events message
+            const auto conn_ctx = ConnectionContext{
+                    .client_addr    = ctx->address(),
+                    .client_port    = ctx->port(),
+                    .max_size       = settings_.max_size,
+                    .buffering_size = settings_.buffering_size};
 
             try {
-                if (settings.on_connection) co_await settings.on_connection(ctx);
+                if (settings_.on_connection) {
+                    co_await settings_.on_connection(ctx);
+                }
 
-                std::string data;// Recieved HTTP Request data
-                data.reserve(buffering_size);
+                std::string data;
+                data.reserve(conn_ctx.buffering_size);
 
-                // Dynamically read up to max_size bytes from the socket stored into data
-                auto buffer = asio::dynamic_string_buffer(data, max_size);
+                auto buffer = asio::dynamic_string_buffer(data, conn_ctx.max_size);
                 co_await ctx->async_read(buffer, use_awaitable);
 
-                // Create a Request from recieved HTTP Request data
-                // Execute all ship handlers
-                // Return a Response to the client
-                if (auto req = Request::create(ctx, data.c_str(), data.size())) {
-                    Response resp;
-                    co_await handle_ships(*req, resp);
-                    co_await ctx->async_write(resp.string(), use_awaitable);
+                if (auto request = Request::create(ctx, data.c_str(), data.size())) {
+                    Response response;
+                    co_await handle_ships_(*request, response);
+                    co_await ctx->async_write(response.string(), use_awaitable);
                 } else {
-                    // Parsing the request failed
-                    // Send the client a 500 Internal Server Error as a Response
-                    if (settings.on_warning) co_await settings.on_warning(ctx, fmt::format("Failed to parse request:\n{}", data));
-                    co_await ctx->async_write(Response(http::Status::BadRequest).string(), use_awaitable);
+                    handle_failed_request(ctx, data);
                 }
             } catch (const asio::system_error &se) {
-                if (se.code() == asio::error::eof) {
-                    // This is the normal result of trying to access a closed connection
-                    // A ton of these warnings could indicate a larger problem
-                    warning_message = "Connection closed early";
-                } else {
-                    critical_message = fmt::format("asio exception: {}", se.what());
-                }
+                handle_connection_error(ctx, se);
             } catch (const std::exception &e) {
-                critical_message = fmt::format("handle_ships exception: {}", e.what());
+                handle_critical_error(ctx, e);
             }
-
-            // Handle unexpected server event callback coroutines
-            if (warning_message && settings.on_warning)
-                co_await settings.on_warning(ctx, *warning_message);
-
-            if (critical_message && settings.on_critical)
-                co_await settings.on_critical(ctx, *critical_message);
         }
 
-        /// @brief Listens for incoming connections.
-        /// @return An awaitable object.
+        // New helper methods to break down the connection handling
+        auto handle_failed_request(const SharedSocket &ctx, const std::string &data) -> awaitable<void> {
+            if (settings_.on_warning) {
+                co_await settings_.on_warning(ctx, fmt::format("Failed to parse request:\n{}", data));
+            }
+            co_await ctx->async_write(Response(http::Status::BadRequest).string(), use_awaitable);
+        }
+
+        auto handle_connection_error(const SharedSocket &ctx, const asio::system_error &se) -> awaitable<void> {
+            if (se.code() == asio::error::eof) {
+                if (settings_.on_warning) {
+                    co_await settings_.on_warning(ctx, "Connection closed early");
+                }
+            } else if (settings_.on_critical) {
+                co_await settings_.on_critical(ctx, fmt::format("asio exception: {}", se.what()));
+            }
+        }
+
+        auto handle_critical_error(const SharedSocket &ctx, const std::exception &e) -> awaitable<void> {
+            if (settings_.on_critical) {
+                co_await settings_.on_critical(ctx, fmt::format("handle_ships exception: {}", e.what()));
+            }
+        }
+
         auto listener() -> awaitable<void> {
             auto executor = co_await this_coro::executor;
-            tcp::acceptor acceptor(executor, {tcp::v4(), settings.port});
-            for (;;) {
+            tcp::acceptor acceptor(executor, {tcp::v4(), settings_.port});
+
+            while (true) {
                 try {
                     tcp::socket socket = co_await acceptor.async_accept(use_awaitable);
-                    if (ssl_context) {
-                        auto ctx = std::make_shared<Socket>(std::move(ssl::stream<tcp::socket>(std::move(socket), *ssl_context)));
-                        co_await std::get<SslSocket>(ctx->socket).async_handshake(ssl::stream_base::server, use_awaitable);
-                        co_spawn(executor, on_connection(ctx), detached);
-                    } else {
-                        auto ctx = std::make_shared<Socket>(std::move(socket));
-                        co_spawn(executor, on_connection(ctx), detached);
-                    }
-                } catch (const std::exception &e) { log::critical("Listener exception: {}", e.what()); }
+                    handle_new_connection(std::move(socket), executor);
+                } catch (const std::exception &e) {
+                    log::critical("Listener exception: {}", e.what());
+                }
             }
+        }
+
+        template<typename Executor>
+        void handle_new_connection(tcp::socket &&socket, const Executor &executor) {
+            if (ssl_context_) {
+                auto ctx = std::make_shared<Socket>(std::move(ssl::stream<tcp::socket>(std::move(socket), *ssl_context_)));
+                co_spawn(executor, handle_ssl_connection(ctx), detached);
+            } else {
+                auto ctx = std::make_shared<Socket>(std::move(socket));
+                co_spawn(executor, on_connection(ctx), detached);
+            }
+        }
+
+        auto handle_ssl_connection(SharedSocket ctx) -> awaitable<void> {
+            co_await std::get<SslSocket>(ctx->socket()).async_handshake(ssl::stream_base::server, use_awaitable);
+            co_await on_connection(ctx);
         }
 
         /// @brief Starts the server.
@@ -176,10 +233,10 @@ namespace harbour::server {
             }
         }
 
-        Settings settings;                        ///< Settings for the Server
-        ShipsHandleFn handle_ships;               ///< Function to handle Ships.
-        std::vector<detail::Ship> &ships;         ///< Vector of global Ships.
-        std::unique_ptr<ssl::context> ssl_context;///< SSL context for secure connections.
+        Settings settings_;                        ///< Settings for the Server
+        ShipsHandleFn handle_ships_;               ///< Function to handle Ships.
+        std::vector<detail::Ship> &ships_;         ///< Vector of global Ships.
+        std::unique_ptr<ssl::context> ssl_context_;///< SSL context for secure connections.
     };
 
 }// namespace harbour::server

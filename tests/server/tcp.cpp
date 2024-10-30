@@ -23,7 +23,7 @@ auto Echo(const Request &req) -> Response {
 
 auto make_server() {
     std::vector<harbour::detail::Ship> ships;
-    auto ship_handler = [&](const Request &req, Response &resp) -> awaitable<void> {
+    auto ship_handler = [&](const Request &req, Response &resp) -> asio::awaitable<void> {
         resp = Echo(req);
         co_return;
     };
@@ -31,46 +31,65 @@ auto make_server() {
     return server::Server(ship_handler, settings, ships);
 }
 
-auto client(asio::io_context &io_context, const server::Settings &settings, bool &ok) -> awaitable<void> {
+auto client(asio::io_context &io_context, const server::Settings &settings) -> asio::awaitable<bool> {
     try {
-        tcp::socket socket(io_context);
+        auto executor = co_await asio::this_coro::executor;
+        tcp::socket socket(executor);
+        
         tcp::endpoint endpoint(asio::ip::make_address("127.0.0.1"), settings.port);
+        co_await socket.async_connect(endpoint, asio::use_awaitable);
+        
+        co_await async_write(socket, asio::buffer(req), asio::use_awaitable);
 
-        co_await socket.async_connect(endpoint, use_awaitable);
-        co_await asio::async_write(socket, asio::buffer(req), use_awaitable);
-
-        char data[4096];
-        auto n   = co_await socket.async_read_some(asio::buffer(data, 4096), use_awaitable);
-        auto got = std::string(data, n);
-        if (got == want)
-            ok = true;
+        std::array<char, 4096> data;
+        auto n = co_await socket.async_read_some(asio::buffer(data), asio::use_awaitable);
+        auto got = std::string_view(data.data(), n);
+        
+        co_return got == want;
     } catch (const std::exception &e) {
         log::critical("client exception: {}", e.what());
+        co_return false;
     }
-
-    io_context.stop();
 }
 
 auto main() -> int {
     try {
         asio::io_context io_context(1);
+        auto guard = asio::make_work_guard(io_context);
 
+        // Signal handling
         asio::signal_set signals(io_context, SIGINT, SIGTERM);
-        signals.async_wait([&](auto, auto) { io_context.stop(); });
+        signals.async_wait([&](auto, auto) { 
+            guard.reset();
+            io_context.stop();
+        });
 
+        // Create and start server
         auto srv = make_server();
-        co_spawn(io_context, srv.listener(), asio::detached);
-
+        
+        // Use structured concurrency pattern
         bool ok = false;
-        co_spawn(io_context, client(io_context, srv.settings, ok), asio::detached);
+        asio::co_spawn(io_context, 
+            [&]() -> asio::awaitable<void> {
+                asio::co_spawn(
+                    co_await asio::this_coro::executor,
+                    srv.listener(),
+                    asio::detached
+                );
+                
+                // Run client and get result
+                ok = co_await client(io_context, srv.settings_);
+                io_context.stop();
+            }, 
+            asio::detached
+        );
 
         io_context.run();
-
+        
         assert(ok);
-        if (!ok) return 1;
+        return ok ? 0 : 1;
 
-        return 0;
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
         log::critical("Server exception: {}", e.what());
         return 1;
     }

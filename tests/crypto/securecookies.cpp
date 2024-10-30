@@ -15,8 +15,8 @@
     if (!(ok)) { return 1; }
 
 auto main() -> int {
-    std::vector<char> hash(32, 1);
-    std::vector<char> block(32, 2);
+    std::vector<std::uint8_t> hash(32, 1);
+    std::vector<std::uint8_t> block(32, 2);
     std::unordered_map<std::string, std::string> map = {{"1", "1"}, {"2", "2"}, {"3", "3"}};
 
     if (auto securecookie = harbour::SecureCookies::create(hash, block)) {

@@ -26,31 +26,28 @@
 #include "../json.hpp"
 
 namespace harbour {
-    namespace cookies {
-        namespace detail {
+    namespace cookies::detail {
 
-            /// @brief Generate a Unix UTC timestamp for the current time
-            /// @return size_t Unix UTC timestamp
-            auto timestamp() -> std::size_t {
-                return std::chrono::time_point_cast<std::chrono::milliseconds>(
-                               std::chrono::system_clock::now())
-                        .time_since_epoch()
-                        .count();
-            }
+        /// @brief Generate a Unix UTC timestamp for the current time
+        /// @return size_t Unix UTC timestamp
+        auto timestamp() -> std::size_t {
+            return std::chrono::time_point_cast<std::chrono::milliseconds>(
+                           std::chrono::system_clock::now())
+                    .time_since_epoch()
+                    .count();
+        }
+        /// @brief Convert a date string to a type T
+        /// @tparam T Type to convert string to
+        /// @param date Date to convert
+        /// @return T Converted date string
+        template<typename T>
+        auto date_to_v(ranges::RandomAccessScalarRange auto &&date) -> T {
+            T t{};
+            std::from_chars(date.data(), date.data() + date.size(), t);
+            return t;
+        }
 
-            /// @brief Convert a date string to a type T
-            /// @tparam T Type to convert string to
-            /// @param date Date to convert
-            /// @return T Converted date string
-            template<typename T>
-            auto date_to_v(ranges::RandomAccessScalarRange auto &&date) -> T {
-                T t{};
-                std::from_chars(date.data(), date.data() + date.size(), t);
-                return t;
-            }
-
-        }// namespace detail
-    }// namespace cookies
+    }// namespace cookies::detail
 
     struct SecureCookies {
         Cookies cookies;
@@ -62,15 +59,19 @@ namespace harbour {
         /// @param HashKey 32-byte Hash key used for HMAC authentication
         /// @param BlockKey 32-byte Block key used for AES256-CTR encryption
         /// @return std::optional<SecureCookies> SecureCookies on success, empty on failure
-        [[nodiscard]] static auto create(ranges::RandomAccessScalarRange auto &&HashKey,
-                                         ranges::RandomAccessScalarRange auto &&BlockKey) -> std::optional<SecureCookies> {
+        [[nodiscard]] static auto create(ranges::RandomAccessCharRange auto &&HashKey,
+                                         ranges::RandomAccessCharRange auto &&BlockKey) -> std::optional<SecureCookies> {
             using namespace std::chrono_literals;
             if (HashKey.size() != 32) return {};
             if (BlockKey.size() != 32) return {};
             SecureCookies sc;
             (void) sc.cookies.with_age(2'592'000s);// 86400 * 30
-            std::copy(HashKey.begin(), HashKey.end(), sc.hash_key.begin());
-            std::copy(BlockKey.begin(), BlockKey.end(), sc.block_key.begin());
+
+            auto hash_ptr  = reinterpret_cast<const std::uint8_t *>(HashKey.data());
+            auto block_ptr = reinterpret_cast<const std::uint8_t *>(BlockKey.data());
+
+            std::copy(hash_ptr, hash_ptr + HashKey.size(), sc.hash_key.begin());
+            std::copy(block_ptr, block_ptr + BlockKey.size(), sc.block_key.begin());
             return sc;
         }
 

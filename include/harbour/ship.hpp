@@ -49,7 +49,7 @@ namespace harbour::detail {
     template<class... Ts>
     overloaded(Ts...) -> overloaded<Ts...>;
 
-    /// @brief Type aliases for various function signatures.
+    /// @brief Type aliases for awaitable ship variants
     using Ship_0  = std::function<awaitable<Response>(const Request &, Response &)>;
     using Ship_1  = std::function<awaitable<Response>(Response &, const Request &)>;
     using Ship_2  = std::function<awaitable<std::optional<Response>>(const Request &, Response &)>;
@@ -65,7 +65,8 @@ namespace harbour::detail {
     using Ship_12 = std::function<awaitable<Response>()>;
     using Ship_13 = std::function<awaitable<std::optional<Response>>()>;
     using Ship_14 = std::function<awaitable<void>()>;
-    /// ===========================================================================================
+
+    /// @brief Type aliases for non-awaitable ship variants
     using Ship_15 = std::function<Response(const Request &, Response &)>;
     using Ship_16 = std::function<Response(Response &, const Request &)>;
     using Ship_17 = std::function<std::optional<Response>(const Request &, Response &)>;
@@ -147,69 +148,42 @@ namespace harbour::detail {
         using S = decltype(s);
         using T = std::decay_t<S>;
 
-        if constexpr (is_ship<T>)
-            return Ship{s};
-        else if constexpr (std::is_invocable_r_v<awaitable<Response>, S, const Request &, Response &>)
-            return Ship{Ship_0{s}};
-        else if constexpr (std::is_invocable_r_v<awaitable<Response>, S, Response &, const Request &>)
-            return Ship{Ship_1{s}};
-        else if constexpr (std::is_invocable_r_v<awaitable<std::optional<Response>>, S, const Request &, Response &>)
-            return Ship{Ship_2{s}};
-        else if constexpr (std::is_invocable_r_v<awaitable<std::optional<Response>>, S, Response &, const Request &>)
-            return Ship{Ship_3{s}};
-        else if constexpr (std::is_invocable_r_v<awaitable<void>, S, const Request &, Response &>)
-            return Ship{Ship_4{s}};
-        else if constexpr (std::is_invocable_r_v<awaitable<void>, S, Response &, const Request &>)
-            return Ship{Ship_5{s}};
-        else if constexpr (std::is_invocable_r_v<awaitable<Response>, S, const Request &>)
-            return Ship{Ship_6{s}};
-        else if constexpr (std::is_invocable_r_v<awaitable<Response>, S, Response &>)
-            return Ship{Ship_7{s}};
-        else if constexpr (std::is_invocable_r_v<awaitable<std::optional<Response>>, S, const Request &>)
-            return Ship{Ship_8{s}};
-        else if constexpr (std::is_invocable_r_v<awaitable<std::optional<Response>>, S, Response &>)
-            return Ship{Ship_9{s}};
-        else if constexpr (std::is_invocable_r_v<awaitable<void>, S, const Request &>)
-            return Ship{Ship_10{s}};
-        else if constexpr (std::is_invocable_r_v<awaitable<void>, S, Response &>)
-            return Ship{Ship_11{s}};
-        else if constexpr (std::is_invocable_r_v<awaitable<Response>, S>)
-            return Ship{Ship_12{s}};
-        else if constexpr (std::is_invocable_r_v<awaitable<std::optional<Response>>, S>)
-            return Ship{Ship_13{s}};
-        else if constexpr (std::is_invocable_r_v<awaitable<void>, S>)
-            return Ship{Ship_14{s}};
-        /// =======================================================================================================
-        else if constexpr (std::is_invocable_r_v<Response, S, const Request &, Response &>)
-            return Ship{Ship_15{s}};
-        else if constexpr (std::is_invocable_r_v<Response, S, Response &, const Request &>)
-            return Ship{Ship_16{s}};
-        else if constexpr (std::is_invocable_r_v<std::optional<Response>, S, const Request &, Response &>)
-            return Ship{Ship_17{s}};
-        else if constexpr (std::is_invocable_r_v<std::optional<Response>, S, Response &, const Request &>)
-            return Ship{Ship_18{s}};
-        else if constexpr (std::is_invocable_r_v<void, S, const Request &, Response &>)
-            return Ship{Ship_19{s}};
-        else if constexpr (std::is_invocable_r_v<void, S, Response &, const Request &>)
-            return Ship{Ship_20{s}};
-        else if constexpr (std::is_invocable_r_v<Response, S, const Request &>)
-            return Ship{Ship_21{s}};
-        else if constexpr (std::is_invocable_r_v<Response, S, Response &>)
-            return Ship{Ship_22{s}};
-        else if constexpr (std::is_invocable_r_v<std::optional<Response>, S, const Request &>)
-            return Ship{Ship_23{s}};
-        else if constexpr (std::is_invocable_r_v<std::optional<Response>, S, Response &>)
-            return Ship{Ship_24{s}};
-        else if constexpr (std::is_invocable_r_v<void, S, const Request &>)
-            return Ship{Ship_25{s}};
-        else if constexpr (std::is_invocable_r_v<void, S, Response &>)
-            return Ship{Ship_26{s}};
-        else if constexpr (std::is_invocable_r_v<Response, S>)
-            return Ship{Ship_27{s}};
-        else if constexpr (std::is_invocable_r_v<std::optional<Response>, S>)
-            return Ship{Ship_28{s}};
-        else if constexpr (std::is_invocable_r_v<void, S>)
-            return Ship{Ship_29{s}};
+        // clang-format off
+        /// Awaitable ship variants
+        if constexpr (is_ship<T>) return Ship{s};
+        else if constexpr (std::is_invocable_r_v<awaitable<Response>, S, const Request &, Response &>)                return Ship{Ship_0{s}};
+        else if constexpr (std::is_invocable_r_v<awaitable<Response>, S, Response &, const Request &>)                return Ship{Ship_1{s}};
+        else if constexpr (std::is_invocable_r_v<awaitable<std::optional<Response>>, S, const Request &, Response &>) return Ship{Ship_2{s}};
+        else if constexpr (std::is_invocable_r_v<awaitable<std::optional<Response>>, S, Response &, const Request &>) return Ship{Ship_3{s}};
+        else if constexpr (std::is_invocable_r_v<awaitable<void>, S, const Request &, Response &>)                    return Ship{Ship_4{s}};
+        else if constexpr (std::is_invocable_r_v<awaitable<void>, S, Response &, const Request &>)                    return Ship{Ship_5{s}};
+        else if constexpr (std::is_invocable_r_v<awaitable<Response>, S, const Request &>)                            return Ship{Ship_6{s}};
+        else if constexpr (std::is_invocable_r_v<awaitable<Response>, S, Response &>)                                 return Ship{Ship_7{s}};
+        else if constexpr (std::is_invocable_r_v<awaitable<std::optional<Response>>, S, const Request &>)             return Ship{Ship_8{s}};
+        else if constexpr (std::is_invocable_r_v<awaitable<std::optional<Response>>, S, Response &>)                  return Ship{Ship_9{s}};
+        else if constexpr (std::is_invocable_r_v<awaitable<void>, S, const Request &>)                                return Ship{Ship_10{s}};
+        else if constexpr (std::is_invocable_r_v<awaitable<void>, S, Response &>)                                     return Ship{Ship_11{s}};
+        else if constexpr (std::is_invocable_r_v<awaitable<Response>, S>)                                             return Ship{Ship_12{s}};
+        else if constexpr (std::is_invocable_r_v<awaitable<std::optional<Response>>, S>)                              return Ship{Ship_13{s}};
+        else if constexpr (std::is_invocable_r_v<awaitable<void>, S>)                                                 return Ship{Ship_14{s}};
+        
+        /// Non-awaitable ship variants
+        else if constexpr (std::is_invocable_r_v<Response, S, const Request &, Response &>)                           return Ship{Ship_15{s}};
+        else if constexpr (std::is_invocable_r_v<Response, S, Response &, const Request &>)                           return Ship{Ship_16{s}};
+        else if constexpr (std::is_invocable_r_v<std::optional<Response>, S, const Request &, Response &>)            return Ship{Ship_17{s}};
+        else if constexpr (std::is_invocable_r_v<std::optional<Response>, S, Response &, const Request &>)            return Ship{Ship_18{s}};
+        else if constexpr (std::is_invocable_r_v<void, S, const Request &, Response &>)                               return Ship{Ship_19{s}};
+        else if constexpr (std::is_invocable_r_v<void, S, Response &, const Request &>)                               return Ship{Ship_20{s}};
+        else if constexpr (std::is_invocable_r_v<Response, S, const Request &>)                                       return Ship{Ship_21{s}};
+        else if constexpr (std::is_invocable_r_v<Response, S, Response &>)                                            return Ship{Ship_22{s}};
+        else if constexpr (std::is_invocable_r_v<std::optional<Response>, S, const Request &>)                        return Ship{Ship_23{s}};
+        else if constexpr (std::is_invocable_r_v<std::optional<Response>, S, Response &>)                             return Ship{Ship_24{s}};
+        else if constexpr (std::is_invocable_r_v<void, S, const Request &>)                                           return Ship{Ship_25{s}};
+        else if constexpr (std::is_invocable_r_v<void, S, Response &>)                                                return Ship{Ship_26{s}};
+        else if constexpr (std::is_invocable_r_v<Response, S>)                                                        return Ship{Ship_27{s}};
+        else if constexpr (std::is_invocable_r_v<std::optional<Response>, S>)                                         return Ship{Ship_28{s}};
+        else if constexpr (std::is_invocable_r_v<void, S>)                                                            return Ship{Ship_29{s}};
+        // clang-format on
     }
 
     /// @brief Handler for processing a Request and Response using a Ship.
@@ -235,20 +209,16 @@ namespace harbour::detail {
             }
         };
 
+        // clang-format off
         auto ol = detail::overloaded{
                 [&](auto &s) -> awaitable<std::optional<Response>> {
-                    if constexpr (requires { s(req, resp); }) {
-                        co_return co_await handle(s, req, resp);
-                    } else if constexpr (requires { s(resp, req); }) {
-                        co_return co_await handle(s, resp, req);
-                    } else if constexpr (requires { s(req); }) {
-                        co_return co_await handle(s, req);
-                    } else if constexpr (requires { s(resp); }) {
-                        co_return co_await handle(s, resp);
-                    } else {
-                        co_return co_await handle(s);
-                    }
+                    if      constexpr (requires { s(req, resp); }) co_return co_await handle(s, req, resp);
+                    else if constexpr (requires { s(resp, req); }) co_return co_await handle(s, resp, req);
+                    else if constexpr (requires { s(req); })       co_return co_await handle(s, req);
+                    else if constexpr (requires { s(resp); })      co_return co_await handle(s, resp);
+                    else                                           co_return co_await handle(s);
                 }};
+        // clang-format on
 
         co_return co_await std::visit(ol, ship);
     };

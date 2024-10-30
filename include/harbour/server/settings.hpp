@@ -32,6 +32,8 @@ namespace harbour::server {
         std::optional<std::string> private_key_path;///< Optional private key path
         std::optional<std::string> certificate_path;///< Optional certificate path
 
+        std::optional<std::string> private_key_password;///< Optional private key password
+
         log::callbacks::Connection on_connection{log::callbacks::on_connection};///< Callback for a new connection
         log::callbacks::Warning on_warning{log::callbacks::on_warning};         ///< Callback for a server warning
         log::callbacks::Critical on_critical{log::callbacks::on_critical};      ///< Callback for a server critical
@@ -85,6 +87,18 @@ namespace harbour::server {
             return *this;
         }
 
+        /// @brief Set the PEM format SSL certificate and private key using data stored in memory
+        /// @param certificate Certificate to use
+        /// @param private_key Private key to use
+        /// @param private_key_password Password for private key
+        /// @return Settings& Reference to Settings for chaining
+        auto with_ssl_data(std::string_view certificate, std::string_view private_key, std::string private_key_password) noexcept -> Settings & {
+            this->certificate          = certificate;
+            this->private_key          = private_key;
+            this->private_key_password = private_key_password;
+            return *this;
+        }
+
         /// @brief Set the PEM format SSL certificate and private key using files
         /// @param certificate_path Path to certificate
         /// @param private_key_path Path to private key
@@ -92,6 +106,18 @@ namespace harbour::server {
         auto with_ssl_paths(std::string_view certificate_path, std::string_view private_key_path) noexcept -> Settings & {
             this->certificate_path = certificate_path;
             this->private_key_path = private_key_path;
+            return *this;
+        }
+
+        /// @brief Set the PEM format SSL certificate and private key using files
+        /// @param certificate_path Path to certificate
+        /// @param private_key_path Path to private key
+        /// @param private_key_password Password for private key
+        /// @return Settings& Reference to Settings for chaining
+        auto with_ssl_paths(std::string_view certificate_path, std::string_view private_key_path, std::string private_key_password) noexcept -> Settings & {
+            this->certificate_path     = certificate_path;
+            this->private_key_path     = private_key_path;
+            this->private_key_password = private_key_password;
             return *this;
         }
 
